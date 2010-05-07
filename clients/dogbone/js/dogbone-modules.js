@@ -72,7 +72,7 @@ Number.prototype.msec2time = function() {
 /******************
  * Helper classes
  ******************/
-
+var activeTable = false; /* FIXME: better solution? */
 var ResultTable = function(config) {
   var self = this;
   /* Default configuration */
@@ -81,8 +81,12 @@ var ResultTable = function(config) {
     idTag: "id",
     highlightClass: "playing",
     sortable: false,
-    click: function() {},
-    dblclick: function() {},
+    click: function(e) {
+      activeTable.selectMulti = e.shiftKey ? true : false;
+      var nbr = $(this).data('nbr');
+      activeTable.selectItem(nbr);
+    },
+    dblclick: $.noop,
     callbacks: {
       album: function(element) {
         var a = $('<a/>').attr('href', '#album/' + element.text());
@@ -105,7 +109,9 @@ var ResultTable = function(config) {
   
   /* Some properties */
   this.items = [];
+  this.data  = {};
   this.selectedItem = false;
+  this.selectedItems = [];
   this.fields = [];
   this.selectMulti = false;
   
@@ -126,15 +132,21 @@ var ResultTable = function(config) {
   /***** Methods *****/
   this.display = function() {
     var self = this;
+    self.selectedItems = [];
+    /* Set table as active? */
+    if($(self.ui.content).is(':visible')) activeTable = self;
+    /* Empty items */
     $(self.ui.items).empty();
+    /* Fill with new items */
     $(self.items).each(function(i, el) {
       var tr = $("<tr></tr>");
       var id = self.options.idTag in el ? el[self.options.idTag] : i;
-      tr.attr("id", self.options.name+"-item-id-"+id);
-      tr.attr("name", self.options.name+"-item-no-"+i);
+      tr.data('id', id);
+      tr.data('nbr', i);
+      tr.attr('id', self.options.name+"-item-nbr-"+i)
       /* always add uri */
-      if("uri" in el) { tr.attr("uri", el.uri); }
-      $(self.fields).each(function(i, field) {
+      if("uri" in el) { tr.data('uri', el.uri); }
+      $(self.fields).each(function(j, field) {
         var content = $("<td></td>");
         if(field in el) {
           var value = el[field];
@@ -155,6 +167,8 @@ var ResultTable = function(config) {
       tr.click(self.options.click);
       tr.dblclick(self.options.dblclick);
       $(self.ui.items).append(tr);
+      /* Save rows internally */
+      self.data[i] = tr;      
     });
     
     $("tr:visible",this.ui.items).filter(":odd").addClass("odd");
@@ -169,7 +183,9 @@ var ResultTable = function(config) {
   
   this.selectItem = function(index) {
     index = parseInt(index);
-    this.deselectAll();
+    if(!this.selectMulti) {
+      this.deselectAll();
+    }
     if(index > this.items.length) return;
     
     if(!this.selectMulti ||
@@ -180,21 +196,24 @@ var ResultTable = function(config) {
     /* Create the selection range */
     var min = this.selectedItem < index ? this.selectedItem : index;
     var max = this.selectedItem < index ? index : this.selectedItem;
-
+    
+    this.selectedItems = [];
     for(var i = min; i <= max; i++) {
-      $('tr[name="'+this.options.name+'-item-no-'+i+'"]').addClass("selected");
+      this.selectedItems.push(i);
+      this.data[i].addClass("selected");
     }
   };
   this.deselectAll = function() {
     this.selectedItem = false;
+    this.selectedItems = [];
     $("tr", this.ui.items).removeClass("selected");
   };
   this.clearHighlight = function() {
     $("tr", this.ui.items).removeClass(this.options.highlightClass);  
   };
   this.highlightItem = function(index) {
-    var item = $('tr[name="'+this.options.name+'-item-no-'+index+'"]');
-    item.addClass(this.options.highlightClass);
+    if(index in this.data)
+      this.data[index].addClass(this.options.highlightClass);
   };
 }
 
@@ -252,7 +271,7 @@ var Main = {
       hoverClass: 'drophover',
       tolerance: 'pointer',
       drop: function(event, ui) {
-        uri = ui.draggable.attr("uri");
+        uri = ui.draggable.data("uri");
         Dogvibes.queue(uri);
       }
     });
@@ -290,23 +309,34 @@ var Playqueue = {
     Playqueue.table = new ResultTable(
     {
       name: 'Playqueue', 
-      click: function() {
-        var index = $(this).attr("name").removePrefix('Playqueue-item-no-');
-        Playqueue.table.selectItem(index);       
-      },
       dblclick: function() {
-        var id = $(this).attr("id").removePrefix('Playqueue-item-id-');
+        var id = $(this).data('id');
         Dogvibes.playTrack(id, "-1");
       },
       /* Add a remove-icon  */
       callbacks: {
         space: function(element) {        
           $('<span> remove </span>')
-            .attr("id", "Remove-id-"+element.id)
-            .attr("title", "remove track from playqueue")
-            .click(function() {
-              var id = $(this).attr("id").removePrefix("Remove-id-");
-              Dogvibes.removeTrack(id);
+            .data('id', element.id)
+            .data('nbr', element.nbr)
+            .attr("title", "remove track(s) from playqueue")
+            .click(function(e) {
+              var id = $(this).data('id');
+              var nbr = $(this).data('nbr');
+              /* if clicked item is in selected range, remove entire range */
+              if( Playqueue.table.selectedItems.indexOf(nbr) != -1 ) {
+                id = [];
+                $(Playqueue.table.selectedItems).each(function(i, el) {
+                  id.push(Playqueue.table.data[el].data('id'));
+                  $("#Playqueue-item-nbr-"+el).remove();
+                });
+              } else {
+                /* FIXME: remove all ids once API exists */
+                Dogvibes.removeTrack(id);
+                $("#Playqueue-item-nbr-"+nbr).remove();
+              }
+              e.preventDefault();
+              return false;
           }).appendTo(element);
         }
       }
@@ -315,26 +345,23 @@ var Playqueue = {
     $(document).bind("Status.playlistchange", function() { Playqueue.fetch() });
     $(document).bind("Status.state", function() { Playqueue.set() });
     $(document).bind("Status.playlist", function() { Playqueue.set() });
-    $(document).bind("Server.connected", Playqueue.fetch);
+    $(document).bind("Server.connected", Playqueue.fetch);     
   },
   fetch: function() {
     if(Dogbone.page.id != "playqueue") return;
     if(Dogvibes.server.connected) { 
       Playqueue.hash = Dogvibes.status.playlistversion;
-      Playqueue.table.empty();
-      $(Playqueue.ui.page).addClass("loading");
       Dogvibes.getAllTracksInQueue("Playqueue.update");
     }
   },
-  update: function(json) {
-    $(Playqueue.ui.page).removeClass("loading");  
+  update: function(json) { 
     if(json.error !== 0) {
       return;
     }
     Playqueue.table.items = json.result;
     Playqueue.table.display();
     Playqueue.set();
-    /* Make draggable/sortable */
+    /* Make draggable/sortable. TODO: move into ResultTable */
     $(function() {
       $("tr", Playqueue.table.ui.items).draggable(Config.draggableOptions);
     });     
@@ -364,7 +391,7 @@ var PlayControl = {
     duration: "#TimeInfo-duration"
   },
   volSliding: false,
-  seekSlideing: false,
+  seekSliding: false,
   init: function() {
     $(document).bind("Status.state", PlayControl.set);
     $(document).bind("Status.volume", PlayControl.setVolume);
@@ -522,25 +549,36 @@ var Playlist = {
     {
       name: 'Playlist',
       highlightClass: "listplaying",
-      /* Click events */
-      click: function() {
-        var index = $(this).attr("name").removePrefix('Playlist-item-no-');
-        Playlist.table.selectItem(index);    
-      },
+      /* Dblclick event */
       dblclick: function() {
-        var index = $(this).attr('id').removePrefix('Playlist-item-id-');
+        var index = $(this).data('id');
         Playlist.playItem(index);
       },
       /* Add a remove-icon  */
       callbacks: {
         space: function(element) {        
           $('<span> remove </span>')
-            .attr("id", "Remove-id-"+element.id)
-            .attr("title", "remove track from playlist")
-            .click(function() {
-              var id = $(this).attr("id").removePrefix("Remove-id-");
+            .data('id', element.id)
+            .data('nbr', element.nbr)
+            .attr("title", "remove track(s) from playlist")
+            .click(function(e) {
+              var id = $(this).data("id");
+              var nbr =$(this).data("nbr"); 
               var pid = Playlist.selectedList;
-              Dogvibes.removeFromPlaylist(id, pid, "Playlist.setPage");
+              /* if clicked item is in selected range, remove entire range */
+              if( Playlist.table.selectedItems.indexOf(nbr) != -1 ) {
+                id = [];
+                $(Playlist.table.selectedItems).each(function(i, el) {
+                  id.push(Playlist.table.data[el].data('id'));
+                  $("#Playlist-item-nbr-"+el).remove();
+                });
+              } else {
+                /* FIXME: remove all ids once API exists */
+                Dogvibes.removeFromPlaylist(id, pid);
+                $("#Playlist-item-nbr-"+nbr).remove();
+              }
+              e.preventDefault();
+              return false;
           }).appendTo(element);
         }
       }
@@ -557,15 +595,15 @@ var Playlist = {
     /* Handle sorts */
     $(Playlist.table.ui.items).bind("sortupdate", function(event, ui) {
       var items = $(this).sortable('toArray');
-      var trackID = $(ui.item).attr("id");
+      var trackPos =$(ui.item).data("nbr"); 
+      var trackID = $(ui.item).data("id");
       var position;
       for(var i = 0; i < items.length; i++) {
-        if(items[i] == trackID) {
+        if(items[i] == "Playlist-item-nbr-"+trackPos) {
           position = i;
           break;
         }
       }
-      trackID = trackID.removePrefix("Playlist-item-id-");
       Dogvibes.move(Playlist.selectedList, trackID, (position+1), "Playlist.setPage");
     });               
   },
@@ -609,17 +647,17 @@ var Playlist = {
         tolerance: 'pointer',
         drop: function(event, ui) {
           id = $(this).attr("id").removePrefix("Playlist-");
-          uri = ui.draggable.attr("uri");
+          uri = ui.draggable.data("uri");
           Dogvibes.addToPlaylist(id, uri);
         }
       });
       /* Remove-button */
       $('<span> remove </span>')
-      .attr("id", "Remove-id-" + el.id)
+      .data("id", el.id)
       .attr("title", "remove this playlist")
       .click(function() {
         if(confirm("Do you want to remove this playlist?")) {
-          var id = $(this).attr("id").removePrefix("Remove-id-");
+          var id = $(this).data("id");
           Dogvibes.removePlaylist(id, "Playlist.fetchAll");
           /* FIXME: solve this nicer */
           if(id == Playlist.selectedList) {
@@ -629,7 +667,7 @@ var Playlist = {
       }).appendTo(item);
       /* Double click to start playing */
       item.dblclick(function() {
-        id = $(this).attr("id").removePrefix("Playlist-id-");
+        id = $(this).data("id");
         Dogvibes.playTrack(0, id);
       });
       Playlist.ui.list.addItem(el.id, item);
@@ -706,12 +744,8 @@ var Search = {
       name: "Search",
       idTag: "uri",
       sortable: true,
-      click: function() {
-        var index = $(this).attr("name").removePrefix('Search-item-no-');
-        Search.table.selectItem(index);
-      },
       dblclick: function() {
-        var uri = $(this).attr("id").removePrefix('Search-item-id-');
+        var uri = $(this).data("id");
         Dogvibes.queue(uri);
         Search.table.deselectAll();
         $(this).effect("highlight");
