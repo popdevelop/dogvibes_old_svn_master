@@ -91,7 +91,16 @@ class AlbumArtServer(resource.Resource):
 def handle_request(path):
 
     u = urlparse(path)
+
     c = u.path.split('/')
+
+    # Hack to avoid utf-8 to be garbled. Under investigation
+    us = u.query.split('&')
+    query = ""
+    for o in us:
+        a = o.split('=')
+        if a[0] == 'query':
+            query = urllib.unquote(a[1].decode('utf8'))
 
     try:
         callback = None
@@ -132,6 +141,11 @@ def handle_request(path):
         # strip params from paramters not in the method definition
         args = inspect.getargspec(getattr(klass, method))[0]
         params = dict(filter(lambda k: k[0] in args, params.items()))
+
+        # Hack to avoid utf-8 to be garbled. Under investigation
+        if 'query' in params:
+            params['query'] = query
+
         # call the method
         data = getattr(klass, method).__call__(**params)
     except AttributeError as e:
@@ -327,6 +341,6 @@ if __name__ == "__main__":
 
     reactor.listenTCP(int(cfg['HTTP_PORT']), server.Site(HTTPServer()))
 
-    register_dog()
+#    register_dog()
 
     reactor.run()

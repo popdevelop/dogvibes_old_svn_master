@@ -1,8 +1,6 @@
 import gst
-
-import urllib
+import urlparse, urllib
 import xml.etree.ElementTree as ET
-
 from track import Track
 
 class SpotifySource:
@@ -72,7 +70,9 @@ class SpotifySource:
     def search(self, query):
         tracks = []
 
-        url = "http://ws.spotify.com/search/1/track?q=" + urllib.quote_plus(query)
+        query = urllib.quote(urllib.unquote(query).encode('utf8'),'=&?/')
+
+        url = u"http://ws.spotify.com/search/1/track?q=%s" % query
 
         u = urllib.urlopen(url)
         tree = ET.parse(u)
