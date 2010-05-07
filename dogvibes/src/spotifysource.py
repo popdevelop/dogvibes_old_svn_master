@@ -86,6 +86,7 @@ class SpotifySource:
             track['album'] = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
             track['uri'] = e.items()[0][1]
+            track['popularity'] = e.find('.//{%s}popularity' % ns).text
             territories = e.find('.//{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns)).text
             if 'SE' in territories:
                 tracks.append(track)
