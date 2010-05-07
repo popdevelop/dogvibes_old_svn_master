@@ -546,3 +546,12 @@ div.loading {
 .theme-tracktable tbody tr:hover td span:hover {
   background-image: url("img/skin-icon-remove.png");
 }
+
+.theme-tracktable tbody tr td div {
+  display: inline-block;
+  float: right;
+  height: 8px;
+  margin-bottom: 2px;
+  background-color: #EEE;
+  text-indent: -999px;
+}

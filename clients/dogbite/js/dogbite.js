@@ -488,7 +488,7 @@ var Playlists  = {
     for(var i in items) {
       a  = UI.newElement('a', items[i].title);
       a.href = "#player";
-      a._id = cnt++;
+      a._id = items[i].id;
       a.onclick = Playlists.playItem;
       li = UI.newElement('li', a);
       if(a._id == Status.data.index &&

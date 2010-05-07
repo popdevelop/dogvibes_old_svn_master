@@ -750,6 +750,13 @@ var Search = {
         Search.table.deselectAll();
         $(this).effect("highlight");
         $(this).addClass("queued");
+      },
+      callbacks: {
+        popularity: function(element) {
+          var value = element.text();
+          var bar = $('<div></div>').css('width', (value*60)+"px");
+          element.contents().wrap(bar)
+        }
       }
     });
   
