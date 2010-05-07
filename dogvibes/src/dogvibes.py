@@ -132,11 +132,20 @@ class Dogvibes():
         return playlist.add_track(track)
         self.needs_push_update = True
 
-    # TODO: should not be named track_id since it's referring to the nbr in the list
     def API_removeTrackFromPlaylist(self, playlist_id, track_id):
         try:
             playlist = Playlist.get(playlist_id)
             playlist.remove_track_id(int(track_id))
+        except ValueError as e:
+            raise
+        self.needs_push_update = True
+
+    def API_removeTracksFromPlaylist(self, playlist_id, track_ids):
+        try:
+            playlist = Playlist.get(playlist_id)
+            for track_id in track_ids.split(','):
+                if track_id != '': # don't crash on railing comma
+                    playlist.remove_track_id(int(track_id))
         except ValueError as e:
             raise
         self.needs_push_update = True
