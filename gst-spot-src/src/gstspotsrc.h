@@ -27,7 +27,7 @@
 #include <sys/types.h>
 
 #include <gst/gst.h>
-#include <spotify/api.h>
+#include <libspotify/api.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbasesrc.h>
 
