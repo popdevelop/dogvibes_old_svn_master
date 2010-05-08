@@ -124,7 +124,7 @@ var ResultTable = function(config) {
       }
     }
   });
-  
+
   if(self.options.sortable) {
     $(self.ui.content).tablesorter();
   }
@@ -572,11 +572,12 @@ var Playlist = {
                   id.push(Playlist.table.data[el].data('id'));
                   $("#Playlist-item-nbr-"+el).remove();
                 });
+                id = $(id).get().join(',');
+
               } else {
-                /* FIXME: remove all ids once API exists */
-                Dogvibes.removeFromPlaylist(id, pid);
                 $("#Playlist-item-nbr-"+nbr).remove();
               }
+              Dogvibes.removeFromPlaylist(id, pid);
               e.preventDefault();
               return false;
           }).appendTo(element);
@@ -771,6 +772,8 @@ var Search = {
   },
   setPage: function() {
     if(Dogbone.page.id != "search") return;
+    /* FIXME: ugly */
+    activeTable = Search.table;
     /* See if search parameter has changed. If so, reload */
     if(Dogvibes.server.connected &&
        Dogbone.page.param != Search.param) {
