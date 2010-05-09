@@ -14,6 +14,10 @@ class SpotifySource:
         #spotifydogvibes.login(user, passw);
 
     def create_track_from_uri(self, uri):
+        uri = uri.split("://")
+        if len(uri) != 2:
+            return None
+        uri = uri[1]
         url = "http://ws.spotify.com/lookup/1/?uri=" + uri
 
         try:
