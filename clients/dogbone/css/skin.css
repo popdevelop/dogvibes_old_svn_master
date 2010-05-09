@@ -29,6 +29,41 @@ a:hover {
   width: 100%;
 }
 
+/* Notfications */
+#EventContainer { 
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 10px 10px 0 0;
+  z-index: 9000;
+}
+      
+#EventContainer div.notice-inner {
+  position: relative;
+  width: 200px;
+  padding: 5px 15px 5px 10px;
+  margin:0 0 5px 0;
+  background-color: #000;
+  color: #FFF;
+  
+  /* Round corners */
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  
+  /* Opacity */
+  filter:alpha(opacity=60);
+  -moz-opacity:0.6;
+  -khtml-opacity: 0.6;
+  opacity: 0.6;
+  
+}
+
+#EventContainer div b {
+  color: #0F0;
+}
+
+
 tr.ui-draggable-dragging,
 tr.ui-sortable-helper {
   background-color: #FFF6BF;
