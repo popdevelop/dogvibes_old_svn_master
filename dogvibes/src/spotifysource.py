@@ -14,6 +14,7 @@ class SpotifySource:
         #spotifydogvibes.login(user, passw);
 
     def create_track_from_uri(self, uri):
+        print uri
         uri = uri.split("://")
         if len(uri) != 2:
             return None
@@ -89,7 +90,7 @@ class SpotifySource:
             track['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             track['album'] = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
-            track['uri'] = e.items()[0][1]
+            track['uri'] = "spotify://" + e.items()[0][1]
             track['popularity'] = e.find('.//{%s}popularity' % ns).text
             territories = e.find('.//{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns)).text
             if 'SE' in territories:
