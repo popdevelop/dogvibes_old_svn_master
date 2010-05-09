@@ -209,31 +209,31 @@ class Amp():
         playlist.add_track(track)
         self.needs_push_update = True
 
-    def API_removeTrack(self, nbr):
-        nbr = int(nbr)
+    def API_removeTrack(self, track_id):
+        track_id = int(track_id)
 
         # For now if we are trying to remove the existing playing track. Do nothing.
-        if (nbr == self.active_playlist_id):
+        if (track_id == self.active_playlist_id):
             logging.warning("Not allowed to remove playing track")
             return
 
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.remove_track_id(nbr)
+        playlist.remove_track_id(track_id)
         self.needs_push_update = True
 
-    def API_removeTracks(self, nbrs):
+    def API_removeTracks(self, track_ids):
 
-        for nbr in nbrs.split(','):
-            if nbr != '': # don't crash on railing comma
-                nbr = int(nbr)
+        for track_id in track_ids.split(','):
+            if track_id != '': # don't crash on railing comma
+                track_id = int(track_id)
 
                 # For now if we are trying to remove the existing playing track. Do nothing.
-                if (nbr == self.active_playlist_id):
+                if (track_id == self.active_playlist_id):
                     logging.warning("Not allowed to remove playing track")
                     continue
 
                 playlist = Playlist.get(self.tmpqueue_id)
-                playlist.remove_track_id(nbr)
+                playlist.remove_track_id(track_id)
                 self.needs_push_update = True
 
     def API_seek(self, mseconds):
