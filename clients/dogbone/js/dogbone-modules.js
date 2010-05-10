@@ -4,7 +4,7 @@
 
 var Config = {
   defaultUser: "",
-  defaultServer: "http://192.168.0.51:2000",
+  defaultServer: "http://localhost:2000",
   resizeable: true,
   draggableOptions: {
     revert: 'invalid', 
