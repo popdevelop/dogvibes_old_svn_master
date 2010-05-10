@@ -108,13 +108,53 @@ class SpotifySource:
 
         return tracks
 
-    def get_albums(self, artist_uri):
+    def get_albums(self, query):
+        #artist_uri = SpotifySource.strip_protocol(artist_uri)
+
+        ns = "http://www.spotify.com/ns/music/1"
+
+        query = urllib.quote(urllib.unquote(query).encode('utf8'),'=&?/')
+        url = u"http://ws.spotify.com/search/1/artist?q=%s" % query
+
+        try:
+            u = urllib.urlopen(url)
+            tree = ET.parse(u)
+        except:
+            return None
+
+        artist_uri = tree.find('.//{%s}artist' % ns).attrib['href']
+        if artist_uri == '':
+            return None
+
+        url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
+        print url
+        try:
+            u = urllib.urlopen(url)
+            tree = ET.parse(u)
+        except:
+            return None
+
+        albums = []
+
+        for e in tree.findall('.//{%s}album' % ns):
+            album = {}
+            album['uri'] = 'spotify://' + e.attrib['href']
+            album['name'] = e.find('.//{%s}name' % ns).text
+            album['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+            album['released'] = e.find('.//{%s}released' % ns).text
+            territories = e.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
+            if territories != None and ('SE' in territories or territories == 'worldwide'):
+                albums.append(album)
+
+        return albums
+
+    def get_tracks_in_album(self, album_uri):
         artist_uri = SpotifySource.strip_protocol(artist_uri)
 
         albums = []
 
         url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
-        print url
+
         try:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
@@ -151,4 +191,4 @@ class SpotifySource:
 
 if __name__ == '__main__':
     src = SpotifySource(None, None, None)
-    print src.get_albums("spotify://spotify:artist:4YrKBkKSVeqDamzBPWVnSJ")
+    print src.get_albums("Kent")

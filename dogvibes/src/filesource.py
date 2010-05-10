@@ -19,6 +19,9 @@ class FileSource:
     def search(self, query):
         return self.collection.search(query)
 
+    def get_albums(self, query):
+        return None
+
     def list(self, type):
         return self.collection.list(type)
 
