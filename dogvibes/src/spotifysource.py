@@ -21,12 +21,8 @@ class SpotifySource:
         return uri[1]
 
     def create_track_from_uri(self, uri):
-        uri = uri.split("://")
-        if len(uri) != 2:
-            return None
-        uri = uri[1]
-        url = "http://ws.spotify.com/lookup/1/?uri=" + uri
         uri = SpotifySource.strip_protocol(uri)
+        url = "http://ws.spotify.com/lookup/1/?uri=" + uri
 
         try:
             e = ET.parse(urllib.urlopen(url))
