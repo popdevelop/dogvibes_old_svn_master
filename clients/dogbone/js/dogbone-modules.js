@@ -4,7 +4,7 @@
 
 var Config = {
   defaultUser: "",
-  defaultServer: "http://localhost:2000",
+  defaultServer: "http://192.168.0.51:2000",
   resizeable: true,
   draggableOptions: {
     revert: 'invalid', 
@@ -23,7 +23,7 @@ var Config = {
     helper: 'clone', 
     appendTo: "#drag-dummy", 
     zIndex: 1000,
-    addClasses: false,
+    addClasses: false
   }  
 };
 
@@ -72,7 +72,6 @@ Number.prototype.msec2time = function() {
 /******************
  * Helper classes
  ******************/
-var activeTable = false; /* FIXME: better solution? */
 var ResultTable = function(config) {
   var self = this;
   /* Default configuration */
@@ -82,9 +81,11 @@ var ResultTable = function(config) {
     highlightClass: "playing",
     sortable: false,
     click: function(e) {
-      activeTable.selectMulti = e.shiftKey ? true : false;
+      $(document).dblclick();
+      var tbl = $(this).data('self');
+      tbl.selectMulti = e.shiftKey ? true : false;
       var nbr = $(this).data('nbr');
-      activeTable.selectItem(nbr);
+      tbl.selectItem(nbr);
     },
     dblclick: $.noop,
     callbacks: {
@@ -133,17 +134,17 @@ var ResultTable = function(config) {
   this.display = function() {
     var self = this;
     self.selectedItems = [];
-    /* Set table as active? */
-    if($(self.ui.content).is(':visible')) activeTable = self;
     /* Empty items */
     $(self.ui.items).empty();
     /* Fill with new items */
     $(self.items).each(function(i, el) {
       var tr = $("<tr></tr>");
       var id = self.options.idTag in el ? el[self.options.idTag] : i;
+      /* Store some data */
       tr.data('id', id);
       tr.data('nbr', i);
-      tr.attr('id', self.options.name+"-item-nbr-"+i)
+      tr.data('self', self);
+      tr.attr('id', self.options.name+"-item-nbr-"+i);
       /* always add uri */
       if("uri" in el) { tr.data('uri', el.uri); }
       $(self.fields).each(function(j, field) {
@@ -182,25 +183,23 @@ var ResultTable = function(config) {
   };
   
   this.selectItem = function(index) {
-    index = parseInt(index);
-    if(!this.selectMulti) {
-      this.deselectAll();
+    var self = this;
+    index = parseInt(index, 10);
+    if(!self.selectMulti) {
+      self.deselectAll();
     }
-    if(index > this.items.length) return;
-    
-    if(!this.selectMulti ||
-       !this.selectedItem) {
-      this.selectedItem = index;
+    if(index > self.items.length) { return; }
+    if(self.selectMulti===false || self.selectedItem===false) {
+      self.selectedItem = index;
     }
-    
+
     /* Create the selection range */
-    var min = this.selectedItem < index ? this.selectedItem : index;
-    var max = this.selectedItem < index ? index : this.selectedItem;
-    
-    this.selectedItems = [];
+    var min = self.selectedItem < index ? self.selectedItem : index;
+    var max = self.selectedItem < index ? index : self.selectedItem;
+    self.selectedItems = [];
     for(var i = min; i <= max; i++) {
-      this.selectedItems.push(i);
-      this.data[i].addClass("selected");
+      self.selectedItems.push(i);
+      self.data[i].addClass("selected");
     }
   };
   this.deselectAll = function() {
@@ -212,10 +211,11 @@ var ResultTable = function(config) {
     $("tr", this.ui.items).removeClass(this.options.highlightClass);  
   };
   this.highlightItem = function(index) {
-    if(index in this.data)
+    if(index in this.data) {
       this.data[index].addClass(this.options.highlightClass);
+    }
   };
-}
+};
 
 var NavList = {
   /* Store all sections globally */
@@ -271,7 +271,7 @@ var Main = {
       hoverClass: 'drophover',
       tolerance: 'pointer',
       drop: function(event, ui) {
-        uri = ui.draggable.data("uri");
+        var uri = ui.draggable.data("uri");
         Dogvibes.queue(uri);
       }
     });
@@ -330,11 +330,11 @@ var Playqueue = {
                   id.push(Playqueue.table.data[el].data('id'));
                   $("#Playqueue-item-nbr-"+el).remove();
                 });
+                $(id).get().join(',');
               } else {
-                /* FIXME: remove all ids once API exists */
-                Dogvibes.removeTrack(id);
                 $("#Playqueue-item-nbr-"+nbr).remove();
               }
+              Dogvibes.removeTrack(id);              
               e.preventDefault();
               return false;
           }).appendTo(element);
@@ -342,13 +342,13 @@ var Playqueue = {
       }
     });
     
-    $(document).bind("Status.playlistchange", function() { Playqueue.fetch() });
-    $(document).bind("Status.state", function() { Playqueue.set() });
-    $(document).bind("Status.playlist", function() { Playqueue.set() });
-    $(document).bind("Server.connected", Playqueue.fetch);     
+    $(document).bind("Status.playlistchange", function() { Playqueue.fetch(); });
+    $(document).bind("Status.state", function() { Playqueue.set(); });
+    $(document).bind("Status.playlist", function() { Playqueue.set(); });
+    $(document).bind("Server.connected", Playqueue.fetch);
   },
   fetch: function() {
-    if(Dogbone.page.id != "playqueue") return;
+    if(Dogbone.page.id != "playqueue") { return; }
     if(Dogvibes.server.connected) { 
       Playqueue.hash = Dogvibes.status.playlistversion;
       Dogvibes.getAllTracksInQueue("Playqueue.update");
@@ -428,34 +428,28 @@ var PlayControl = {
   set: function() {
     $(PlayControl.ui.controls).removeClass();
     $(PlayControl.ui.controls).addClass(Dogvibes.status.state);
-    switch(Dogvibes.status.state) {
-      case "stopped":
-        $(PlayControl.ui.seek).slider( "option", "disabled", true );
-        break;
-      default:
-        $(PlayControl.ui.seek).slider( "option", "disabled", false );
-        break;
+    if(Dogvibes.status.state == "stopped") {
+      $(PlayControl.ui.seek).slider( "option", "disabled", true );
+    } else {
+      $(PlayControl.ui.seek).slider( "option", "disabled", false );
     }
     //$(PlayControl.ui.duration).text(Dogvibes.status.duration.msec2time());    
   },
   toggle: function() {
-    switch(Dogvibes.status.state) {
-      case "playing":
-        Dogvibes.pause();
-        break;
-      default:
-        Dogvibes.play();
-        break;
+    if(Dogvibes.status.state == "playing") {
+      Dogvibes.pause();
+    } else {
+      Dogvibes.play();
     }
     PlayControl.set();
   },
   setVolume: function() {
-    if(PlayControl.volSliding) return;
+    if(PlayControl.volSliding) { return; }
     $(PlayControl.ui.volume).slider('option', 'value', Dogvibes.status.volume*100);  
   },
   setTime: function() {
     //$(PlayControl.ui.elapsed).text(Dogvibes.status.elapsedmseconds.msec2time());
-    if(PlayControl.seekSliding) return;
+    if(PlayControl.seekSliding) { return; }
     $(PlayControl.ui.seek).slider('option', 'value', (Dogvibes.status.elapsedmseconds/Dogvibes.status.duration)*100);  
   }  
 };
@@ -609,7 +603,7 @@ var Playlist = {
     });               
   },
   setPage: function() {
-    if(Dogbone.page.id != "playlist") return;
+    if(Dogbone.page.id != "playlist") { return; }
     Playlist.ui.list.selectItem(Dogbone.page.param);
     Titlebar.set(Dogbone.page.title);
     
@@ -647,8 +641,8 @@ var Playlist = {
         hoverClass: 'drophover',
         tolerance: 'pointer',
         drop: function(event, ui) {
-          id = $(this).attr("id").removePrefix("Playlist-");
-          uri = ui.draggable.data("uri");
+          var id = $(this).attr("id").removePrefix("Playlist-");
+          var uri = ui.draggable.data("uri");
           Dogvibes.addToPlaylist(id, uri);
         }
       });
@@ -689,7 +683,8 @@ var Playlist = {
     });     
   },
   playItem: function(id) {
-    if(parseInt(id) != NaN) {
+    var nbr = parseInt(id, 10);
+    if(!isNaN(nbr)) {
       Dogvibes.playTrack(id, Playlist.selectedList);
     }
   },
@@ -697,10 +692,9 @@ var Playlist = {
     Playlist.table.clearHighlight();
     $('li', Playlist.ui.list.ul).removeClass('playing');    
     if(Dogvibes.status.state == "playing") {
-       $("#Playlist-"+Dogvibes.status.playlist_id).addClass('playing');
-       
+      $("#Playlist-"+Dogvibes.status.playlist_id).addClass('playing');
       if(Dogvibes.status.playlist_id == Playlist.selectedList) {    
-        Playlist.table.highlightItem(Dogvibes.status.index);       
+        Playlist.table.highlightItem(Dogvibes.status.index);
       }
     }
   } 
@@ -713,7 +707,7 @@ var Search = {
     section: "#Search-section",
     page   : "#search"
   },
-  searches: Array(),
+  searches: [],
   param: "",
   table: false,
   init: function() {
@@ -734,7 +728,10 @@ var Search = {
     });
 
     $(Search.ui.form).submit(function(e) {
-      Search.doSearch($("#Search-input").val());
+      var val = $("#Search-input").val();
+      if(val != "") {
+        Search.doSearch($("#Search-input").val());
+      }
       e.preventDefault();
       return false;
     });
@@ -756,7 +753,7 @@ var Search = {
         popularity: function(element) {
           var value = element.text();
           var bar = $('<div></div>').css('width', (value*60)+"px");
-          element.contents().wrap(bar)
+          element.contents().wrap(bar);
         }
       }
     });
@@ -771,9 +768,7 @@ var Search = {
     Search.draw();
   },
   setPage: function() {
-    if(Dogbone.page.id != "search") return;
-    /* FIXME: ugly */
-    activeTable = Search.table;
+    if(Dogbone.page.id != "search") { return; }
     /* See if search parameter has changed. If so, reload */
     if(Dogvibes.server.connected &&
        Dogbone.page.param != Search.param) {
@@ -861,7 +856,7 @@ var Artist = {
       $("#Album-art").attr('src', url);
     }
   }
-}
+};
 
 /***************************
  * Keybindings 
@@ -942,13 +937,9 @@ var PanelSplit = {
     });    
     $(".resizable-bottom").each(function(i, el) {
       var height = $(el).css("bottom");
-      height = parseInt(height.substring(0, height.indexOf("px")));
+      height = parseInt(height.substring(0, height.indexOf("px")), 10);
       $(el).css("bottom", (height + (left - PanelSplit.left)) + "px");
     });
     PanelSplit.left = left;
   }
 };
-
-window.onbeforeunlod = function() {
-  return "Are you sure you want to leave?";
-}

@@ -462,6 +462,7 @@ div.loading {
 .theme-tracktable thead tr {
   background-image: url('img/skin-table-header-bg.gif');
   background-repeat: repeat-x;
+  background-position: top left;
   height: 19px;
   font-weight: bold;
   margin: 0;
@@ -497,14 +498,14 @@ div.loading {
 }
 
 /* Default cell props */
-.theme-tracktable tbody td {
+.theme-tracktable tbody tr td {
   padding:1px 5px;
   font-size: 11px;
   color: #C3C3C3;
   cursor: default;
 }
 
-.theme-tracktable tbody td.time {
+.theme-tracktable tbody tr td.time {
   text-align: right;
 }
 
@@ -537,6 +538,7 @@ div.loading {
 .theme-tracktable tbody tr.playing {
   background-image: url("img/skin-table-item-playing-bg.gif");
   background-repeat: repeat-x;
+  background-position: top left;
   height: 37px;
 }
 
@@ -546,11 +548,13 @@ div.loading {
   color: #000;
   height: 37px;
 }
+
 .theme-tracktable tbody tr.playing td:first-child {
   background-image: url("img/skin-table-item-playing.gif");
   background-repeat: no-repeat;
   background-position: 50% 50%;
   width: 33px;
+  text-indent: -999px;
 }
 
 .theme-tracktable tbody tr.listplaying td:first-child {

@@ -137,7 +137,8 @@ window.Dogvibes =  {
     play:   "/play",
     playTrack: "/playTrack?nbr=",
     queue:  "/queue?uri=",
-    removeTrack : "/removeTrack?nbr=",
+    removeTrack : "/removeTrack?track_id=",
+    removeTracks: "/removeTracks?track_ids=",    
     pause:  "/pause",
     next:   "/nextTrack",
     seek:   "/seek?mseconds=",
@@ -197,7 +198,7 @@ window.Dogvibes =  {
     if(Dogvibes.status.artist != oldStatus.artist ||
        Dogvibes.status.title  != oldStatus.title  ||
        Dogvibes.status.album  != oldStatus.album  ||
-       Dogvibes.status.albumArt != oldStatus.albumArt) {
+       Dogvibes.status.index  != oldStatus.index) {
       $(document).trigger("Status.songinfo");
     }
 
@@ -255,7 +256,8 @@ window.Dogvibes =  {
     Dogvibes.server.send(URL, Success);     
   },
   removeTrack: function(id, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.removeTrack + id;
+    var cmd = (id.indexOf(',') != -1) ? Dogvibes.cmd.removeTracks : Dogvibes.cmd.removeTrack;
+    var URL = Dogvibes.defAmp + cmd + id;
     Dogvibes.server.send(URL, Success);
   },  
   play: function(Success) {
