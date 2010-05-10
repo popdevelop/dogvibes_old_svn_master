@@ -13,12 +13,20 @@ class SpotifySource:
         self.created = False
         #spotifydogvibes.login(user, passw);
 
+    @classmethod
+    def strip_protocol(self, uri):
+        uri = uri.split("://")
+        if len(uri) != 2:
+            return None
+        return uri[1]
+
     def create_track_from_uri(self, uri):
         uri = uri.split("://")
         if len(uri) != 2:
             return None
         uri = uri[1]
         url = "http://ws.spotify.com/lookup/1/?uri=" + uri
+        uri = SpotifySource.strip_protocol(uri)
 
         try:
             e = ET.parse(urllib.urlopen(url))
@@ -78,8 +86,11 @@ class SpotifySource:
 
         url = u"http://ws.spotify.com/search/1/track?q=%s" % query
 
-        u = urllib.urlopen(url)
-        tree = ET.parse(u)
+        try:
+            u = urllib.urlopen(url)
+            tree = ET.parse(u)
+        except:
+            return None
 
         ns = "http://www.spotify.com/ns/music/1"
 
@@ -92,10 +103,38 @@ class SpotifySource:
             track['uri'] = "spotify://" + e.items()[0][1]
             track['popularity'] = e.find('.//{%s}popularity' % ns).text
             territories = e.find('.//{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns)).text
-            if 'SE' in territories:
+            if 'SE' in territories or territories == 'worldwide':
                 tracks.append(track)
 
         return tracks
+
+    def get_albums(self, artist_uri):
+        artist_uri = SpotifySource.strip_protocol(artist_uri)
+
+        albums = []
+
+        url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
+        print url
+        try:
+            u = urllib.urlopen(url)
+            tree = ET.parse(u)
+        except:
+            return None
+
+        ns = "http://www.spotify.com/ns/music/1"
+
+        for e in tree.findall('.//{%s}album' % ns):
+            album = {}
+            album['uri'] = 'spotify://' + e.attrib['href']
+            album['name'] = e.find('.//{%s}name' % ns).text
+            album['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+            album['released'] = e.find('.//{%s}released' % ns).text
+            territories = e.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
+            if territories != None and ('SE' in territories or territories == 'worldwide'):
+                albums.append(album)
+                print album
+
+        return albums
 
     def list(self, type):
         return[]
@@ -110,3 +149,7 @@ class SpotifySource:
         # Pause connected amp if play_token_lost is recieved
         if self.amp != None:
             self.amp.API_pause()
+
+if __name__ == '__main__':
+    src = SpotifySource(None, None, None)
+    print src.get_albums("spotify://spotify:artist:4YrKBkKSVeqDamzBPWVnSJ")
