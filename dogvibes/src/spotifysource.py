@@ -132,7 +132,6 @@ class SpotifySource:
             territories = e.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
             if territories != None and ('SE' in territories or territories == 'worldwide'):
                 albums.append(album)
-                print album
 
         return albums
 

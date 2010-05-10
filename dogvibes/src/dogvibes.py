@@ -102,6 +102,13 @@ class Dogvibes():
                 ret += source.search(query)
         return ret
 
+    def API_getAlbums(self, artist_uri):
+        ret = []
+        for source in self.sources:
+            if source:
+                ret += source.get_albums(artist_uri)
+        return ret
+
     def API_list(self, type):
         ret = []
         for source in self.sources:
