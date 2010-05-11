@@ -116,15 +116,18 @@ var ResultTable = function(config) {
   this.fields = [];
   this.selectMulti = false;
   
-  /* Configure table fields by looking for table headers */
-  $(".template", self.ui.content).children().each(function(i, el) {
-    if("id" in el) {
-      var field = el.id.removePrefix(self.options.name + "-");
-      if(field !== false) {
-        self.fields.push(field);
+  /* Configure table fields by looking for table headers if not provided
+   * in options */
+  if(typeof(this.options.fields) == "undefined") {
+    $(".template", self.ui.content).children().each(function(i, el) {
+      if("id" in el) {
+        var field = el.id.removePrefix(self.options.name + "-");
+        if(field !== false) {
+          self.fields.push(field);
+        }
       }
-    }
-  });
+    });
+  }
 
   if(self.options.sortable) {
     $(self.ui.content).tablesorter();
@@ -216,6 +219,7 @@ var ResultTable = function(config) {
     }
   };
 };
+
 
 var NavList = {
   /* Store all sections globally */
@@ -492,7 +496,7 @@ var TrackInfo = {
   set: function() {
     $(TrackInfo.ui.artist).text(Dogvibes.status.artist);
     $(TrackInfo.ui.title).text(Dogvibes.status.title);
-    var img = Dogvibes.albumArt(Dogvibes.status.uri);
+    var img = Dogvibes.albumArt(Dogvibes.status.uri, 180);
     /* Create a new image and crossfade over */
     var newImg = new Image();
     newImg.src = img;
@@ -832,6 +836,7 @@ var Search = {
 
 /* FIXME: correct artist/album handler in future */
 var Artist = {
+  albums: [],
   albumItems: [
     {track: "1", title: "Maja min maja", duration: "3:54" },
     {track: "2", title: "Jag vill bo i en svamp", duration: "3:24" },
@@ -848,14 +853,70 @@ var Artist = {
   },
   setPage: function() {
     Titlebar.set(Dogbone.page.title);
-    $("#"+Dogbone.page.title + "-title").text(Dogbone.page.param);
-    if(Dogbone.page.title == "Album") {
+    $("#"+Dogbone.page.title + "-headline").text(Dogbone.page.param);    
+    if(Dogbone.page.title == "Album") {          
       Artist.table.items = Artist.albumItems;
       Artist.table.display();
       var url = Dogvibes.albumArt("spotify://spotify:track:5ZINxPiu71f39pOp0qbTl4");
       $("#Album-art").attr('src', url);
     }
+    else {
+      Artist.albums = [];
+      Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
+    }
+  },
+  display: function(data) {
+    if(data.error > 0) { return false; }
+    var other = false;
+    var artist = Dogbone.page.param;
+    /* FIXME: will this always work? */
+    if(artist == data.result[0].artist) {
+      $('<h3></h3>').text("Albums").appendTo('#artist');
+    }
+    $(data.result).each(function(i, element) {
+      if(!other && element.artist != artist) {
+        other = true;
+        $('<h3></h3>').text("Appears on").appendTo('#artist');
+      }
+      var idx = Artist.albums.length;
+      Artist.albums[idx] = new AlbumEntry(element);
+      $('#artist').append(Artist.albums[idx].ui);
+      Dogvibes.getAlbum(element.uri, "Artist.albums["+idx+"].set");
+    });
   }
+};
+
+var AlbumEntry = function(entry) {
+  this.ui = 
+    $('<div></div>')
+    .addClass('AlbumEntry');
+  var title = 
+    $('<h4></h4>')
+    .appendTo(this.ui)    
+    .text(entry.name + ' ('+entry.released+')');
+  var art = 
+    $('<div></div>')
+    .addClass('AlbumArt')
+    .appendTo(this.ui);
+  var artimg = 
+    $('<img></img>')
+    .attr('src', Dogvibes.albumArt(entry.uri, 130))
+    .appendTo(art);
+  var table =  
+    $('<table></table>')
+    .attr('id', entry.uri+"-content")
+    .addClass('theme-tracktable')
+    .appendTo(this.ui);
+  var items = $('<tbody></tbody>').attr('id', entry.uri+'-items').appendTo(this.table);
+  
+  
+  this.resTbl = new ResultTable({ name: entry.uri, fields: [ 'title', 'duration' ] });
+  this.set = function(data) {
+    if(data.error > 0) { return; }
+    this.resTbl.items = data.result;
+    this.resTbl.display(); 
+  }
+  
 };
 
 /***************************

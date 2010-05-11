@@ -14,7 +14,7 @@ window.Dogbone = {
       Dogbone.pageRoot = rootObj;
       Dogbone.findPages();
       $(Dogbone.pages).each(function(id,el) { Dogbone.hidePage(el); });
-      if(location.hash.length == 0 &&
+      if(location.hash.length === 0 &&
          Dogbone.defaultPage.length > 0) {
         location.hash = "#"+Dogbone.defaultPage;
       }

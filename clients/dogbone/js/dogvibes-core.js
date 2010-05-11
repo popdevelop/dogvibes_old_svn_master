@@ -143,7 +143,7 @@ window.Dogvibes =  {
     next:   "/nextTrack",
     seek:   "/seek?mseconds=",
     volume: "/setVolume?level=",
-    albumArt: "/dogvibes/getAlbumArt?size=180&uri=",
+    albumArt: "/dogvibes/getAlbumArt?uri=",
     moveInPlaylist: "/dogvibes/moveTrackInPlaylist?playlist_id=",
     playlists: "/dogvibes/getAllPlaylists",
     playlist: "/dogvibes/getAllTracksInPlaylist?playlist_id=",
@@ -155,7 +155,8 @@ window.Dogvibes =  {
     playqueue: "/getAllTracksInQueue",
     search: "/dogvibes/search?query=",
     setVolume: "/setVolume?level=",
-    seek: "/seek?mseconds="
+    getAlbums: "/dogvibes/getAlbums?query=",
+    getAlbum: "/dogvibes/getTracksInAlbum?album_uri="
   },
   /*****************
    * Initialization
@@ -172,7 +173,7 @@ window.Dogvibes =  {
   /* Handle new status event from connection object and dispatch events */
   handleStatus: function() {
     var data = Dogvibes.server.status;
-    if(data.error != 0) {
+    if(data.error !== 0) {
       /* TODO: Notify */
       return;
     }
@@ -262,19 +263,19 @@ window.Dogvibes =  {
   },  
   play: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.play;
-    Dogvibes.server.send(URL, Success)
+    Dogvibes.server.send(URL, Success);
   },
   prev: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.prev;
-    Dogvibes.server.send(URL, Success)
+    Dogvibes.server.send(URL, Success);
   },
   next: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.next;
-    Dogvibes.server.send(URL, Success)
+    Dogvibes.server.send(URL, Success);
   },    
   pause: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.pause;
-    Dogvibes.server.send(URL, Success)
+    Dogvibes.server.send(URL, Success);
   },  
   createPlaylist: function(name, Success) {
     var URL = Dogvibes.cmd.createPlaylist + name;
@@ -296,9 +297,17 @@ window.Dogvibes =  {
     var URL = Dogvibes.cmd.moveInPlaylist + pid + "&track_id=" + tid + "&position=" + pos;
     Dogvibes.server.send(URL, Success);
   },
+  getAlbums: function(query, Success) {
+    var URL = Dogvibes.cmd.getAlbums + query;
+    Dogvibes.server.send(URL, Success);
+  },
+  getAlbum: function(uri, Success) {
+    var URL = Dogvibes.cmd.getAlbum + uri;
+    Dogvibes.server.send(URL, Success);  
+  },
   /* Returns an URL to the album art */
-  albumArt: function(uri) {
-    return Dogvibes.serverURL + Dogvibes.cmd.albumArt + uri;
+  albumArt: function(uri, size) {
+    return Dogvibes.serverURL + Dogvibes.cmd.albumArt + uri + "&size=" + size;
   }
 };
 
