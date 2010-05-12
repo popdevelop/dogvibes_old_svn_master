@@ -496,7 +496,7 @@ var TrackInfo = {
   set: function() {
     $(TrackInfo.ui.artist).text(Dogvibes.status.artist);
     $(TrackInfo.ui.title).text(Dogvibes.status.title);
-    var img = Dogvibes.albumArt(Dogvibes.status.uri, 180);
+    var img = Dogvibes.albumArt(Dogvibes.status.artist, Dogvibes.status.album, 180);
     /* Create a new image and crossfade over */
     var newImg = new Image();
     newImg.src = img;
@@ -505,7 +505,7 @@ var TrackInfo = {
     $(newImg).load(function() {
       $(newImg)
         .appendTo('#currentsong')
-        .fadeIn(2000, function() {
+        .fadeIn(500, function() {
           $(TrackInfo.ui.albumArt).remove();
           $(newImg).attr("id", "TrackInfo-albumArt");
         });
@@ -858,7 +858,7 @@ var Artist = {
       $("#Album-headline").text(Dogbone.page.param);      
       Artist.table.items = Artist.albumItems;
       Artist.table.display();
-      var url = Dogvibes.albumArt("spotify://spotify:track:5ZINxPiu71f39pOp0qbTl4");
+      var url = Dogvibes.albumArt("Oasis", "Wonderwall");
       $("#Album-art").attr('src', url);
     }
     else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
@@ -904,7 +904,7 @@ var AlbumEntry = function(entry) {
     .appendTo(this.ui);
   var artimg = 
     $('<img></img>')
-    .attr('src', Dogvibes.albumArt(entry.uri, 130))
+    .attr('src', Dogvibes.albumArt(entry.artist, entry.name, 130))
     .appendTo(art);
   var table =  
     $('<table></table>')
