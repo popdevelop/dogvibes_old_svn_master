@@ -16,19 +16,19 @@ SEP = r'[[SEP]]'
 class Dog():
     def __init__(self, stream):
         self.stream = stream
+        self.active_requests = []
 
     def set_username(self, username):
         username = username[:-len(EOS)]
         dog = Dog.find(username)
         if dog != None:
-            # TODO: close stream
+            dog.stream.close()
             dogs.remove(dog)
+            print "Bye, %s!" % self.username
         dogs.append(self)
 
-        print "Hello, %s!" % username
+        print "Welcome, %s!" % username
         self.username = username
-
-    active_requests = []
 
     def command_callback(self, data):
         data = data[:-len(EOS)]
@@ -62,8 +62,9 @@ class Dog():
 
     def send_command(self, command, request):
         try:
+            print "writing " + command
             self.stream.write(command + EOS)
-        except IOError:
+        except:
             print "Bye, %s!" % self.username
             self.stream.close()
             dogs.remove(self)
