@@ -24,7 +24,7 @@ class Dog():
         if dog != None:
             dog.stream.close()
             dogs.remove(dog)
-            print "Bye, %s!" % self.username
+            print "Bye, %s!" % dog.username
         dogs.append(self)
 
         print "Welcome, %s!" % username
