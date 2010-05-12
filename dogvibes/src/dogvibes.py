@@ -104,7 +104,6 @@ class Dogvibes():
 
     def create_playlist(self, name):
         Playlist.create(name)
-        request.finish()
 
     # API
 
@@ -149,6 +148,7 @@ class Dogvibes():
 
     def API_createPlaylist(self, name, request):
         self.create_playlist(name)
+        request.finish()
 
     def API_removePlaylist(self, id, request):
         Playlist.remove(id)
