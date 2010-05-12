@@ -102,6 +102,10 @@ class Dogvibes():
         except ValueError as e:
             request.finish(AlbumArt.get_standard_image(size), raw = True)
 
+    def create_playlist(self, name):
+        Playlist.create(name)
+        request.finish()
+
     # API
 
     def API_createSpotifySource(self, user, passw, request):
@@ -144,8 +148,7 @@ class Dogvibes():
                          args=(artist, album, size, request)).start()
 
     def API_createPlaylist(self, name, request):
-        Playlist.create(name)
-        request.finish()
+        self.create_playlist(name)
 
     def API_removePlaylist(self, id, request):
         Playlist.remove(id)
