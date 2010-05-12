@@ -29,7 +29,7 @@ class Amp():
 
         # Create amps playqueue
         if Playlist.name_exists(dogvibes.ampdbname + id) == False:
-            self.dogvibes.API_createPlaylist(dogvibes.ampdbname + id)
+            self.dogvibes.create_playlist(dogvibes.ampdbname + id)
         tqplaylist = Playlist.get_by_name(dogvibes.ampdbname + id)
         self.tmpqueue_id = tqplaylist.id
 
