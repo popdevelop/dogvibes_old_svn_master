@@ -323,6 +323,10 @@ window.Dogvibes =  {
   },
   /* Returns an URL to the album art */
   albumArt: function(artist, album, size) {
+    if (artist == '') {
+      artist = 'none';
+      album = 'nope';
+    }
     return Dogvibes.serverURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
   }
 };
