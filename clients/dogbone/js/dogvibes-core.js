@@ -45,9 +45,10 @@ var AJAX = {
   error: function() {
     /* Try to reconnect before giving up */
     AJAX.connected = false;
+    clearTimeout(AJAX.timeout);
     if(AJAX.attemps-- > 0) {
       /* Wait longer and longer */
-      setTimeout(AJAX.getStatus, AJAX.delay *= 2);
+      AJAX.timer = setTimeout(AJAX.getStatus, AJAX.delay *= 2);
       return;
     }
     /* Give up */
