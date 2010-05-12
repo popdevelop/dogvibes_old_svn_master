@@ -4,6 +4,8 @@ import os
 import config
 import sys
 
+import threading
+
 from amp import Amp
 
 # import spources
@@ -17,7 +19,6 @@ from devicespeaker import DeviceSpeaker
 from track import Track
 from playlist import Playlist
 from source import Source
-
 
 class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
@@ -39,13 +40,13 @@ class Dogvibes():
                     spotifysource = SpotifySource("spotify", source.user, source.passw)
                     self.sources.append(spotifysource)
         else:
-            # This is just here because of laziness 
+            # This is just here because of laziness
             if(cfg['ENABLE_SPOTIFY_SOURCE'] == '1'):
                 spot_user = cfg["SPOTIFY_USER"]
                 spot_pass = cfg["SPOTIFY_PASS"]
-                self.API_createSpotifySource(spot_user, spot_pass)
+                self.create_spotifysource(spot_user, spot_pass)
             if(cfg['ENABLE_FILE_SOURCE'] == '1'):
-                self.API_createFileSource(cfg["FILE_SOURCE_ROOT"])
+                self.create_filesource(cfg["FILE_SOURCE_ROOT"])
 
         # add all speakers, should also be stored in database as sources
         self.speakers = [DeviceSpeaker("devicesink")]
@@ -56,7 +57,7 @@ class Dogvibes():
 
         # add all amps
         amp0 = Amp(self, "0")
-        amp0.API_connectSpeaker(0)
+        amp0.connect_speaker(0)
         self.amps = [amp0]
 
         # add sources to amp, assume spotify source on first position, laziness
@@ -71,90 +72,105 @@ class Dogvibes():
                     return track
         raise ValueError('Could not create track from URI')
 
-    # API
-
-    def API_createSpotifySource(self, user, passw):
+    def create_spotifysource(self, user, passw):
         spotifysource = SpotifySource("spotify", user, passw)
         # FIXME: this logs in to the spotify source for the moment
         spotifysource.get_src()
         self.sources.append(spotifysource)
         Source.add(user, passw, "spotify")
 
-    def API_createFileSource(self, dir):
-        #FIXME implement me
-        #FileSource("filesource", cfg["FILE_SOURCE_ROOT"])
-        return
-
-    def API_getAllSources(self):
+    def create_filesource(self, dir):
         pass
 
-    def API_search(self, query):
-        # FIXME: need to lock this section
-        self.search_history.append(query)
-        # Save 20 searches. You can then limit this in your API call
-        if len(self.search_history) > 20:
-            self.search_history.pop(0)
-        ret = []
-        self.needs_push_update = True
+    def get_all_tracks_in_playlist(self, playlist_id):
+        try:
+            playlist = Playlist.get(playlist_id)
+        except ValueError as e:
+            raise
+        return [track.__dict__ for track in playlist.get_all_tracks()]
 
+    def do_search(self, query, request):
+        ret = []
         for source in self.sources:
             if source:
                 ret += source.search(query)
-        return ret
+        request.finish(ret)
 
-    def API_getAlbums(self, query):
+    def fetch_albumart(self, artist, album, size, request):
+        try:
+            request.finish(AlbumArt.get_image(artist, album, size), raw = True)
+        except ValueError as e:
+            request.finish(AlbumArt.get_standard_image(size), raw = True)
+
+    # API
+
+    def API_createSpotifySource(self, user, passw, request):
+        self.create_spotifysource(user, passw)
+        request.finish()
+
+    def API_createFileSource(self, dir, request):
+        self.create_filesource(dir)
+        request.finish()
+
+    def API_getAllSources(self, request):
+        request.finish()
+
+    def API_search(self, query, request):
+        threading.Thread(target=self.do_search, args=(query, request)).start()
+
+    def API_getAlbums(self, query, request):
         ret = []
         for source in self.sources:
             if source:
                 ret += source.get_albums(query)
-        return ret
+        request.finish(ret)
 
-    def API_getTracksInAlbum(self, album_uri):
+    def API_getTracksInAlbum(self, album_uri, request):
         ret = []
         for source in self.sources:
             if source:
                 ret += source.get_tracks_in_album(album_uri)
-        return ret
+        request.finish(ret)
 
-    def API_list(self, type):
+    def API_list(self, type, request):
         ret = []
         for source in self.sources:
             if source:
                 ret += source.list(type)
-        return ret
+        request.finish(ret)
 
-    def API_getAlbumArt(self, uri, size = 0):
-        try:
-            track = self.create_track_from_uri(uri)
-            return AlbumArt.get_image(track.artist, track.album, size)
-        except ValueError:
-            return AlbumArt.get_standard_image(size)
+    def API_getAlbumArt(self, artist, album, size, request):
+        threading.Thread(target=self.fetch_albumart,
+                         args=(artist, album, size, request)).start()
 
-    def API_createPlaylist(self, name):
+    def API_createPlaylist(self, name, request):
         Playlist.create(name)
+        request.finish()
 
-    def API_removePlaylist(self, id):
+    def API_removePlaylist(self, id, request):
         Playlist.remove(id)
         self.needs_push_update = True
+        request.finish()
 
-    def API_addTrackToPlaylist(self, playlist_id, uri):
+    def API_addTrackToPlaylist(self, playlist_id, uri, request):
         track = self.create_track_from_uri(uri)
         try:
             playlist = Playlist.get(playlist_id)
         except ValueError as e:
             raise
-        return playlist.add_track(track)
         self.needs_push_update = True
+        request.finish(playlist.add_track(track))
 
-    def API_removeTrackFromPlaylist(self, playlist_id, track_id):
+    def API_removeTrackFromPlaylist(self, playlist_id, track_id, request):
         try:
             playlist = Playlist.get(playlist_id)
             playlist.remove_track_id(int(track_id))
         except ValueError as e:
             raise
         self.needs_push_update = True
+        request.finish()
 
-    def API_removeTracksFromPlaylist(self, playlist_id, track_ids):
+    def API_removeTracksFromPlaylist(self, playlist_id, track_ids, request):
         try:
             playlist = Playlist.get(playlist_id)
             for track_id in track_ids.split(','):
@@ -163,34 +179,32 @@ class Dogvibes():
         except ValueError as e:
             raise
         self.needs_push_update = True
+        request.finish()
 
-    def API_getAllPlaylists(self):
+    def API_getAllPlaylists(self, request):
         all_playlists = [playlist.to_dict() for playlist in Playlist.get_all()]
         all_playlists = filter(lambda x:x['name'][0:len(self.ampdbname)] != self.ampdbname,all_playlists)
-        return all_playlists
+        request.finish(all_playlists)
 
-    def API_getAllTracksInPlaylist(self, playlist_id):
-        try:
-            playlist = Playlist.get(playlist_id)
-        except ValueError as e:
-            raise
-        return [track.__dict__ for track in playlist.get_all_tracks()]
+    def API_getAllTracksInPlaylist(self, playlist_id, request):
+        request.finish(self.get_all_tracks_in_playlist(playlist_id))
 
-    def API_renamePlaylist(self, playlist_id, name):
+    def API_renamePlaylist(self, playlist_id, name, request):
         try:
             Playlist.rename(playlist_id, name)
         except ValueError as e:
             raise
         self.needs_push_update = True
+        request.finish()
 
-    def API_moveTrackInPlaylist(self, playlist_id, track_id, position):
+    def API_moveTrackInPlaylist(self, playlist_id, track_id, position, request):
         try:
             playlist = Playlist.get(playlist_id)
             playlist.move_track(int(track_id), int(position))
         except ValueError as e:
             raise
-        return 0
         self.needs_push_update = True
+        request.finish()
 
-    def API_getSearchHistory(self, nbr):
-        return self.search_history[-int(nbr):]
+    def API_getSearchHistory(self, nbr, request):
+        request.finish(self.search_history[-int(nbr):])

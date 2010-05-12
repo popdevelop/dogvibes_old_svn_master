@@ -79,8 +79,7 @@ class Amp():
 
         self.sources.remove(self.dogvibes.sources[nbr])
 
-    # API
-    def API_connectSpeaker(self, nbr):
+    def connect_speaker(self, nbr, request = None):
         nbr = int(nbr)
         if nbr > len(self.dogvibes.speakers) - 1:
             logging.warning ("Connect speaker - speaker does not exist")
@@ -96,7 +95,28 @@ class Amp():
         #self.needs_push_update = True
         # FIXME: activate when client connection has been fixed!
 
-    def API_disconnectSpeaker(self, nbr):
+    def get_played_milliseconds(self):
+        (pending, state, timeout) = self.pipeline.get_state ()
+        if (state == gst.STATE_NULL):
+            logging.debug ("getPlayedMilliseconds in state==NULL")
+            return 0
+        try:
+            pos = (pos, form) = self.pipeline.query_position(gst.FORMAT_TIME)
+        except:
+            pos = 0
+        # We get nanoseconds from gstreamer elements, convert to ms
+        return pos / 1000000
+
+    def next_track(self):
+        self.change_track(1, True)
+        self.needs_push_update = True
+
+    # API
+    def API_connectSpeaker(self, nbr, request):
+        self.connect_speaker(nbr)
+        request.finish()
+
+    def API_disconnectSpeaker(self, nbr, request):
         nbr = int(nbr)
         if nbr > len(self.dogvibes.speakers) - 1:
             logging.warning ("disconnect speaker - speaker does not exist")
@@ -113,23 +133,15 @@ class Amp():
         else:
             logging.warning ("disconnect speaker - speaker not found")
         self.needs_push_update = True
+        request.finish()
 
-    def API_getAllTracksInQueue(self):
-        return self.dogvibes.API_getAllTracksInPlaylist(self.tmpqueue_id)
+    def API_getAllTracksInQueue(self, request):
+        request.finish(self.dogvibes.get_all_tracks_in_playlist(self.tmpqueue_id))
 
-    def API_getPlayedMilliSeconds(self):
-        (pending, state, timeout) = self.pipeline.get_state ()
-        if (state == gst.STATE_NULL):
-            logging.debug ("getPlayedMilliseconds in state==NULL")
-            return 0
-        try:
-            pos = (pos, form) = self.pipeline.query_position(gst.FORMAT_TIME)
-        except:
-            pos = 0
-        # We get nanoseconds from gstreamer elements, convert to ms
-        return pos / 1000000
+    def API_getPlayedMilliSeconds(self, request):
+        request.finish(self.get_played_milliseconds())
 
-    def API_getStatus(self):
+    def API_getStatus(self, request):
         status = {}
 
         # FIXME this should be speaker specific
@@ -144,14 +156,14 @@ class Amp():
         else:
             status['playlist_id'] = self.active_playlist_id
 
-        track = self.fetch_active_track()            
+        track = self.fetch_active_track()
         if track != None:
             status['uri'] = track.uri
             status['title'] = track.title
             status['artist'] = track.artist
             status['album'] = track.album
             status['duration'] = int(track.duration)
-            status['elapsedmseconds'] = self.API_getPlayedMilliSeconds()
+            status['elapsedmseconds'] = self.get_played_milliseconds()
             status['id'] = self.active_playlists_track_id
             status['index'] = track.position - 1
         else:
@@ -165,13 +177,13 @@ class Amp():
         else:
             status['state'] = 'paused'
 
-        return status
+        request.finish(status)
 
-    def API_nextTrack(self):
-        self.change_track(1, True)
-        self.needs_push_update = True
+    def API_nextTrack(self, request):
+        self.next_track()
+        request.finish()
 
-    def API_playTrack(self, playlist_id, nbr):
+    def API_playTrack(self, playlist_id, nbr, request):
         nbr = int(nbr)
         playlist_id = int(playlist_id)
 
@@ -187,41 +199,47 @@ class Amp():
 
         self.change_track(nbr, False)
         self.needs_push_update = True
+        request.finish()
 
-    def API_previousTrack(self):
+    def API_previousTrack(self, request):
         self.change_track(-1, True)
         self.needs_push_update = True
+        request.finish()
 
-    def API_play(self):
+    def API_play(self, request):
         playlist = self.fetch_active_playlist()
         track = self.fetch_active_track()
         if track != None:
-            self.play_only_if_null(track)      
+            self.play_only_if_null(track)
         self.needs_push_update = True
+        request.finish()
 
-    def API_pause(self):
+    def API_pause(self, request):
         self.set_state(gst.STATE_PAUSED)
         self.needs_push_update = True
+        request.finish()
 
-    def API_queue(self, uri):
+    def API_queue(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
         playlist.add_track(track)
         self.needs_push_update = True
+        request.finish()
 
-    def API_removeTrack(self, track_id):
+    def API_removeTrack(self, track_id, request):
         track_id = int(track_id)
 
         # For now if we are trying to remove the existing playing track. Do nothing.
         if (track_id == self.active_playlist_id):
             logging.warning("Not allowed to remove playing track")
-            return
+            request.finish(error = 3)
 
         playlist = Playlist.get(self.tmpqueue_id)
         playlist.remove_track_id(track_id)
         self.needs_push_update = True
+        request.finish()
 
-    def API_removeTracks(self, track_ids):
+    def API_removeTracks(self, track_ids, request):
 
         for track_id in track_ids.split(','):
             if track_id != '': # don't crash on railing comma
@@ -235,25 +253,29 @@ class Amp():
                 playlist = Playlist.get(self.tmpqueue_id)
                 playlist.remove_track_id(track_id)
                 self.needs_push_update = True
+        request.finish()
 
-    def API_seek(self, mseconds):
+    def API_seek(self, mseconds, request):
         if self.src == None:
-            return 0
+            request.finish(0)
         ns = int(mseconds) * 1000000
         logging.debug("Seek with time to ns=%d" %ns)
         self.pipeline.seek_simple (gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, ns)
         self.needs_push_update = True
+        request.finish()
 
-    def API_setVolume(self, level):
+    def API_setVolume(self, level, request):
         level = float(level)
         if (level > 1.0 or level < 0.0):
             raise DogError, 'Volume must be between 0.0 and 1.0'
         self.dogvibes.speakers[0].set_volume(level)
         self.needs_push_update = True
+        request.finish()
 
-    def API_stop(self):
+    def API_stop(self, request):
         self.set_state(gst.STATE_NULL)
         self.needs_push_update = True
+        request.finish()
 
     # Internal functions
 
@@ -344,7 +366,7 @@ class Amp():
     def pipeline_message(self, bus, message):
         t = message.type
         if t == gst.MESSAGE_EOS:
-            self.API_nextTrack()
+            self.next_track()
             self.needs_push_update = True
             # TODO: is this enough? An update is pushed to the clients
             # but will the info be correct?

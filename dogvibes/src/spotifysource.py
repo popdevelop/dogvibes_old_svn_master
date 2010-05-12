@@ -31,10 +31,16 @@ class SpotifySource:
 
         ns = "http://www.spotify.com/ns/music/1"
 
-        title = e.find('.//{%s}name' % ns).text
-        artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
-        album = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
-        duration = int(float(e.find('.//{%s}length' % ns).text) * 1000)
+        if 'album' in uri:
+            title = ""
+            artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+            album = e.find('.//{%s}name' % ns).text
+            duration = 0
+        else:
+            title = e.find('.//{%s}name' % ns).text
+            artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+            album = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
+            duration = int(float(e.find('.//{%s}length' % ns).text) * 1000)
 
         track = Track("spotify://"+uri)
         track.title = title
@@ -116,19 +122,19 @@ class SpotifySource:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
         except:
-            return None
+            return []
 
         artist_uri = tree.find('.//{%s}artist' % ns).attrib['href']
         if artist_uri == '':
-            return None
+            return []
 
         url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
-        print url
+
         try:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
         except:
-            return None
+            return []
 
         albums = []
 
@@ -145,7 +151,8 @@ class SpotifySource:
         return albums
 
     def get_tracks_in_album(self, album_uri):
-        artist_uri = SpotifySource.strip_protocol(artist_uri)
+        return []
+        album_uri = SpotifySource.strip_protocol(album_uri)
 
         albums = []
 

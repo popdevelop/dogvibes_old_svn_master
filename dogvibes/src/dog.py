@@ -1,18 +1,10 @@
-from twisted.internet.protocol import Protocol, Factory
-from twisted.internet import glib2reactor
-glib2reactor.install()
-from twisted.web import server, resource
-from twisted.internet import reactor
-import SocketServer
 import socket
 import logging
-import threading
 import re
 import cjson
 from urlparse import urlparse
 import sys
 from dogvibes import Dogvibes
-from threading import Thread
 import signal
 import optparse
 import gobject
@@ -22,6 +14,7 @@ import inspect
 import urllib
 import config
 import time
+from tornado import iostream, ioloop
 
 API_VERSION = '0.1'
 
@@ -31,34 +24,15 @@ LOG_LEVELS = {'0': logging.CRITICAL,
               '3': logging.INFO,
               '4': logging.DEBUG}
 
-lock = threading.Lock()
+EOS = r'[[EOS]]'
+SEP = r'[[SEP]]'
 
 def register_dog():
-#    DEFAULT_EXT_IP = '0.0.0.0'
-#
-#    int_ip = socket.gethostbyname(socket.gethostname())
-#
-#    # Try fetching external IP more than once. Sometimes it fails
-#    for i in range(0,3):
-#        try:
-#            response = urllib.urlopen('http://whatismyip.org')
-#            ext_ip = response.read()
-#            continue
-#        except:
-#            ext_ip = DEFAULT_EXT_IP
-#            if i < 2:
-#                time.sleep(1)
-
-#    if ext_ip == DEFAULT_EXT_IP:
-#        print 'Could not get external IP. No connection to Internet?'
-
-    if cfg['MASTER_SERVER'] == 'dogvib.es':
-        int_ip = 'dogvib.es'
-    else:
+    int_ip = cfg['MASTER_SERVER']
+    if int_ip == 'localhost':
         int_ip = socket.gethostbyname(socket.gethostname())
 
     try:
-#        response = urllib.urlopen('http://dogvibes.com/registerDog?name=%s&password=%s&int_ip=%s&exp_ip=%s&ws_port=%s&http_port=%s&api_version=%s' % (cfg['DOGVIBES_USER'], cfg['DOGVIBES_PASS'], int_ip, ext_ip, cfg['WS_PORT'], cfg['HTTP_PORT'], API_VERSION))
         response = urllib.urlopen('http://dogvibes.com/registerDog?name=%s&password=%s&int_ip=%s&api_version=%s' % (cfg['DOGVIBES_USER'], cfg['DOGVIBES_PASS'], int_ip, API_VERSION))
     except:
         print 'Could access dogvibes.com'
@@ -74,99 +48,114 @@ def register_dog():
     else:
         print 'Unknown error when registering client'
 
-class DogProtocol(Protocol):
+def on_data(command):
+    commands = command.split(EOS)[0:-1]
+    for c in commands:
+        run_command(c)
 
-    buf = '' # Save unprocessed data between reads
+    stream.read_until(EOS, on_data)
 
-    def connectionMade(self):
-        print "Connected to dogvibes.com"
-        self.transport.write(cfg['DOGVIBES_USER'] + r'\\') # register username at dogvibes.com
+def run_command(command):
+    u = urlparse(command)
+    c = u.path.split('/')
 
-    def connectionLost(self, reason):
-        print "Disconnected to dogvibes.com"
+    # Hack to avoid utf-8 to be garbled. Under investigation
+    us = u.query.split('&')
+    query = ""
+    for o in us:
+        a = o.split('=')
+        if a[0] == 'query':
+            query = urllib.unquote(a[1].decode('utf8'))
 
-    def dataReceived(self, command):
-        commands = command.split(r'\\')[0:-1]
-        print commands
-        for c in commands:
-            self.run_command(c)
+    js_callback = None
+    data = None
+    raw = False
+    error = 0
 
-    def run_command(self, command):
-        u = urlparse(command)
-        c = u.path.split('/')
+    params = cgi.parse_qs(u.query)
+    # use only the first value for each key (feel free to clean up):
+    params = dict(zip(params.keys(), map(lambda x: x[0], params.values())))
 
-        try:
-            callback = None
-            data = None
-            error = 0
-            raw = False
+    if 'callback' in params:
+        js_callback = params.pop('callback')
+    if '_' in params:
+        params.pop('_')
 
-            params = cgi.parse_qs(u.query)
-            # use only the first value for each key (feel free to clean up):
-            params = dict(zip(params.keys(), map(lambda x: x[0], params.values())))
+    request = DogRequest(command, js_callback)
 
-            if 'callback' in params:
-                callback = params.pop('callback')
-                if '_' in params:
-                    params.pop('_')
+    try:
+        if (len(c) < 3):
+            raise NameError("Malformed command: %s" % u.path)
 
-            if 'msg_id' in params:
-                msg_id = params.pop('msg_id')
+        method = 'API_' + c[-1]
+         # TODO: this should be determined on API function return:
+        raw = method == 'API_getAlbumArt'
 
-            if (len(c) < 3):
-                raise NameError("Malformed command: %s" % u.path)
+        obj = c[1]
+        #id = c[2]
+        id = 0 # TODO: remove when more amps are supported
 
-            method = 'API_' + c[-1]
-             # TODO: this should be determined on API function return:
-            raw = method == 'API_getAlbumArt'
-
-            obj = c[1]
-            #id = c[2]
-            id = 0 # TODO: remove when more amps are supported
-
-            if obj == 'dogvibes':
-                klass = dogvibes
-            elif obj == 'amp':
-                klass = dogvibes.amps[id]
-            else:
-                raise NameError("No such object '%s'" % obj)
-
-            # strip params from paramters not in the method definition
-            args = inspect.getargspec(getattr(klass, method))[0]
-            params = dict(filter(lambda k: k[0] in args, params.items()))
-            # call the method
-            data = getattr(klass, method).__call__(**params)
-        except AttributeError as e:
-            error = 1 # No such method
-            logging.warning(e)
-        except TypeError as e:
-            error = 2 # Missing parameter
-            logging.warning(e)
-        except ValueError as e:
-            error = 3 # Internal error, e.g. could not find specified uri
-            logging.warning(e)
-        except NameError as e:
-            error = 4 # Wrong object or other URI error
-            logging.warning(e)
-
-        # Add results from method call only if there is any
-        if data == None or error != 0:
-            data = dict(error = error)
+        if obj == 'dogvibes':
+            klass = dogvibes
+        elif obj == 'amp':
+            klass = dogvibes.amps[id]
         else:
-            data = dict(error = error, result = data)
+            raise NameError("No such object '%s'" % obj)
 
-        data = cjson.encode(data)
+        # strip params from paramters not in the method definition
+        args = inspect.getargspec(getattr(klass, method))[0]
+        params = dict(filter(lambda k: k[0] in args, params.items()))
+        params['request'] = request
 
-        # Wrap result in a Javascript function if a callback is present
-        if callback != None:
-            data = "%s(%s)" % (callback, data)
+        # Hack to avoid utf-8 to be garbled. Under investigation
+        if 'query' in params:
+            params['query'] = query
 
-        # TODO: introduce a delay here to test api_server threading!
-        if raw:
-            self.transport.write(command + r'||' + '0' + r'\\')
-        else:
-            self.transport.write(command + r'||' + data + r'\\')
-#        self.transport.write(data + r'\\')
+        # call the method and return as fast as we can
+        getattr(klass, method).__call__(**params)
+    except AttributeError as e:
+        error = 1 # No such method
+        logging.warning(e)
+    except TypeError as e:
+        error = 2 # Missing parameter
+        logging.warning(e)
+    except ValueError as e:
+        error = 3 # Internal error, e.g. could not find specified uri
+        logging.warning(e)
+    except NameError as e:
+        error = 4 # Wrong object or other URI error
+        logging.warning(e)
+
+    if error != 0: # TODO: Don't do it like this! Won't work when threading off
+        request.finish(error = error)
+
+    # The request is not ended here, but instead in the DogRequest.callback
+
+class DogRequest:
+    def __init__(self, command, js_callback):
+        self.command = command
+        self.js_callback = js_callback
+    def finish(self, data = None, error = 0, raw = False):
+        return_data(self.command, data, error, raw, self.js_callback)
+
+def return_data(command, data, error, raw, js_callback):
+    if raw:
+        stream.write(command + SEP + data + EOS)
+        return
+
+    # Add results from method call only if there is any
+    if data == None or error != 0:
+        data = dict(error = error)
+    else:
+        data = dict(error = error, result = data)
+
+    data = cjson.encode(data)
+
+    # Wrap result in a Javascript function if a js_callback is present
+    if js_callback != None:
+        data = "%s(%s)" % (js_callback, data)
+
+    stream.write(command + SEP + data + EOS)
 
 if __name__ == "__main__":
 
@@ -212,12 +201,15 @@ if __name__ == "__main__":
     global dogvibes
     dogvibes = Dogvibes()
 
-    from twisted.internet.protocol import ClientFactory
-    factory = ClientFactory()
-    factory.protocol = DogProtocol
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+
     print "Connecting to %s" % cfg['MASTER_SERVER']
-    reactor.connectTCP(cfg['MASTER_SERVER'], 11111, factory)
+    s.connect((cfg["MASTER_SERVER"], 11111))
+    stream = iostream.IOStream(s)
+
+    stream.write(cfg['DOGVIBES_USER'] + EOS)
 
     register_dog()
 
-    reactor.run()
+    stream.read_until(EOS, on_data)
+    ioloop.IOLoop.instance().start()
