@@ -4,13 +4,14 @@ import xml.etree.ElementTree as ET
 from track import Track
 
 class SpotifySource:
-    amp = None
 
     def __init__(self, name, user, passw):
         self.name = name
         self.passw = passw
         self.user = user
         self.created = False
+        self.amp = None
+
         #spotifydogvibes.login(user, passw);
 
     @classmethod

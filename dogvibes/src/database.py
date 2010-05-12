@@ -1,9 +1,8 @@
 import sqlite3
 
 class Database():
-    statements = []
-
     def __init__(self):
+        self.statements = []
         self.connection = sqlite3.connect('dogvibes.db')
         # Enable returning tuples instead of just an string array
         self.connection.row_factory = sqlite3.Row
