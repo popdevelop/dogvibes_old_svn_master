@@ -837,6 +837,7 @@ var Search = {
 /* FIXME: correct artist/album handler in future */
 var Artist = {
   albums: [],
+  currentArtist: "",
   albumItems: [
     {track: "1", title: "Maja min maja", duration: "3:54" },
     {track: "2", title: "Jag vill bo i en svamp", duration: "3:24" },
@@ -853,15 +854,18 @@ var Artist = {
   },
   setPage: function() {
     Titlebar.set(Dogbone.page.title);
-    $("#"+Dogbone.page.title + "-headline").text(Dogbone.page.param);    
-    if(Dogbone.page.title == "Album") {          
+    if(Dogbone.page.title == "Album") {
+      $("#Album-headline").text(Dogbone.page.param);      
       Artist.table.items = Artist.albumItems;
       Artist.table.display();
       var url = Dogvibes.albumArt("spotify://spotify:track:5ZINxPiu71f39pOp0qbTl4");
       $("#Album-art").attr('src', url);
     }
-    else {
+    else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
+      Artist.currentArtist = Dogbone.page.param;
+      /* Reset and fetch new data */
       Artist.albums = [];
+      $('#artist').empty().append('<h2>'+Dogbone.page.param+'</h2>');
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
   },

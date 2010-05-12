@@ -31,7 +31,7 @@
 <body>
 <div id="top" class="theme-top">
   <form id="Search-form" action="">
-  <input type="text" id="Search-input" class="theme-searchfield" />
+  <div><input type="text" id="Search-input" class="theme-searchfield" /></div>
   </form>
 </div>
 <div id="drag-dummy"></div>
@@ -68,7 +68,7 @@
     <p>
     You're looking at Dogbone, the HTML client to Dogvibes.
     </p>
-<span>
+<div>
 <h3>What is dogvibes?</h3>
 <p>
 Dogvibes is social music. Music is output from one place but is controlled from any connected device. Such devices can be your laptop, phone, remote control or whatever solution that connects with our easy-to-use interface.
@@ -76,13 +76,13 @@ Dogvibes is social music. Music is output from one place but is controlled from 
 <p>
 The music player currently plays Spotify and more formats are on their way. Future plans include integrating services such as Last.fm and playback on Apple Airport Express.
 </p>
-</span>
-<span>
+</div>
+<div>
 <h3>How does it work?</h3>
 <p>
 For the tech guys: Dogvibes was the first Linux audio player to fully integrate Spotify using their released library. The Dogvibes project consists of a fully working Spotify GStreamer source, a Python server handling playback control via either REST or WebSocket requests and a web client, Dogbone, that imitates the Spotify UI (to lawyers: just for fun though, we won't sell it).
 </p>
-</span>
+</div>
     </div>
     <div id="playqueue" title="Play queue">
       <!-- Template for play queue content //-->
@@ -137,12 +137,12 @@ For the tech guys: Dogvibes was the first Linux audio player to fully integrate 
     </div>
     
     <div id="artist" title="Artist">
-      <h2 id="Artist-title"></h2>
+      <h2 id="Artist-headline"></h2>
     </div>
     
     <div id="album" title="Album">
-      <h2 id="Album-title"></h2>
-      <img id="Album-art" src="dummy.jpg"/>
+      <h2 id="Album-headline"></h2>
+      <img id="Album-art" src="dummy.jpg" alt="Album art"/>
       <table id="Album-content" class="theme-tracktable">
         <tbody id="Album-items">
         <tr class="template">

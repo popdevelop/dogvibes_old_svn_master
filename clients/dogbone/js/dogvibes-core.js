@@ -27,17 +27,32 @@ var AJAX = {
   request: false,
   timer: false,
   
+  /* reconnection params */
+  delay: 2000,
+  attemps: 4,
+  
   start: function(server) {
     AJAX.server = server;
     AJAX.timer = setTimeout(AJAX.getStatus, 0);
   },
-  stop: function() {  
+  stop: function() {
     AJAX.connected = false;
+    AJAX.request.abort();    
     clearTimeout(AJAX.timer);
     AJAX.status = Dogvibes.defaultStatus;
-    $(document).trigger("Server.error");
     $(document).trigger("Server.status");
-    AJAX.request.abort();
+  },
+  error: function() {
+    /* Try to reconnect before giving up */
+    AJAX.connected = false;
+    if(AJAX.attemps-- > 0) {
+      /* Wait longer and longer */
+      setTimeout(AJAX.getStatus, AJAX.delay *= 2);
+      return;
+    }
+    /* Give up */
+    $(document).trigger("Server.error");
+    AJAX.stop(); 
   },
   send: function(URL, Success) {
     /* Changing state? */
@@ -46,7 +61,7 @@ var AJAX = {
     }
     AJAX.request = $.jsonp({
       url: AJAX.server + URL,
-      error: AJAX.stop,
+      error: AJAX.error,
       success: eval(Success),
       callbackParameter: "callback",
       timeout: 5000

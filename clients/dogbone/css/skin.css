@@ -329,7 +329,7 @@ div.loading {
   float: right;
   margin: 20px 10px 0 0;
 }
-#home p {
+#home > div > p {
   margin: 0 0 1em 0;
   font-size: 11px;
 }
@@ -346,14 +346,13 @@ div.loading {
   margin-bottom: 0.5em;
 }
 
-#home span {
+#home > div {
   display: inline-block;
   width: 300px;
   float: left;
   margin-right: 10px;
 }
 
-#artist,
 #album {
   padding-left: 20px;
 }
@@ -593,4 +592,50 @@ div.loading {
   margin-bottom: 2px;
   background-color: #EEE;
   text-indent: -999px;
+}
+
+/*
+ * Artist view style
+ */
+ 
+#artist h2 {
+  font-size: 16px;
+  color: #EEE;
+  padding-left: 15px;
+}
+#artist h3 {
+  padding-left: 15px;
+  background-color: #666;
+  color: #333;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: rgba(255,255,255,0.2) 0 1px 0;  
+}
+
+#artist h4 {
+  font-size: 12px;
+  color: #c3c3c3;
+}
+
+#artist .AlbumEntry {
+  display: block;
+  clear: both;
+  padding: 0 0 10px 15px;
+  border-bottom: 1px solid #272727;
+}
+#artist .AlbumArt {
+  width: 130px;
+  height: 130px;
+  display: inline-block;
+  background-image: url('img/skin-no-albumart-small.png');
+}
+
+#artist .AlbumArt > img {
+  height: 130px;
+  width: 130px;
+}
+
+#artist .AlbumTracks {
+  margin-left: 10px;
+  display: inline-block;
 }
