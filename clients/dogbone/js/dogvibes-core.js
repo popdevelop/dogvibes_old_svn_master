@@ -106,6 +106,7 @@ var WSocket = {
       WSocket.ws = new WebSocket(server);
       WSocket.ws.onopen = function() { 
         WSocket.connected = true;
+        WSocket.getStatus();
         $(document).trigger("Server.connected"); 
       };
       WSocket.ws.onmessage = function(e){ eval(e.data); };
@@ -179,7 +180,8 @@ window.Dogvibes =  {
     search: "/dogvibes/search?query=",
     setVolume: "/setVolume?level=",
     getAlbums: "/dogvibes/getAlbums?query=",
-    getAlbum: "/dogvibes/getTracksInAlbum?album_uri="
+    getAlbum: "/dogvibes/getTracksInAlbum?album_uri=",
+    getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds"
   },
   /*****************
    * Initialization
@@ -280,7 +282,7 @@ window.Dogvibes =  {
     Dogvibes.server.send(URL, Success);     
   },
   removeTrack: function(id, Success) {
-    var cmd = (id.indexOf(',') != -1) ? Dogvibes.cmd.removeTracks : Dogvibes.cmd.removeTrack;
+    var cmd = (id.indexOf(',') != -1) ? Dogvibes.cmd.removeTrack : Dogvibes.cmd.removeTracks;
     var URL = Dogvibes.defAmp + cmd + id;
     Dogvibes.server.send(URL, Success);
   },  
@@ -327,6 +329,10 @@ window.Dogvibes =  {
   getAlbum: function(uri, Success, Context) {
     var URL = Dogvibes.cmd.getAlbum + uri;
     Dogvibes.server.send(URL, Success, Context);  
+  },
+  getPlayedMilliSecs: function(Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.getPlayedMilliSecs;
+    Dogvibes.server.send(URL, Success);
   },
   /* Returns an URL to the album art */
   albumArt: function(artist, album, size) {

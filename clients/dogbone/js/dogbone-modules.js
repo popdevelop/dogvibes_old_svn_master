@@ -3,8 +3,8 @@
  */
 
 var Config = {
-  defaultUser: "",
-  defaultServer: "http://localhost:2000",
+  defaultUser: "jimtegel",
+  defaultServer: "ws://localhost:2000/stream",
   resizeable: true,
   draggableOptions: {
     revert: 'invalid', 
@@ -398,10 +398,17 @@ var PlayControl = {
   },
   volSliding: false,
   seekSliding: false,
+  updateTimer: false,
   init: function() {
     $(document).bind("Status.state", PlayControl.set);
     $(document).bind("Status.volume", PlayControl.setVolume);
-    $(document).bind("Status.elapsed", PlayControl.setTime);
+    $(document).bind("Status.elapsed", function() {
+      PlayControl.setTime({result: Dogvibes.status.elapsedmseconds});
+    });
+    
+    PlayControl.updateTimer = setTimeout(function() {
+      Dogvibes.getPlayedMilliSecs("PlayControl.setTime");
+    }, 100);
     
     $(PlayControl.ui.volume).slider( {
       start: function(e, ui) { PlayControl.volSliding = true; },
@@ -421,20 +428,24 @@ var PlayControl = {
     
     $(PlayControl.ui.nextBtn).click(function() {
       Dogvibes.next();
+      this.blur();
     });
 
     $(PlayControl.ui.playBtn).click(function() {
       PlayControl.toggle();
+      this.blur();      
     });
     
     $(PlayControl.ui.prevBtn).click(function() {
       Dogvibes.prev();
+      this.blur();      
     });
   },
   set: function() {
     $(PlayControl.ui.controls).removeClass();
     $(PlayControl.ui.controls).addClass(Dogvibes.status.state);
     if(Dogvibes.status.state == "stopped") {
+      PlayControl.setTime({result: 0});
       $(PlayControl.ui.seek).slider( "option", "disabled", true );
     } else {
       $(PlayControl.ui.seek).slider( "option", "disabled", false );
@@ -453,10 +464,17 @@ var PlayControl = {
     if(PlayControl.volSliding) { return; }
     $(PlayControl.ui.volume).slider('option', 'value', Dogvibes.status.volume*100);  
   },
-  setTime: function() {
+  setTime: function(elapsed) {
     //$(PlayControl.ui.elapsed).text(Dogvibes.status.elapsedmseconds.msec2time());
     if(PlayControl.seekSliding) { return; }
-    $(PlayControl.ui.seek).slider('option', 'value', (Dogvibes.status.elapsedmseconds/Dogvibes.status.duration)*100);  
+    $(PlayControl.ui.seek).slider('option', 'value', (elapsed.result/Dogvibes.status.duration)*100); 
+    /* Fetch another time update */
+    if(PlayControl.updateTimer) {
+      clearTimeout(PlayControl.updateTimer);
+      PlayControl.updateTimer = setTimeout(function() {
+        Dogvibes.getPlayedMilliSecs("PlayControl.setTime");
+      }, 500);      
+    }
   }  
 };
 
@@ -844,9 +862,11 @@ var Artist = {
   init: function() {
     $(document).bind("Page.artist", Artist.setPage);
     $(document).bind("Page.album", function() { Artist.setPage(); });
+    $(document).bind("Server.connected", function() { Artist.setPage(); });    
   },
   setPage: function() {
     Titlebar.set(Dogbone.page.title);
+    if(!Dogvibes.server.connected) { return; }
     if(Dogbone.page.title == "Album") {
       var album = Dogbone.page.param;
       /* FIXME: need a way of getting single album info */
@@ -919,8 +939,10 @@ var AlbumEntry = function(entry) {
   this.resTbl = new ResultTable({ name: entry.uri, fields: [ 'title', 'duration' ] });
   this.set = function(data) {
     if(data.error > 0) { return; }
-    this.context.resTbl.items = data.result;
-    this.context.resTbl.display(); 
+    /* XXX: compensate for different behaviours in AJAX/WS */
+    var self = typeof(this.context) == "undefined" ? this : this.context;
+    self.resTbl.items = data.result;
+    self.resTbl.display(); 
   }
   
 };
