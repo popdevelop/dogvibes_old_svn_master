@@ -105,6 +105,14 @@ class Dogvibes():
     def create_playlist(self, name):
         Playlist.create(name)
 
+    def get_album(self, album_uri, request):
+        album = None
+        for source in self.sources:
+            album = source.get_album(album_uri);
+            if album != None:
+                break
+        request.finish(album)
+
     # API
 
     def API_createSpotifySource(self, user, passw, request):
@@ -129,19 +137,8 @@ class Dogvibes():
         request.finish(ret)
 
     def API_getAlbum(self, album_uri, request):
-        album = None
-        for source in self.sources:
-            album = source.get_album(album_uri);
-            if album != None:
-                break
-        request.finish(album)
-
-    def API_getTracksInAlbum(self, album_uri, request):
-        ret = []
-        for source in self.sources:
-            if source:
-                ret += source.get_tracks_in_album(album_uri)
-        request.finish(ret)
+        threading.Thread(target=self.get_album,
+                         args=(album_uri, request)).start()
 
     def API_list(self, type, request):
         ret = []
