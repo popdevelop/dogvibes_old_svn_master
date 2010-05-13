@@ -544,13 +544,14 @@ var Playlist = {
   },
   table: false,
   selectedList: "",
+  playlistNames: {},
   init: function() {
     Playlist.ui.list =    new NavList.Section(Playlist.ui.section, 'playlists');
     Playlist.ui.newList = new NavList.Section(Playlist.ui.newPlist, 'last');
     Playlist.ui.newBtn  = $("<li class='newlist'><a>New playlist</a></li>");
     Playlist.ui.newBtn.click(function() {
       var name = prompt("Enter new playlist name");
-      if(name) {
+      if (name != null && name != "") {
         Dogvibes.createPlaylist(name, "Playlist.fetchAll");
       }
     });
@@ -651,7 +652,10 @@ var Playlist = {
       alert("Couldn't get playlists");
       return;
     }
+    Playlist.playlistNames = {};
     $(json.result).each(function(i, el) {
+      /* Save names */
+      Playlist.playlistNames[el.id] = el.name;
       /* Create list item */
       var item = 
       $('<li></li>')
@@ -693,9 +697,9 @@ var Playlist = {
       .data("id", el.id)
       .attr("title", "rename this playlist")
       .click(function() {
-        var newname = prompt("Enter new playlist name", '');
         var id = $(this).data('id');
-        if(newname != '') {
+        var newname = prompt("Enter new playlist name", Playlist.playlistNames[id]);
+        if(newname != '' && newname != null) {
           Dogvibes.renamePlaylist(id, newname);
         }
       }).appendTo(item);      
@@ -980,6 +984,36 @@ var AlbumEntry = function(entry) {
   
 };
 
+var EventManager = {
+  init: function() {
+    $(document).bind("Status.state", EventManager.state);
+    $(document).bind("Status.songinfo", EventManager.songinfo);
+  },
+  state: function() {
+    if(Dogvibes.status.state == "playing") { return; }
+    var user = "<b>Somebody</b> ";
+    var msg;
+    switch(Dogvibes.status.state) {
+      case "stopped":
+        msg = " stopped playback";
+        break;
+      case "paused":
+        msg = "paused playback";
+        break;
+    } 
+    $('#EventContainer').notify({ text: user + msg });
+  },
+  songinfo: function() {
+    if(Dogvibes.status.state != "playing") { return; }
+    var user = "<b>Somebody</b> "; 
+    var pid = parseInt(Dogvibes.status.playlist_id, 10);
+    var name = (pid === -1) ? "playqueue" : Playlist.playlistNames[pid];
+    var name = name ? " from '"+name+"'" : "";
+    msg = " is playing '" + Dogvibes.status.title + "'";
+    $('#EventContainer').notify({ text: user + msg + name });  
+  }
+};
+
 /***************************
  * Keybindings 
  ***************************/
@@ -1023,6 +1057,7 @@ $(document).ready(function() {
   Search.init();
   Playlist.init();
   Artist.init();
+  EventManager.init();
   /* Start server connection */
   Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
   
