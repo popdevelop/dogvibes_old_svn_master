@@ -37,16 +37,19 @@ class SpotifySource:
             artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             album = e.find('.//{%s}name' % ns).text
             duration = 0
+            album_uri = uri
         else:
             title = e.find('.//{%s}name' % ns).text
             artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             album = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
             duration = int(float(e.find('.//{%s}length' % ns).text) * 1000)
+            album_uri = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
 
         track = Track("spotify://"+uri)
         track.title = title
         track.artist = artist
         track.album = album
+        track.album_uri = album_uri
         track.duration = duration
 
         return track
@@ -93,7 +96,7 @@ class SpotifySource:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
         except:
-            return None
+            return []
 
         ns = "http://www.spotify.com/ns/music/1"
 
@@ -102,6 +105,7 @@ class SpotifySource:
             track['title'] = e.find('.//{%s}name' % ns).text
             track['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             track['album'] = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
+            track['album_uri'] = tree.find('.//{%s}album' % ns).attrib['href']
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
             track['uri'] = "spotify://" + e.items()[0][1]
             track['popularity'] = e.find('.//{%s}popularity' % ns).text
@@ -163,7 +167,7 @@ class SpotifySource:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
         except:
-            return None
+            return []
 
         ns = "http://www.spotify.com/ns/music/1"
 

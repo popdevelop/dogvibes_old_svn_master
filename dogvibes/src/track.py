@@ -3,10 +3,11 @@ from database import Database
 class Track:
     # Set all attributes as parateters to be able to initialize with a **dict
     def __init__(self, uri, title = 'Name', artist = 'Artist', album = 'Album',
-                 duration = 0):
+                 duration = 0, album_uri = ''):
         self.title = title
         self.artist = artist
         self.album = album
+        self.album_uri = album_uri
         self.uri = uri
         self.duration = duration
 
@@ -20,8 +21,8 @@ class Track:
         db.commit_statement('''select * from tracks where uri = ?''', [self.uri])
         row = db.fetchone()
         if row == None:
-            db.commit_statement('''insert into tracks (title, artist, album, uri, duration) values (?, ?, ?, ?, ?)''',
-                                (self.title, self.artist, self.album, self.uri, self.duration))
+            db.commit_statement('''insert into tracks (title, artist, album, album_uri, uri, duration) values (?, ?, ?, ?, ?, ?)''',
+                                (self.title, self.artist, self.album, self.album_uri, self.uri, self.duration))
             return db.inserted_id()
         else:
             return row['id']

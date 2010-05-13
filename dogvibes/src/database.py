@@ -14,7 +14,7 @@ class Database():
         # are able to keep track of properties such as play count and can
         # reference tracks by an unique dogvibes id, rather than an uri which
         # can change over time.
-        self.add_statement('''create table if not exists tracks (id INTEGER PRIMARY KEY, title TEXT, artist TEXT, album TEXT, uri TEXT, duration INTEGER)''')
+        self.add_statement('''create table if not exists tracks (id INTEGER PRIMARY KEY, title TEXT, artist TEXT, album TEXT, album_uri TEXT, uri TEXT, duration INTEGER)''')
         # Table for storing playlists
         self.add_statement('''create table if not exists playlists (id INTEGER PRIMARY KEY, name TEXT)''')
         # Table for storing the relation between playlists and tracks, i.e.
