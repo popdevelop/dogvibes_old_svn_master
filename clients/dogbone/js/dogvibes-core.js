@@ -177,6 +177,7 @@ window.Dogvibes =  {
     removeTracksFromPlaylist: "/dogvibes/removeTracksFromPlaylist?track_ids=",  
     createPlaylist: "/dogvibes/createPlaylist?name=",
     removePlaylist: "/dogvibes/removePlaylist?id=",
+    renamePlaylist: "/dogvibes/renamePlaylist?playlist_id=",
     playqueue: "/getAllTracksInQueue",
     search: "/dogvibes/search?query=",
     setVolume: "/setVolume?level=",
@@ -310,6 +311,10 @@ window.Dogvibes =  {
     var URL = Dogvibes.cmd.removePlaylist + id;
     Dogvibes.server.send(URL, Success);  
   },  
+  renamePlaylist: function(id, name, Success) {
+    var URL = Dogvibes.cmd.renamePlaylist + id + "&name=" + name;
+    Dogvibes.server.send(URL, Success);    
+  },
   setVolume: function(vol, Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.setVolume + vol;
     Dogvibes.server.send(URL, Success);

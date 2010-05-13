@@ -155,6 +155,7 @@ tr.ui-sortable-helper td {
 .theme-navigation ul.playlists li {
   background-image:url("img/skin-icon-playlist.gif");
 }
+.theme-navigation ul.playlists li em, 
 .theme-navigation ul.playlists li span {  
   position:absolute;
   top: 0;
@@ -172,6 +173,16 @@ tr.ui-sortable-helper td {
 
 .theme-navigation ul.playlists li:hover span:hover {
   background-image: url("img/skin-icon-remove.png");
+}
+
+.theme-navigation ul.playlists li:hover em {
+  right: 18px;
+  background-image: url("img/skin-icon-rename-weak.png");
+}
+
+.theme-navigation ul.playlists li:hover em:hover {
+  right: 18px;
+  background-image: url("img/skin-icon-rename.png");
 }
 
 .theme-navigation ul playlists li.playing {

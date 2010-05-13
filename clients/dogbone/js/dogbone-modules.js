@@ -607,7 +607,7 @@ var Playlist = {
 
     /* Setup events */
     $(document).bind("Page.playlist", Playlist.setPage);
-    $(document).bind("Status.playlistchange", function() { Playlist.setPage(); });   
+    $(document).bind("Status.playlistchange", function() { Playlist.setPage(); Playlist.fetchAll(); });   
     $(document).bind("Server.connected", function() { Playlist.fetchAll(); });
     
     $(document).bind("Status.state", function() { Playlist.set(); });    
@@ -686,6 +686,18 @@ var Playlist = {
           }
         }
       }).appendTo(item);
+      /* Rename-button */
+      $('<em> rename </em>')
+      .data("id", el.id)
+      .attr("title", "rename this playlist")
+      .click(function() {
+        var newname = prompt("Enter new playlist name", '');
+        var id = $(this).data('id');
+        if(newname != '') {
+          Dogvibes.renamePlaylist(id, newname);
+        }
+      }).appendTo(item);      
+      
       /* Double click to start playing */
       item.dblclick(function() {
         id = $(this).data("id");
