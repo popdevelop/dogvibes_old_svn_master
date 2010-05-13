@@ -139,8 +139,8 @@ class DogRequest:
     def __init__(self, nbr, js_callback):
         self.nbr = nbr
         self.js_callback = js_callback
-    def finish(self, data = None, error = 0, raw = False, push = False):
-        return_data(self.nbr, data, error, raw, self.js_callback, push)
+    def finish(self, data = None, error = 0, raw = False):
+        return_data(self.nbr, data, error, raw, self.js_callback)
 
 def return_data(nbr, data, error, raw, js_callback):
     if raw:
