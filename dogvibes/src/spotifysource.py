@@ -129,9 +129,12 @@ class SpotifySource:
         except:
             return []
 
-        artist_uri = tree.find('.//{%s}artist' % ns).attrib['href']
-        if artist_uri == '':
+        artist_uri = tree.find('.//{%s}artist' % ns)
+        if artist_uri == None:
+            print "ERROR: Empty fetch from %s" % url
             return []
+
+        artist_uri = artist_uri.attrib['href']
 
         url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
 
