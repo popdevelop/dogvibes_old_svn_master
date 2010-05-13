@@ -711,7 +711,9 @@ var Playlist = {
       });
       Playlist.ui.list.addItem(el.id, item);
     });
+    /* Update info */
     Playlist.setPage();
+    Playlist.set();
   },
 
   handleResponse: function(json) {
@@ -1007,7 +1009,7 @@ var EventManager = {
     if(Dogvibes.status.state != "playing") { return; }
     var user = "<b>Somebody</b> "; 
     var pid = parseInt(Dogvibes.status.playlist_id, 10);
-    var name = (pid === -1) ? "playqueue" : Playlist.playlistNames[pid];
+    var name = (pid === -1) ? "play queue" : Playlist.playlistNames[pid];
     var name = name ? " from '"+name+"'" : "";
     msg = " is playing '" + Dogvibes.status.title + "'";
     $('#EventContainer').notify({ text: user + msg + name });  
