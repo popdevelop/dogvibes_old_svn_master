@@ -155,33 +155,44 @@ class SpotifySource:
 
         return albums
 
-    def get_tracks_in_album(self, album_uri):
-        return []
+    def get_album(self, album_uri):
         album_uri = SpotifySource.strip_protocol(album_uri)
 
-        albums = []
-
-        url = u"http://ws.spotify.com/lookup/1/?uri=%s&extras=albumdetail" % artist_uri
-
+        url = "http://ws.spotify.com/lookup/1/?uri=%s&extras=trackdetail" % album_uri
+        print url
         try:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
         except:
-            return []
+            return None
 
         ns = "http://www.spotify.com/ns/music/1"
 
-        for e in tree.findall('.//{%s}album' % ns):
-            album = {}
-            album['uri'] = 'spotify://' + e.attrib['href']
-            album['name'] = e.find('.//{%s}name' % ns).text
-            album['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
-            album['released'] = e.find('.//{%s}released' % ns).text
-            territories = e.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
-            if territories != None and ('SE' in territories or territories == 'worldwide'):
-                albums.append(album)
+        album = {}
+        tracks = []
 
-        return albums
+        album['name'] = "Wonderwall"
+        album['released'] = "1994"
+
+        for e in tree.findall('.//{%s}track' % ns):
+            track = {}
+            track['title'] = e.find('.//{%s}name' % ns).text
+            track['track-number'] = e.find('.//{%s}track-number' % ns).text
+            track['disc-number'] = e.find('.//{%s}disc-number' % ns).text
+            track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
+            track['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+#            track['album_uri'] = tree.find('.//{%s}album' % ns).attrib['href']
+            track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
+            track['uri'] = "spotify://" + e.items()[0][1]
+            track['popularity'] = e.find('.//{%s}popularity' % ns).text
+
+#            territories = e.find('.//{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns)).text
+#            if 'SE' in territories or territories == 'worldwide':
+            tracks.append(track)
+
+        album['tracks'] = tracks
+
+        return album
 
     def list(self, type):
         return[]
@@ -199,4 +210,5 @@ class SpotifySource:
 
 if __name__ == '__main__':
     src = SpotifySource(None, None, None)
-    print src.get_albums("Kent")
+#    print src.get_albums("Kent")
+    print src.get_album("spotify://spotify:album:6G9fHYDCoyEErUkHrFYfs4")

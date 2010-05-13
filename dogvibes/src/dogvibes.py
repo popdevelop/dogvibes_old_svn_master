@@ -128,6 +128,14 @@ class Dogvibes():
                 ret += source.get_albums(query)
         request.finish(ret)
 
+    def API_getAlbum(self, album_uri, request):
+        album = None
+        for source in self.sources:
+            album = source.get_album(album_uri);
+            if album != None:
+                break
+        request.finish(album)
+
     def API_getTracksInAlbum(self, album_uri, request):
         ret = []
         for source in self.sources:

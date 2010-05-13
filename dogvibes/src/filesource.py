@@ -20,6 +20,9 @@ class FileSource:
         return self.collection.search(query)
 
     def get_albums(self, query):
+        return []
+
+    def get_album(self, album_uri):
         return None
 
     def list(self, type):
@@ -27,3 +30,4 @@ class FileSource:
 
     def uri_matches(self, uri):
         return False
+
