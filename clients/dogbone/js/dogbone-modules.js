@@ -142,6 +142,8 @@ var ResultTable = function(config) {
     self.selectedItems = [];
     /* Empty items */
     $(self.ui.items).empty();
+    var obj = $(self.ui.items);
+    
     /* Fill with new items */
     $(self.items).each(function(i, el) {
       var tr = $("<tr></tr>");
@@ -883,15 +885,8 @@ var Artist = {
     if(!Dogvibes.server.connected) { return; }
     if(Dogbone.page.title == "Album") {
       var album = Dogbone.page.param;
-      /* FIXME: need a way of getting single album info */
-      var entry = {
-        uri: album,
-        artist: "Jularbo",
-        name: "none",
-        released: "1981",
-      };
       $("#album").empty();
-      Dogvibes.getAlbum(entry.uri, "Artist.setAlbum");
+      Dogvibes.getAlbum(album, "Artist.setAlbum");
     }
     else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
       Artist.currentArtist = Dogbone.page.param;
@@ -901,9 +896,10 @@ var Artist = {
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
   },
-  setAlbum: function(data) {
-    Artist.album = new AlbumEntry(data);
-    $("#album").append(Artist.album.ui);
+  setAlbum: function(data) {  
+    Artist.album = new AlbumEntry(data.result);
+    $("#album").append(Artist.album.ui);  
+    Artist.album.set(data);  
   },
   display: function(data) {
     if(data.error > 0) { return false; }
@@ -931,6 +927,8 @@ var Artist = {
 
 var AlbumEntry = function(entry) {
   var self = this;
+  var tableName = entry.uri.replace(/:/g, '_');
+  tableName = tableName.replace(/\//g, '')
   this.ui = 
     $('<div></div>')
     .addClass('AlbumEntry');
@@ -946,26 +944,29 @@ var AlbumEntry = function(entry) {
     $('<img></img>')
     .attr('src', Dogvibes.albumArt(entry.artist, entry.name, 130))
     .appendTo(art);
-  var table =  
+  this.table =  
     $('<table></table>')
-    .attr('id', entry.uri+"-content")
+    .attr('id', tableName+"-content")
     .data('self', this)
     .addClass('theme-tracktable')
     .appendTo(this.ui);
-  var items = $('<tbody></tbody>').attr('id', entry.uri+'-items').appendTo(this.table);
+  var items = $('<tbody></tbody>').attr('id', tableName+'-items').appendTo(this.table);
   
-  this.resTbl = new ResultTable({ name: entry.uri, fields: [ 'title', 'duration' ] });
-  /* Show the tracks if we have them */
-  if(typeof(entry.tracks) != "undefined") { 
-    self.resTbl.items = entry.tracks;
-    self.resTbl.display();
-  }
+  var clear = 
+    $('<div></div>')
+    .attr('class', 'clear')
+    .appendTo(this.ui);
+  
+  this.resTbl = new ResultTable({ name: tableName, fields: [ 'space', 'title', 'duration' ] });
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
     var self = typeof(this.context) == "undefined" ? this : this.context;
-    self.resTbl.items = data.result;
+    self.resTbl.items = data.result.tracks;
     self.resTbl.display(); 
+    $(function() {
+      $("tr", self.resTbl.ui.items).draggable(Config.draggableOptions);
+    });    
   }
   
 };

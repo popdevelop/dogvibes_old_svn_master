@@ -18,6 +18,15 @@ a:hover {
   color: #FFF;
 }
 
+div.clear {
+	clear: both;
+	display: block;
+	overflow: hidden;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+
 /* Mainly for avoiding blue outline in Chrome */
 *:focus {outline: none;}
 
@@ -628,16 +637,18 @@ div.loading {
   color: #c3c3c3;
 }
 
-#artist .AlbumEntry {
+.AlbumEntry {
   display: block;
   clear: both;
   padding: 0 0 10px 15px;
   border-bottom: 1px solid #272727;
 }
-#artist .AlbumArt {
+.AlbumArt {
   width: 130px;
   height: 130px;
   display: inline-block;
+  float: left;
+  margin-right: 15px;
   background-image: url('img/skin-no-albumart-small.png');
 }
 
@@ -650,3 +661,9 @@ div.loading {
   margin-left: 10px;
   display: inline-block;
 }
+
+.AlbumEntry .theme-tracktable {
+  width: 600px;
+}
+
+

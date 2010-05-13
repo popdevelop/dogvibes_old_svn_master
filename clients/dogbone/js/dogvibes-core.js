@@ -182,7 +182,7 @@ window.Dogvibes =  {
     search: "/dogvibes/search?query=",
     setVolume: "/setVolume?level=",
     getAlbums: "/dogvibes/getAlbums?query=",
-    getAlbum: "/dogvibes/getTracksInAlbum?album_uri=",
+    getAlbum: "/dogvibes/getAlbum?album_uri=",
     getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds"
   },
   /*****************
