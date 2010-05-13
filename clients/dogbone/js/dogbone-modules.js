@@ -298,12 +298,12 @@ var Main = {
     });
   },
   setQueue: function() {
-    Titlebar.set(Dogbone.page.title);
+    Titlebar.set("Play queue");
     Main.ui.list.selectItem(Dogbone.page.id);
     Playqueue.fetch();
   },
   setHome: function() {
-    Titlebar.set(Dogbone.page.title);
+    Titlebar.set("Home");
     Main.ui.list.selectItem(Dogbone.page.id);
   }  
 };
@@ -634,7 +634,7 @@ var Playlist = {
   setPage: function() {
     if(Dogbone.page.id != "playlist") { return; }
     Playlist.ui.list.selectItem(Dogbone.page.param);
-    Titlebar.set(Dogbone.page.title);
+    Titlebar.set("Playlist");
     
     if(Dogvibes.server.connected) {
       /* Save which list that is selected */
@@ -888,14 +888,15 @@ var Artist = {
     $(document).bind("Server.connected", function() { Artist.setPage(); });    
   },
   setPage: function() {
-    Titlebar.set(Dogbone.page.title);
     if(!Dogvibes.server.connected) { return; }
-    if(Dogbone.page.title == "Album") {
+    if(Dogbone.page.id == "album") {
+      Titlebar.set("Album");    
       var album = Dogbone.page.param;
       $("#album").empty();
       Dogvibes.getAlbum(album, "Artist.setAlbum");
     }
-    else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
+    else if(Dogbone.page.id == "artist" && Artist.currentArtist != Dogbone.page.param){
+      Titlebar.set("Artist");
       Artist.currentArtist = Dogbone.page.param;
       /* Reset and fetch new data */
       Artist.albums = [];

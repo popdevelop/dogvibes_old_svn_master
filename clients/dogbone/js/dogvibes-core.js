@@ -341,9 +341,8 @@ window.Dogvibes =  {
   },
   /* Returns an URL to the album art */
   albumArt: function(artist, album, size) {
-    if (artist == '') {
-      artist = 'none';
-      album = 'nope';
+    if (artist == '' || album == '') {
+      return "";
     }   
     return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
   }

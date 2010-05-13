@@ -7,7 +7,7 @@ window.Dogbone = {
   pageRoot: null,
   pages: [],
   currentHash: "",
-  page: { id: "", title: "", param: false},
+  page: { id: "", param: false},
   init: function(root) {
     var rootObj = document.getElementById(root);
     if(rootObj) {
@@ -34,7 +34,6 @@ window.Dogbone = {
     if(pageObj && ($.inArray(pageID, Dogbone.pages) !== -1)) {
       Dogbone.hidePage(Dogbone.page.id);
       Dogbone.page.id    = pageID;
-      Dogbone.page.title = pageObj.attr('title');
       Dogbone.page.param = param;
       pageObj.show();      
       $(document).trigger("Page."+pageID);
