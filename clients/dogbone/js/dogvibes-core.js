@@ -190,10 +190,10 @@ window.Dogvibes =  {
   init: function(protocol, server, user) {   
     $(document).bind("Server.status", Dogvibes.handleStatus);
     Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
+    Dogvibes.albumartURL = "http://" + server + "/" + user;    
     server = protocol + "://" + server;
     Dogvibes.server.start(server, user);
     Dogvibes.serverURL = server;
-    Dogvibes.albumartURL = "http://" + server;
   },
   /* Handle new status event from connection object and dispatch events */
   handleStatus: function() {
@@ -339,7 +339,7 @@ window.Dogvibes =  {
     if (artist == '') {
       artist = 'none';
       album = 'nope';
-    }
+    }   
     return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
   }
 };
