@@ -109,7 +109,6 @@ class Amp():
 
     def next_track(self):
         self.change_track(1, True)
-        self.needs_push_update = True
 
     def get_status(self):
         status = {}
@@ -149,6 +148,16 @@ class Amp():
 
         return status
 
+    def track_to_client(self):
+        track = self.fetch_active_track()
+        return { "album": track.album,
+                 "artist": track.artist,
+                 "title": track.title,
+                 "uri": track.uri,
+                 "duration": track.duration,
+                 "id": self.active_playlists_track_id,
+                 "index": track.position - 1 }
+
     # API
     def API_connectSpeaker(self, nbr, request):
         self.connect_speaker(nbr)
@@ -170,7 +179,6 @@ class Amp():
             self.set_state(state)
         else:
             logging.warning ("disconnect speaker - speaker not found")
-        self.needs_push_update = True
         request.finish()
 
     def API_getAllTracksInQueue(self, request):
@@ -184,6 +192,8 @@ class Amp():
 
     def API_nextTrack(self, request):
         self.next_track()
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
         request.finish()
 
     def API_playTrack(self, playlist_id, nbr, request):
@@ -201,12 +211,14 @@ class Amp():
             self.active_playlist_id = playlist_id
 
         self.change_track(nbr, False)
-        self.needs_push_update = True
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
         request.finish()
 
     def API_previousTrack(self, request):
         self.change_track(-1, True)
-        self.needs_push_update = True
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
         request.finish()
 
     def API_play(self, request):
@@ -214,12 +226,12 @@ class Amp():
         track = self.fetch_active_track()
         if track != None:
             self.play_only_if_null(track)
-        self.needs_push_update = True
+        request.push({'state': self.get_state()})
         request.finish()
 
     def API_pause(self, request):
         self.set_state(gst.STATE_PAUSED)
-        self.needs_push_update = True
+        request.push({'state': self.get_state()})
         request.finish()
 
     def API_queue(self, uri, request):
@@ -243,7 +255,6 @@ class Amp():
         request.finish()
 
     def API_removeTracks(self, track_ids, request):
-
         for track_id in track_ids.split(','):
             if track_id != '': # don't crash on trailing comma
                 track_id = int(track_id)
@@ -264,7 +275,7 @@ class Amp():
         ns = int(mseconds) * 1000000
         logging.debug("Seek with time to ns=%d" %ns)
         self.pipeline.seek_simple (gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, ns)
-        self.needs_push_update = True
+        request.push({'duration': self.fetch_active_track().duration})
         request.finish()
 
     def API_setVolume(self, level, request):
@@ -272,12 +283,12 @@ class Amp():
         if (level > 1.0 or level < 0.0):
             raise DogError, 'Volume must be between 0.0 and 1.0'
         self.dogvibes.speakers[0].set_volume(level)
-        self.needs_push_update = True
+        request.push({'volume': self.dogvibes.speakers[0].get_volume()})
         request.finish()
 
     def API_stop(self, request):
         self.set_state(gst.STATE_NULL)
-        self.needs_push_update = True
+        request.push({'state': 'stopped'})
         request.finish()
 
     # Internal functions
@@ -352,7 +363,7 @@ class Amp():
                     self.active_playlists_track_id = -1
                     logging.warning("Could not find this id in the active playlist")
                     self.set_state(gst.STATE_NULL)
-                    return                
+                    return
 
         try:
             track = playlist.get_track_nbr(next_position)
@@ -370,7 +381,8 @@ class Amp():
         t = message.type
         if t == gst.MESSAGE_EOS:
             self.next_track()
-            self.needs_push_update = True
+            request.push({'state': self.get_state()})
+            request.push(self.track_to_client())
             # TODO: is this enough? An update is pushed to the clients
             # but will the info be correct?
 
@@ -404,6 +416,15 @@ class Amp():
             self.src.link(self.decodebin)
 
         self.set_state(gst.STATE_PLAYING)
+
+    def get_state(self):
+        (pending, state, timeout) = self.pipeline.get_state()
+        if state == gst.STATE_PLAYING:
+            return 'playing'
+        elif state == gst.STATE_NULL:
+            return 'stopped'
+        else:
+            return 'paused'
 
     def set_state(self, state):
         logging.debug("set state try: "+str(state))

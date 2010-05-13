@@ -156,35 +156,42 @@ class DogRequest:
         self.nbr = nbr
         self.msg_id = msg_id
         self.js_callback = js_callback
+        self.pushes = []
+
+    def push(self, data):
+        self.pushes.append(data)
+
     def finish(self, data = None, error = 0, raw = False, push = False):
         return_data(self.nbr, data, error, raw, self.js_callback, self.msg_id, push)
+        joined_pushes = {}
+        [ joined_pushes.update(push) for push in self.pushes ]
+        if joined_pushes != {}:
+            return_data('0', joined_pushes, 0, False, "pushHandler", None, True)
 
-def return_data(nbr, data, error, raw, js_callback, msg_id, push):
+def return_data(nbr, data, error, raw, js_callback, msg_id, broadcast):
     if raw:
         stream.write(nbr + SEP + RAW_YES + SEP + PUSH_NO + SEP + data + EOS)
         return
 
-    # Add results from method call only if there is any
-    if data == None or error != 0:
-        data = dict(error = error)
-    else:
-        data = dict(error = error, result = data)
-
+    res = {}
+    if data != None and error == 0:
+        res['result'] = data
+    if not broadcast:
+        res['error'] = error
     if msg_id != None:
-        data['msg_id'] = msg_id
+        res['msg_id'] = msg_id
 
-    data = cjson.encode(data)
+    res = cjson.encode(res)
 
-    # Wrap result in a Javascript function if a js_callback is present
     if js_callback != None:
-        data = "%s(%s)" % (js_callback, data)
+        res = "%s(%s)" % (js_callback, res)
 
-    if push:
-        is_push = PUSH_YES
+    if broadcast:
+        is_broadcast = PUSH_YES
     else:
-        is_push = PUSH_NO
+        is_broadcast = PUSH_NO
 
-    stream.write(nbr + SEP + RAW_NO + SEP + is_push + SEP + data + EOS)
+    stream.write(nbr + SEP + RAW_NO + SEP + is_broadcast + SEP + res + EOS)
 
 if __name__ == "__main__":
 
