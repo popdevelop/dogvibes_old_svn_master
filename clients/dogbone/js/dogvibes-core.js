@@ -45,7 +45,7 @@ var AJAX = {
   error: function() {
     /* Try to reconnect before giving up */
     AJAX.connected = false;
-    clearTimeout(AJAX.timeout);
+    clearTimeout(AJAX.timer);
     if(AJAX.attemps-- > 0) {
       /* Wait longer and longer */
       AJAX.timer = setTimeout(AJAX.getStatus, AJAX.delay *= 2);
@@ -55,32 +55,39 @@ var AJAX = {
     $(document).trigger("Server.error");
     AJAX.stop(); 
   },
-  send: function(URL, Success) {
+  send: function(URL, Success, Context) {
     /* Changing state? */
     if(!AJAX.status.connected) {
       $(document).trigger("Server.connecting");    
     }
-    AJAX.request = $.jsonp({
+    var opts = {
       url: AJAX.server + URL,
       error: AJAX.error,
       success: eval(Success),
       callbackParameter: "callback",
       timeout: 5000
-    });
+    };
+    if(typeof(Context) != "undefined") {
+      opts.context = Context;
+    }
+    AJAX.request = $.jsonp(opts);
   },
   /* Private functions */
   getStatus: function() {
     /* TODO: avoid forward reference */
-    clearTimeout(AJAX.timeout);
+    clearTimeout(AJAX.timer);
     AJAX.send(Dogvibes.defAmp + Dogvibes.cmd.status, "AJAX.handleStatus");
   },
   handleStatus: function(data) {
     /* Changing state? */
     if(!AJAX.connected) {
       AJAX.connected = true;
+      /* Reset */
+      AJAX.attempts = 4;
+      AJAX.delay = 2000;
       $(document).trigger("Server.connected");
     }
-    
+    clearTimeout(AJAX.timer);
     AJAX.timer = setTimeout(AJAX.getStatus, AJAX.interval);
     
     AJAX.status = data;
@@ -112,7 +119,7 @@ var WSocket = {
     $(document).trigger("Server.error");
     $(document).trigger("Server.status");    
   },
-  send: function(URL, Success, Error) {
+  send: function(URL, Success, Context) {
     Success = typeof(Success) == "undefined" ? "WSocket.getStatus" : Success;
     try {
       if (URL.indexOf('?') == -1) {
@@ -317,9 +324,9 @@ window.Dogvibes =  {
     var URL = Dogvibes.cmd.getAlbums + query;
     Dogvibes.server.send(URL, Success);
   },
-  getAlbum: function(uri, Success) {
+  getAlbum: function(uri, Success, Context) {
     var URL = Dogvibes.cmd.getAlbum + uri;
-    Dogvibes.server.send(URL, Success);  
+    Dogvibes.server.send(URL, Success, Context);  
   },
   /* Returns an URL to the album art */
   albumArt: function(artist, album, size) {

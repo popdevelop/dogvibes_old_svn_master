@@ -127,6 +127,8 @@ var ResultTable = function(config) {
         }
       }
     });
+  } else {
+    this.fields = this.options.fields;
   }
 
   if(self.options.sortable) {
@@ -837,29 +839,26 @@ var Search = {
 /* FIXME: correct artist/album handler in future */
 var Artist = {
   albums: [],
+  album: [],
   currentArtist: "",
-  albumItems: [
-    {track: "1", title: "Maja min maja", duration: "3:54" },
-    {track: "2", title: "Jag vill bo i en svamp", duration: "3:24" },
-    {track: "3", title: "Olyckan", duration: "2:59" },
-    {track: "4", title: "Maja min maja", duration: "3:54" },
-    {track: "5", title: "Maja min maja", duration: "3:54" },
-    {track: "6", title: "Maja min maja", duration: "3:54" }                 
-  ],
   init: function() {
-    Artist.table = new ResultTable({ name: 'Album' });
-    Artist.table.empty();
     $(document).bind("Page.artist", Artist.setPage);
     $(document).bind("Page.album", function() { Artist.setPage(); });
   },
   setPage: function() {
     Titlebar.set(Dogbone.page.title);
     if(Dogbone.page.title == "Album") {
-      $("#Album-headline").text(Dogbone.page.param);      
-      Artist.table.items = Artist.albumItems;
-      Artist.table.display();
-      var url = Dogvibes.albumArt("Oasis", "Wonderwall");
-      $("#Album-art").attr('src', url);
+      var album = Dogbone.page.param;
+      /* FIXME: need a way of getting single album info */
+      var entry = {
+        uri: "",
+        artist: "Jularbo",
+        name: album,
+        released: "1981",
+      };
+      Artist.album = new AlbumEntry(entry);
+      $("#album").empty().append(Artist.album.ui);
+      Dogvibes.getAlbum(entry.uri, "Artist.album.set", Artist.album);
     }
     else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
       Artist.currentArtist = Dogbone.page.param;
@@ -885,12 +884,15 @@ var Artist = {
       var idx = Artist.albums.length;
       Artist.albums[idx] = new AlbumEntry(element);
       $('#artist').append(Artist.albums[idx].ui);
-      Dogvibes.getAlbum(element.uri, "Artist.albums["+idx+"].set");
+      
+      /* FIXME: solve context problem nicer */
+      Dogvibes.getAlbum(element.uri, "Artist.albums["+idx+"].set", Artist.albums[idx]);
     });
   }
 };
 
 var AlbumEntry = function(entry) {
+  var self = this;
   this.ui = 
     $('<div></div>')
     .addClass('AlbumEntry');
@@ -909,16 +911,16 @@ var AlbumEntry = function(entry) {
   var table =  
     $('<table></table>')
     .attr('id', entry.uri+"-content")
+    .data('self', this)
     .addClass('theme-tracktable')
     .appendTo(this.ui);
   var items = $('<tbody></tbody>').attr('id', entry.uri+'-items').appendTo(this.table);
   
-  
   this.resTbl = new ResultTable({ name: entry.uri, fields: [ 'title', 'duration' ] });
   this.set = function(data) {
     if(data.error > 0) { return; }
-    this.resTbl.items = data.result;
-    this.resTbl.display(); 
+    this.context.resTbl.items = data.result;
+    this.context.resTbl.display(); 
   }
   
 };
