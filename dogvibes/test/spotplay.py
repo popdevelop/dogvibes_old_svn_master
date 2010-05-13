@@ -24,14 +24,32 @@ class GstPlayer:
     def __init__(self, videowidget):
         self.playing = False
         self.player = gst.Pipeline("player")
-        self.src = gst.element_factory_make("spot", "src")
-        self.src.set_property ("user", "FIXME")
-        self.src.set_property ("pass", "FIXME")
-        self.src.set_property ("uri", "spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67")
-        self.src.set_property ("buffer-time", 10000000)
-        self.sink = gst.element_factory_make("alsasink", "sink")
-        self.player.add(self.src, self.sink)
-        gst.element_link_many(self.src, self.sink)
+        self.srcbin = gst.Bin("sourcebin")
+        self.sinkbin = gst.Bin("sinkbin")
+        
+        self.src_src = gst.element_factory_make("spot", "src")
+        self.src_src.set_property ("user", "fix")
+        self.src_src.set_property ("pass", "fix")
+        self.src_src.set_property ("uri", "spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67")
+        self.src_src.set_property ("buffer-time", 10000000)
+        self.srcbin.add(self.src_src)
+       
+        self.tee = gst.element_factory_make("tee", "tee")
+
+        self.sink_queue2 = gst.element_factory_make("queue2", "queue2")
+        self.sink_volume = gst.element_factory_make("volume", "volume")
+        self.sink_sink = gst.element_factory_make("alsasink", "sink")
+        self.sinkbin.add(self.sink_queue2, self.sink_volume, self.sink_sink)
+
+        gpad = gst.GhostPad("sink", self.sink_queue2.get_static_pad("sink"))
+        self.sinkbin.add_pad(gpad)
+
+        gpad = gst.GhostPad("src", self.src_src.get_static_pad("src"))
+        self.srcbin.add_pad(gpad)
+
+        self.player.add(self.srcbin, self.tee, self.sinkbin)
+        gst.element_link_many(self.srcbin, self.tee, self.sinkbin)
+
         self.videowidget = videowidget
         self.on_eos = False
 
@@ -66,18 +84,18 @@ class GstPlayer:
             self.playing = False
 
     def set_location(self, location):
-        self.src.set_property('uri', location)
+        self.src_src.set_property('uri', location)
 
     def query_position(self):
         "Returns a (position, duration) tuple"
         try:
-            pos = self.src.query_position(gst.FORMAT_TIME)[0]
+            pos = self.player.query_position(gst.FORMAT_TIME)[0]
         except gst.QueryError as e:
             print "query with pos: " +str( e)
             pos = gst.CLOCK_TIME_NONE
 
         try:
-            dur = self.src.query_duration(gst.FORMAT_TIME)[0]
+            dur = self.player.query_duration(gst.FORMAT_TIME)[0]
         except gst.QueryError as e:
             print "query with dur: " +str( e)
             dur = gst.CLOCK_TIME_NONE
