@@ -149,7 +149,11 @@ class WSHandler(websocket.WebSocketHandler):
 
     def on_message(self, command):
         process_command(self, self.username, command)
-        self.receive_message(self.on_message)
+        try:
+            self.receive_message(self.on_message)
+        except IOError:
+            self._finished = True
+            return
 
     def send_result(self, raw, data):
         try:
