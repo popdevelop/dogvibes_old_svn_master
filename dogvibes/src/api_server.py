@@ -12,6 +12,10 @@ dogs = []
 
 EOS = r'[[EOS]]'
 SEP = r'[[SEP]]'
+PUSH_YES = r'1'
+PUSH_NO = r'0'
+RAW_YES = r'1'
+RAW_NO = r'0'
 
 class Dog():
     def __init__(self, stream):
@@ -32,13 +36,15 @@ class Dog():
 
     def command_callback(self, data):
         data = data[:-len(EOS)]
-        nbr, raw, result = data.split(SEP)
+        nbr, raw, push, result = data.split(SEP)
 
         # clean up dangling requests to they are garbage collected
         self.active_handlers = [ h for h in self.active_handlers if h.active() ]
 
         for handler in self.active_handlers:
-            if handler.nbr == nbr: # TODO: and command for HTTP
+            # only return result to the waiting connection
+            # however, if this is a push message, all websockets want it
+            if handler.nbr == nbr or isinstance(handler, WSHandler) and push == PUSH_YES:
                 handler.send_result(raw, result)
 
         if not self.stream.reading():
@@ -108,7 +114,7 @@ class HTTPHandler(tornado.web.RequestHandler):
 
     def send_result(self, raw, data):
         self.set_header("Content-Length", len(data))
-        if raw == '1':
+        if raw == RAW_YES:
             self.set_header("Content-Type", "image/png")
         else:
             self.set_header("Content-Type", "text/javascript")
@@ -142,13 +148,12 @@ class WSHandler(websocket.WebSocketHandler):
     def send_result(self, raw, data):
         try:
             self.write_message(data)
-        except IOError:  # TODO: will this happen?
-            print "Could not write to WS client %s" % self.nbr
-            # TODO unregister, will break when using push
+        except IOError:
+            self._finished = True
             return
 
     def active(self):
-        return True
+        return not self._finished
 
 def setup_dog_socket(io_loop):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)

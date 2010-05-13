@@ -72,7 +72,7 @@ class Amp():
 
         if self.dogvibes.sources[nbr].amp == None:
             logging.warning ("Source has no owner")
-            return      
+            return
         if self.dogvibes.sources[nbr].amp != self:
             logging.warning ("Amp not owner of this source")
             return
@@ -82,7 +82,7 @@ class Amp():
     def connect_speaker(self, nbr, request = None):
         nbr = int(nbr)
         if nbr > len(self.dogvibes.speakers) - 1:
-            logging.warning ("Connect speaker - speaker does not exist")
+            logging.warning("Connect speaker - speaker does not exist")
 
         speaker = self.dogvibes.speakers[nbr]
 
@@ -91,7 +91,7 @@ class Amp():
             self.pipeline.add(self.sink)
             self.tee.link(self.sink)
         else:
-            logging.debug ("Speaker %d already connected" % nbr)
+            logging.debug("Speaker %d already connected" % nbr)
         #self.needs_push_update = True
         # FIXME: activate when client connection has been fixed!
 
@@ -111,37 +111,7 @@ class Amp():
         self.change_track(1, True)
         self.needs_push_update = True
 
-    # API
-    def API_connectSpeaker(self, nbr, request):
-        self.connect_speaker(nbr)
-        request.finish()
-
-    def API_disconnectSpeaker(self, nbr, request):
-        nbr = int(nbr)
-        if nbr > len(self.dogvibes.speakers) - 1:
-            logging.warning ("disconnect speaker - speaker does not exist")
-
-        speaker = self.dogvibes.speakers[nbr];
-
-        if self.pipeline.get_by_name(speaker.name) != None:
-            (pending, state, timeout) = self.pipeline.get_state()
-            self.set_state(gst.STATE_NULL)
-            rm = self.pipeline.get_by_name(speaker.name)
-            self.pipeline.remove(rm)
-            self.tee.unlink(rm)
-            self.set_state(state)
-        else:
-            logging.warning ("disconnect speaker - speaker not found")
-        self.needs_push_update = True
-        request.finish()
-
-    def API_getAllTracksInQueue(self, request):
-        request.finish(self.dogvibes.get_all_tracks_in_playlist(self.tmpqueue_id))
-
-    def API_getPlayedMilliSeconds(self, request):
-        request.finish(self.get_played_milliseconds())
-
-    def API_getStatus(self, request):
+    def get_status(self):
         status = {}
 
         # FIXME this should be speaker specific
@@ -177,7 +147,40 @@ class Amp():
         else:
             status['state'] = 'paused'
 
-        request.finish(status)
+        return status
+
+    # API
+    def API_connectSpeaker(self, nbr, request):
+        self.connect_speaker(nbr)
+        request.finish()
+
+    def API_disconnectSpeaker(self, nbr, request):
+        nbr = int(nbr)
+        if nbr > len(self.dogvibes.speakers) - 1:
+            logging.warning ("disconnect speaker - speaker does not exist")
+
+        speaker = self.dogvibes.speakers[nbr];
+
+        if self.pipeline.get_by_name(speaker.name) != None:
+            (pending, state, timeout) = self.pipeline.get_state()
+            self.set_state(gst.STATE_NULL)
+            rm = self.pipeline.get_by_name(speaker.name)
+            self.pipeline.remove(rm)
+            self.tee.unlink(rm)
+            self.set_state(state)
+        else:
+            logging.warning ("disconnect speaker - speaker not found")
+        self.needs_push_update = True
+        request.finish()
+
+    def API_getAllTracksInQueue(self, request):
+        request.finish(self.dogvibes.get_all_tracks_in_playlist(self.tmpqueue_id))
+
+    def API_getPlayedMilliSeconds(self, request):
+        request.finish(self.get_played_milliseconds())
+
+    def API_getStatus(self, request):
+        request.finish(self.get_status())
 
     def API_nextTrack(self, request):
         self.next_track()
@@ -242,7 +245,7 @@ class Amp():
     def API_removeTracks(self, track_ids, request):
 
         for track_id in track_ids.split(','):
-            if track_id != '': # don't crash on railing comma
+            if track_id != '': # don't crash on trailing comma
                 track_id = int(track_id)
 
                 # For now if we are trying to remove the existing playing track. Do nothing.

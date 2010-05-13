@@ -26,8 +26,10 @@ LOG_LEVELS = {'0': logging.CRITICAL,
 
 EOS = r'[[EOS]]'
 SEP = r'[[SEP]]'
-RAW = r'1'
-NO_RAW = r'0'
+RAW_YES = r'1'
+RAW_NO = r'0'
+PUSH_YES = r'1'
+PUSH_NO = r'0'
 
 def register_dog():
     int_ip = cfg['MASTER_SERVER']
@@ -50,11 +52,21 @@ def register_dog():
     else:
         print 'Unknown error when registering client'
 
+def push_status():
+    amp = dogvibes.amps[0]
+    if amp.needs_push_update or dogvibes.needs_push_update:
+        data = amp.get_status()
+        amp.needs_push_update = False
+        dogvibes.needs_push_update = False
+        return_data('0', data, 0, False, 'pushHandler', None, True)
+
 def on_data(command):
     commands = command.split(EOS)[0:-1]
     for c in commands:
         nbr, c = c.split(SEP) # remove nbr
         run_command(nbr, c)
+
+    push_status()
 
     stream.read_until(EOS, on_data)
 
@@ -70,6 +82,7 @@ def run_command(nbr, command):
         if a[0] == 'query':
             query = urllib.unquote(a[1].decode('utf8'))
 
+    msg_id = None
     js_callback = None
     data = None
     raw = False
@@ -81,10 +94,12 @@ def run_command(nbr, command):
 
     if 'callback' in params:
         js_callback = params.pop('callback')
+    if 'msg_id' in params:
+        msg_id = params.pop('msg_id')
     if '_' in params:
         params.pop('_')
 
-    request = DogRequest(nbr, js_callback)
+    request = DogRequest(nbr, msg_id, js_callback)
 
 #    try:
     if 1:
@@ -136,21 +151,17 @@ def run_command(nbr, command):
     # The request is not ended here, but instead in the DogRequest.callback
 
 class DogRequest:
-    def __init__(self, nbr, js_callback):
+    def __init__(self, nbr, msg_id, js_callback):
         self.nbr = nbr
+        self.msg_id = msg_id
         self.js_callback = js_callback
-    def finish(self, data = None, error = 0, raw = False):
-        return_data(self.nbr, data, error, raw, self.js_callback)
+    def finish(self, data = None, error = 0, raw = False, push = False):
+        return_data(self.nbr, data, error, raw, self.js_callback, self.msg_id, push)
 
-def return_data(nbr, data, error, raw, js_callback):
+def return_data(nbr, data, error, raw, js_callback, msg_id, push):
     if raw:
-        stream.write(nbr + SEP + RAW + SEP + data + EOS)
+        stream.write(nbr + SEP + RAW_YES + SEP + PUSH_NO + SEP + data + EOS)
         return
-
-#    if isinstance(chunk, dict):
-#        chunk = escape.json_encode(chunk)
-#        self.set_header("Content-Type", "text/javascript; charset=UTF-8")
-#    chunk = _utf8(chunk)
 
     # Add results from method call only if there is any
     if data == None or error != 0:
@@ -158,13 +169,21 @@ def return_data(nbr, data, error, raw, js_callback):
     else:
         data = dict(error = error, result = data)
 
+    if msg_id != None:
+        data['msg_id'] = msg_id
+
     data = cjson.encode(data)
 
     # Wrap result in a Javascript function if a js_callback is present
     if js_callback != None:
         data = "%s(%s)" % (js_callback, data)
 
-    stream.write(nbr + SEP + NO_RAW + SEP + data + EOS)
+    if push:
+        is_push = PUSH_YES
+    else:
+        is_push = PUSH_NO
+
+    stream.write(nbr + SEP + RAW_NO + SEP + is_push + SEP + data + EOS)
 
 if __name__ == "__main__":
 
