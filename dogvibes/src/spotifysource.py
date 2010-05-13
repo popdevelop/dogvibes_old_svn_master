@@ -168,12 +168,19 @@ class SpotifySource:
 
         ns = "http://www.spotify.com/ns/music/1"
 
+        root = ET.XML(urllib.urlopen(url).read())
+        print root.tag
+
         album = {}
         tracks = []
 
-        album['name'] = "Wonderwall"
-        album['released'] = "1994"
+        album['name'] = tree.find('.//{%s}name' % ns).text
+        album['released'] = tree.find('.//{%s}released' % ns).text
         album['uri'] = album_uri
+
+        territories = tree.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
+        if 'SE' not in territories and territories != 'worldwide':
+            return None
 
         for e in tree.findall('.//{%s}track' % ns):
             track = {}
@@ -182,17 +189,12 @@ class SpotifySource:
             track['disc-number'] = e.find('.//{%s}disc-number' % ns).text
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
             track['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
-#            track['album_uri'] = tree.find('.//{%s}album' % ns).attrib['href']
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
             track['uri'] = "spotify://" + e.items()[0][1]
             track['popularity'] = e.find('.//{%s}popularity' % ns).text
-
-#            territories = e.find('.//{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns)).text
-#            if 'SE' in territories or territories == 'worldwide':
             tracks.append(track)
 
         album['tracks'] = tracks
-
         return album
 
     def list(self, type):
