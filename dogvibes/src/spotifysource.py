@@ -187,8 +187,8 @@ class SpotifySource:
         for e in tree.findall('.//{%s}track' % ns):
             track = {}
             track['title'] = e.find('.//{%s}name' % ns).text
-            track['track-number'] = e.find('.//{%s}track-number' % ns).text
-            track['disc-number'] = e.find('.//{%s}disc-number' % ns).text
+            track['track_number'] = e.find('.//{%s}track-number' % ns).text
+            track['disc_number'] = e.find('.//{%s}disc-number' % ns).text
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
             track['artist'] = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             track['duration'] = int(float(e.find('.//{%s}length' % ns).text) * 1000)
