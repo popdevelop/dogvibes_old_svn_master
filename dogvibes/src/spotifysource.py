@@ -43,7 +43,7 @@ class SpotifySource:
             artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
             album = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
             duration = int(float(e.find('.//{%s}length' % ns).text) * 1000)
-            album_uri = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
+            album_uri = e.find('.//{%s}album' % ns).attrib['href']
 
         track = Track("spotify://"+uri)
         track.title = title
