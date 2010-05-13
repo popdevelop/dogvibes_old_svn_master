@@ -1,4 +1,3 @@
-import sys, re
 import logging
 import os
 
@@ -16,45 +15,22 @@ def load(filename):
         'SPOTIFY_PASS': 'pass',
         'LASTFM_USER': 'user',
         'LASTFM_PASS': 'pass',
-        'HTTP_PORT': '2000',
-        'WS_PORT': '9999',
+        'HTTP_PORT': 2000,
+        'WS_PORT': 9999,
         'FILE_SOURCE_ROOT': '/home/user/music'
         }
 
-    cfg = dict()
-
-    # Try to open a file handle on the config file and read the text
-    # Possible exception #1 - the file might not be found
-    # Possible exception #2 - the file might have read-protection
-    # If any of these occur, just continue and use default values
     try:
-        configfile = open(filename, "r")
-        configtext = configfile.read()
-        print configtext
-
-        # Compile a pattern that matches our key-value line structure
-        pattern = re.compile("([\w_]+)[\t ]*([\w: \\\/~.-]+)\\n")
-        # Find all matches to this pattern in the text of the config file
-        tuples = re.findall(pattern, configtext)
-
-        
-        # Create a new dictionary and fill it: for every tuple (key, value) in
-        # the'tuples' list, set cfg[key] to value
-        for x in tuples:
-            print x
-            cfg[x[0]] = x[1]
-
+        execfile(filename, {}, defaults)
     except Exception, e:
+        print "Found error in config, use defaults ", e
         pass
 
     for d in defaults:
-        if d in os.environ: # if set as env variable, pick that one first
-            cfg[d] = os.environ[d]
-            print os.environ[d]
-        if d not in cfg: # if still not present, choose a default value
-            cfg[d] = defaults[d]
+        if d in os.environ:
+            defaults[d] = os.environ[d]
 
-    logging.debug(cfg)
+    logging.debug(defaults)
 
     # return the fully-loaded dictionary object
-    return cfg
+    return defaults
