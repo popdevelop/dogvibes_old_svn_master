@@ -173,6 +173,7 @@ class SpotifySource:
 
         album['name'] = "Wonderwall"
         album['released'] = "1994"
+        album['uri'] = album_uri
 
         for e in tree.findall('.//{%s}track' % ns):
             track = {}
