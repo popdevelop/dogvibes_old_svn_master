@@ -134,7 +134,7 @@ class HTTPHandler(tornado.web.RequestHandler):
         return not self._finished
 
     def disconnect(self):
-        self.finish()
+        pass # HTTP clients will time out on their own
 
 class WSHandler(websocket.WebSocketHandler):
     def open(self, username):
