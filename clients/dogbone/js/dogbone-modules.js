@@ -813,10 +813,11 @@ var Search = {
     if(Dogvibes.server.connected &&
        Dogbone.page.param != Search.param) {
       Search.param = Dogbone.page.param;
-      Search.searches.push(Search.param);
+      var keyword = unescape(Search.param);
+      Search.searches.push(keyword);
       Search.table.empty();
       $(Search.ui.page).addClass("loading");
-      Search.addSearch(Search.param);
+      Search.addSearch(keyword);
       
       Dogvibes.search(Search.param, "Search.handleResponse");
     }
@@ -957,7 +958,15 @@ var AlbumEntry = function(entry) {
     .attr('class', 'clear')
     .appendTo(this.ui);
   
-  this.resTbl = new ResultTable({ name: tableName, fields: [ 'space', 'title', 'duration' ] });
+  this.resTbl = new ResultTable({ 
+    name: tableName, 
+    fields: [ 'track_number', 'title', 'duration' ],
+    callbacks: {
+      track_number: function(element) {
+        element.addClass('trackNo');
+      }
+    }
+  });
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
