@@ -14,6 +14,7 @@ import inspect
 import urllib
 import config
 import time
+import threading
 from tornado import iostream, ioloop
 
 API_VERSION = '0.1'
@@ -240,4 +241,9 @@ if __name__ == "__main__":
     register_dog()
 
     stream.read_until(EOS, on_data)
-    ioloop.IOLoop.instance().start()
+
+    threading.Thread(target=ioloop.IOLoop.instance().start).start()
+
+    gobject.threads_init()
+    loop = gobject.MainLoop()
+    loop.run()
