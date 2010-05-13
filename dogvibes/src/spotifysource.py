@@ -162,7 +162,7 @@ class SpotifySource:
         album_uri = SpotifySource.strip_protocol(album_uri)
 
         url = "http://ws.spotify.com/lookup/1/?uri=%s&extras=trackdetail" % album_uri
-        print url
+
         try:
             u = urllib.urlopen(url)
             tree = ET.parse(u)
@@ -172,7 +172,6 @@ class SpotifySource:
         ns = "http://www.spotify.com/ns/music/1"
 
         root = ET.XML(urllib.urlopen(url).read())
-        print root.tag
 
         album = {}
         tracks = []
