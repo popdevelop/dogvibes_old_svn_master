@@ -3,8 +3,9 @@
  */
 
 var Config = {
-  defaultUser: "jimtegel",
-  defaultServer: "ws://localhost:2000/stream",
+  defaultUser: "",
+  defaultServer: "localhost:2000",
+  defaultProtocol: "ws",
   resizeable: true,
   draggableOptions: {
     revert: 'invalid', 
@@ -90,7 +91,7 @@ var ResultTable = function(config) {
     dblclick: $.noop,
     callbacks: {
       album: function(element) {
-        var a = $('<a/>').attr('href', '#album/' + element.text());
+        var a = $('<a/>').attr('href', '#album/' + element.album_uri);
         element.contents().wrap(a);
       },      
       artist: function(element) {
@@ -166,6 +167,7 @@ var ResultTable = function(config) {
         if(field in self.options.callbacks) {
           content.id = id;
           content.nbr = i;
+          content.album_uri = el.album_uri;
           self.options.callbacks[field](content);
         }        
         tr.append(content);
@@ -871,14 +873,13 @@ var Artist = {
       var album = Dogbone.page.param;
       /* FIXME: need a way of getting single album info */
       var entry = {
-        uri: "",
+        uri: album,
         artist: "Jularbo",
-        name: album,
+        name: "none",
         released: "1981",
       };
-      Artist.album = new AlbumEntry(entry);
-      $("#album").empty().append(Artist.album.ui);
-      Dogvibes.getAlbum(entry.uri, "Artist.album.set", Artist.album);
+      $("#album").empty();
+      Dogvibes.getAlbum(entry.uri, "Artist.setAlbum");
     }
     else if(Dogbone.page.title == "Artist" && Artist.currentArtist != Dogbone.page.param){
       Artist.currentArtist = Dogbone.page.param;
@@ -887,6 +888,10 @@ var Artist = {
       $('#artist').empty().append('<h2>'+Dogbone.page.param+'</h2>');
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
+  },
+  setAlbum: function(data) {
+    Artist.album = new AlbumEntry(data);
+    $("#album").append(Artist.album.ui);
   },
   display: function(data) {
     if(data.error > 0) { return false; }
@@ -905,6 +910,7 @@ var Artist = {
       Artist.albums[idx] = new AlbumEntry(element);
       $('#artist').append(Artist.albums[idx].ui);
       
+      /* Get tracks for album, since we don't get them directly */
       /* FIXME: solve context problem nicer */
       Dogvibes.getAlbum(element.uri, "Artist.albums["+idx+"].set", Artist.albums[idx]);
     });
@@ -937,6 +943,11 @@ var AlbumEntry = function(entry) {
   var items = $('<tbody></tbody>').attr('id', entry.uri+'-items').appendTo(this.table);
   
   this.resTbl = new ResultTable({ name: entry.uri, fields: [ 'title', 'duration' ] });
+  /* Show the tracks if we have them */
+  if(typeof(entry.tracks) != "undefined") { 
+    self.resTbl.items = entry.tracks;
+    self.resTbl.display();
+  }
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
@@ -991,7 +1002,7 @@ $(document).ready(function() {
   Playlist.init();
   Artist.init();
   /* Start server connection */
-  Dogvibes.init(Config.defaultServer, Config.defaultUser);
+  Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
   
   /****************************************
    * Misc. behaviour. Application specific

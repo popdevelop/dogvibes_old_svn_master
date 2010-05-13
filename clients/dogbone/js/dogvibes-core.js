@@ -31,8 +31,8 @@ var AJAX = {
   delay: 2000,
   attemps: 4,
   
-  start: function(server) {
-    AJAX.server = server;
+  start: function(server, user) {
+    AJAX.server = server + "/" + user;
     AJAX.timer = setTimeout(AJAX.getStatus, 0);
   },
   stop: function() {
@@ -101,9 +101,10 @@ var WSocket = {
   status: {},
   ws: false,
   connected: false,
-  start: function(server) {
+  start: function(server, user) {
     if("WebSocket" in window) {
-      WSocket.ws = new WebSocket(server);
+      WSocket.ws = new WebSocket(server + "/stream/" + user);
+      console.debug(server + "/stream/" + user);
       WSocket.ws.onopen = function() { 
         WSocket.connected = true;
         WSocket.getStatus();
@@ -186,14 +187,13 @@ window.Dogvibes =  {
   /*****************
    * Initialization
    *****************/
-  init: function(server, user) {
-    if(typeof(user) != "undefined" && user.length > 0) {
-      server = server + "/" + user;
-    }  
+  init: function(protocol, server, user) {   
     $(document).bind("Server.status", Dogvibes.handleStatus);
-    Dogvibes.server = server.substring(0, 2) == 'ws' ? WSocket : AJAX;
-    Dogvibes.server.start(server);
+    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
+    server = protocol + "://" + server;
+    Dogvibes.server.start(server, user);
     Dogvibes.serverURL = server;
+    Dogvibes.albumartURL = "http://" + server;
   },
   /* Handle new status event from connection object and dispatch events */
   handleStatus: function() {
@@ -340,7 +340,7 @@ window.Dogvibes =  {
       artist = 'none';
       album = 'nope';
     }
-    return Dogvibes.serverURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
+    return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
   }
 };
 
