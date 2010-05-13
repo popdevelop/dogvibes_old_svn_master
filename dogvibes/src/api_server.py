@@ -26,9 +26,7 @@ class Dog():
         username = username[:-len(EOS)]
         dog = Dog.find(username)
         if dog != None:
-            dog.stream.close()
-            dogs.remove(dog)
-            print "Bye, %s!" % dog.username
+            dog.destroy()
         dogs.append(self)
 
         print "Welcome, %s!" % username
@@ -54,13 +52,18 @@ class Dog():
         try:
             self.stream.write(handler.nbr + SEP + command + EOS)
         except:
-            print "Bye, %s!" % self.username
-            self.stream.close()
-            dogs.remove(self)
+            self.destroy()
             return
 
         if not self.stream.reading():
             self.stream.read_until(EOS, self.command_callback)
+
+    def destroy(self):
+        self.stream.close()
+        for handler in self.active_handlers:
+            handler.disconnect()
+        dogs.remove(self)
+        print "Bye, %s!" % self.username
 
     @classmethod
     def find(self, username):
@@ -130,6 +133,9 @@ class HTTPHandler(tornado.web.RequestHandler):
     def active(self):
         return not self._finished
 
+    def disconnect(self):
+        self.finish()
+
 class WSHandler(websocket.WebSocketHandler):
     def open(self, username):
         self.username = username
@@ -154,6 +160,9 @@ class WSHandler(websocket.WebSocketHandler):
 
     def active(self):
         return not self._finished
+
+    def disconnect(self):
+        self.close()
 
 def setup_dog_socket(io_loop):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
