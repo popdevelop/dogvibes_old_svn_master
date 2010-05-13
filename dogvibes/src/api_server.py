@@ -171,11 +171,11 @@ if __name__ == '__main__':
             (r"/([a-zA-Z0-9]+).*", HTTPHandler), # TODO: split only on '/', avoids favicon
             ])
 
-    http_server = httpserver.HTTPServer(application)
-    http_server.listen(2000)
-
     io_loop = ioloop.IOLoop.instance()
     setup_dog_socket(io_loop)
+
+    http_server = httpserver.HTTPServer(application)
+    http_server.listen(2000)
 
     print "Dogvibes API server started"
 
