@@ -26,6 +26,8 @@ LOG_LEVELS = {'0': logging.CRITICAL,
 
 EOS = r'[[EOS]]'
 SEP = r'[[SEP]]'
+RAW = r'1'
+NO_RAW = r'0'
 
 def register_dog():
     int_ip = cfg['MASTER_SERVER']
@@ -51,11 +53,12 @@ def register_dog():
 def on_data(command):
     commands = command.split(EOS)[0:-1]
     for c in commands:
-        run_command(c)
+        nbr, c = c.split(SEP) # remove nbr
+        run_command(nbr, c)
 
     stream.read_until(EOS, on_data)
 
-def run_command(command):
+def run_command(nbr, command):
     u = urlparse(command)
     c = u.path.split('/')
 
@@ -81,9 +84,10 @@ def run_command(command):
     if '_' in params:
         params.pop('_')
 
-    request = DogRequest(command, js_callback)
+    request = DogRequest(nbr, js_callback)
 
-    try:
+#    try:
+    if 1:
         if (len(c) < 3):
             raise NameError("Malformed command: %s" % u.path)
 
@@ -113,18 +117,18 @@ def run_command(command):
 
         # call the method and return as fast as we can
         getattr(klass, method).__call__(**params)
-    except AttributeError as e:
-        error = 1 # No such method
-        logging.warning(e)
-    except TypeError as e:
-        error = 2 # Missing parameter
-        logging.warning(e)
-    except ValueError as e:
-        error = 3 # Internal error, e.g. could not find specified uri
-        logging.warning(e)
-    except NameError as e:
-        error = 4 # Wrong object or other URI error
-        logging.warning(e)
+#    except AttributeError as e:
+#        error = 1 # No such method
+#        logging.warning(e)
+#    except TypeError as e:
+#        error = 2 # Missing parameter
+#        logging.warning(e)
+#    except ValueError as e:
+#        error = 3 # Internal error, e.g. could not find specified uri
+#        logging.warning(e)
+#    except NameError as e:
+#        error = 4 # Wrong object or other URI error
+#        logging.warning(e)
 
     if error != 0: # TODO: Don't do it like this! Won't work when threading off
         request.finish(error = error)
@@ -132,16 +136,21 @@ def run_command(command):
     # The request is not ended here, but instead in the DogRequest.callback
 
 class DogRequest:
-    def __init__(self, command, js_callback):
-        self.command = command
+    def __init__(self, nbr, js_callback):
+        self.nbr = nbr
         self.js_callback = js_callback
-    def finish(self, data = None, error = 0, raw = False):
-        return_data(self.command, data, error, raw, self.js_callback)
+    def finish(self, data = None, error = 0, raw = False, push = False):
+        return_data(self.nbr, data, error, raw, self.js_callback, push)
 
-def return_data(command, data, error, raw, js_callback):
+def return_data(nbr, data, error, raw, js_callback):
     if raw:
-        stream.write(command + SEP + data + EOS)
+        stream.write(nbr + SEP + RAW + SEP + data + EOS)
         return
+
+#    if isinstance(chunk, dict):
+#        chunk = escape.json_encode(chunk)
+#        self.set_header("Content-Type", "text/javascript; charset=UTF-8")
+#    chunk = _utf8(chunk)
 
     # Add results from method call only if there is any
     if data == None or error != 0:
@@ -155,7 +164,7 @@ def return_data(command, data, error, raw, js_callback):
     if js_callback != None:
         data = "%s(%s)" % (js_callback, data)
 
-    stream.write(command + SEP + data + EOS)
+    stream.write(nbr + SEP + NO_RAW + SEP + data + EOS)
 
 if __name__ == "__main__":
 
