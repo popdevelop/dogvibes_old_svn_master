@@ -175,6 +175,19 @@ class IOStream(object):
             self.close()
             return
         self._read_buffer += chunk
+
+        # We could do things the pretty way... or do it like this.
+        # Intercepts a Flash policy request and shuts down the connection
+        # in order for the client reconnect
+        if chunk.find("<policy-file-request/>") != -1:
+            self.socket.send('<?xml version="1.0"?>\n')
+            self.socket.send('<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">\n')
+            self.socket.send('<cross-domain-policy>\n')
+            self.socket.send('  <allow-access-from domain="*" to-ports="*"/>\n')
+            self.socket.send('</cross-domain-policy>')
+            self.close()
+            return
+
         if len(self._read_buffer) >= self.max_buffer_size:
             logging.error("Reached maximum read buffer size")
             self.close()
