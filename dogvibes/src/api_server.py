@@ -1,14 +1,19 @@
 import tornado.ioloop
 import tornado.web
-
 import errno
 import functools
 import socket
 from tornado import ioloop, iostream, httpserver, websocket
-
+import logging
 import re
 
 dogs = []
+
+LOG_LEVELS = {'0': logging.CRITICAL,
+              '1': logging.ERROR,
+              '2': logging.WARNING,
+              '3': logging.INFO,
+              '4': logging.DEBUG}
 
 EOS = r'[[EOS]]'
 SEP = r'[[SEP]]'
@@ -29,7 +34,7 @@ class Dog():
             dog.destroy()
         dogs.append(self)
 
-        print "Welcome, %s!" % username
+        logging.info("Welcome, %s!" % username)
         self.username = username
 
     def command_callback(self, data):
@@ -50,8 +55,10 @@ class Dog():
 
     def send_command(self, command, handler):
         try:
+            # FIXME: UnicodeEncodeError: 'ascii' codec can't encode character u'\xf6' in position 46: ordinal not in range(128)
             self.stream.write(handler.nbr + SEP + command + EOS)
         except:
+            logging.debug("Failed writing %s to Dog %s" % (command, self.username))
             self.destroy()
             return
 
@@ -63,7 +70,7 @@ class Dog():
         for handler in self.active_handlers:
             handler.disconnect()
         dogs.remove(self)
-        print "Bye, %s!" % self.username
+        logging.info("Bye, %s!" % self.username)
 
     @classmethod
     def find(self, username):
@@ -75,6 +82,7 @@ class Dog():
 def process_command(handler, username, command):
     dog = Dog.find(username)
     if dog == None:
+        logging.warning("Can't find %s for executing %s" % (username, command))
         return "ERROR!" # FIXME
     dog.send_command(command, handler)
 
@@ -104,7 +112,7 @@ class HTTPHandler(tornado.web.RequestHandler):
     def get(self, username):
         dog = Dog.find(username)
         if dog == None:
-            print "Someone tried to access %s, but it's not connected" % username
+            logging.warning("Someone tried to access %s, but it's not connected" % username)
             return
         self.dog = dog
         # a HTTP connection can be reused so don't add it more than once
@@ -126,7 +134,7 @@ class HTTPHandler(tornado.web.RequestHandler):
             self.write(data)
             self.finish()
         except IOError:
-            print "Could not write to HTTP client %s" % self.nbr
+            logging.warning("Could not write to HTTP client %s" % self.nbr)
             # handler will be removed later when called active()
             return
 
@@ -142,7 +150,7 @@ class WSHandler(websocket.WebSocketHandler):
         self.nbr = assign_nbr()
         dog = Dog.find(username)
         if dog == None:
-            print "Someone tried to access %s, but it's not connected" % username
+            logging.debug("Someone tried to access %s, but it's not connected" % username)
             return
         dog.active_handlers.append(self)
         self.receive_message(self.on_message)
@@ -152,6 +160,7 @@ class WSHandler(websocket.WebSocketHandler):
         try:
             self.receive_message(self.on_message)
         except IOError:
+            logging.debug("Websocket read failed for %s: %s" % (self.username, command))
             self._finished = True
             return
 
@@ -159,6 +168,7 @@ class WSHandler(websocket.WebSocketHandler):
         try:
             self.write_message(data)
         except IOError:
+            logging.debug("Websocket write failed for %s: %s" % (self.username, data))
             self._finished = True
             return
 
@@ -179,6 +189,11 @@ def setup_dog_socket(io_loop):
     io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
 
 if __name__ == '__main__':
+#    logging.basicConfig(level=log_level, filename=options.log_file,
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
     application = tornado.web.Application([
             (r"/stream/([a-zA-Z0-9]+).*", WSHandler),
             (r"/([a-zA-Z0-9]+).*", HTTPHandler), # TODO: split only on '/', avoids favicon
