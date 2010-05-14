@@ -161,6 +161,22 @@ class Amp():
                  "id": self.active_playlists_track_id,
                  "index": track.position - 1 }
 
+    def play_track(self, playlist_id, nbr):
+        nbr = int(nbr)
+        playlist_id = int(playlist_id)
+
+        # -1 is tmpqueue
+        if (playlist_id == -1):
+            # Save last known playlist that is not the tmpqueue
+            if (not self.is_in_tmpqueue()):
+                self.fallback_playlist_id = self.active_playlist_id
+                self.fallback_playlists_track_id = self.active_playlists_track_id
+            self.active_playlist_id = self.tmpqueue_id
+        else:
+            self.active_playlist_id = playlist_id
+
+        self.change_track(nbr, False)
+
     # API
     def API_connectSpeaker(self, nbr, request):
         self.connect_speaker(nbr)
@@ -200,20 +216,7 @@ class Amp():
         request.finish()
 
     def API_playTrack(self, playlist_id, nbr, request):
-        nbr = int(nbr)
-        playlist_id = int(playlist_id)
-
-        # -1 is tmpqueue
-        if (playlist_id == -1):
-            # Save last known playlist that is not the tmpqueue
-            if (not self.is_in_tmpqueue()):
-                self.fallback_playlist_id = self.active_playlist_id
-                self.fallback_playlists_track_id = self.active_playlists_track_id
-            self.active_playlist_id = self.tmpqueue_id
-        else:
-            self.active_playlist_id = playlist_id
-
-        self.change_track(nbr, False)
+        self.play_track(playlist_id, nbr)
         request.push({'state': self.get_state()})
         request.push(self.track_to_client())
         request.finish()
@@ -240,7 +243,15 @@ class Amp():
     def API_queue(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_track(track)
+        self.needs_push_update = True
+        request.finish()
+
+    def API_queueAndPlay(self, uri, request):
+        track = self.dogvibes.create_track_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+        id = playlist.add_track(track)
+        playlist.move_track(id, 1)
+        self.play_track(playlist.id, id)
         self.needs_push_update = True
         request.finish()
 
