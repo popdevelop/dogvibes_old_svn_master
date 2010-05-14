@@ -127,7 +127,6 @@ def run_command(nbr, command):
         params = dict(filter(lambda k: k[0] in args, params.items()))
 
         for p in params:
-            print p
             if not isinstance(params[p], str):
                 request.finish(error = 5)
                 return
