@@ -154,7 +154,7 @@ var pushHandler = WSocket.handleStatus;
 window.Dogvibes =  {
   server: false,
   serverURL: false,
-  status: false,
+  status: {},
   defAmp: "/amp/0" , /* TODO: dynamic */
   cmd: {
     status: "/getStatus",
@@ -199,12 +199,13 @@ window.Dogvibes =  {
   /* Handle new status event from connection object and dispatch events */
   handleStatus: function() {
     var data = Dogvibes.server.status;
-    if(data.error !== 0) {
+    if(typeof(data.error) != 'undefined' && data.error !== 0) {
       /* TODO: Notify */
       return;
     }
-    var oldStatus = Dogvibes.status;
-    Dogvibes.status = data.result;
+    var oldStatus = {};
+    $.extend(oldStatus, Dogvibes.status);
+    $.extend(Dogvibes.status, data.result);
     /* TODO: solve better. Fill in artist info when state is stopped.
      * since this info is not sent from server */
     if(data.result.state == "stopped") {

@@ -637,7 +637,7 @@ div.loading {
   background-image: url('img/skin-no-albumart-small.png');
 }
 
-#artist .AlbumArt > img {
+.AlbumArt > img {
   height: 130px;
   width: 130px;
 }
