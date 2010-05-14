@@ -212,6 +212,7 @@ class Amp():
     def API_nextTrack(self, request):
         self.next_track()
         request.push({'state': self.get_state()})
+        request.push({'playlist_id': self.active_playlist_id})
         request.push(self.track_to_client())
         request.finish()
 
@@ -223,6 +224,7 @@ class Amp():
 
     def API_previousTrack(self, request):
         self.change_track(-1, True)
+        request.push({'playlist_id': self.active_playlist_id})
         request.push({'state': self.get_state()})
         request.push(self.track_to_client())
         request.finish()
