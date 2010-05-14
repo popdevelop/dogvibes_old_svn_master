@@ -125,13 +125,19 @@ def run_command(nbr, command):
         # strip params from paramters not in the method definition
         args = inspect.getargspec(getattr(klass, method))[0]
         params = dict(filter(lambda k: k[0] in args, params.items()))
+
+        for p in params:
+            print p
+            if not isinstance(params[p], str):
+                request.finish(error = 5)
+                return
+
         params['request'] = request
 
         # Hack to avoid utf-8 to be garbled. Under investigation
         if 'query' in params:
             params['query'] = query
 
-        # call the method and return as fast as we can
         getattr(klass, method).__call__(**params)
 #    except AttributeError as e:
 #        error = 1 # No such method
