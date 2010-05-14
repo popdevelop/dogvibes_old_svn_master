@@ -77,10 +77,16 @@ def run_command(nbr, command):
     # Hack to avoid utf-8 to be garbled. Under investigation
     us = u.query.split('&')
     query = ""
+    artist = ""
+    album = ""
     for o in us:
         a = o.split('=')
         if a[0] == 'query':
             query = urllib.unquote(a[1].decode('utf8'))
+        if a[0] == 'artist':
+            artist = urllib.unquote(a[1].decode('utf8'))
+        if a[0] == 'album':
+            album = urllib.unquote(a[1].decode('utf8'))
 
     msg_id = None
     js_callback = None
@@ -135,6 +141,10 @@ def run_command(nbr, command):
         # Hack to avoid utf-8 to be garbled. Under investigation
         if 'query' in params:
             params['query'] = query
+        if 'artist' in params:
+            params['artist'] = artist
+        if 'album' in params:
+            params['album'] = album
 
         getattr(klass, method).__call__(**params)
 #    except AttributeError as e:
