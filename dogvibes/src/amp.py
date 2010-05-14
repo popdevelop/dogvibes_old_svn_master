@@ -243,6 +243,7 @@ class Amp():
     def API_queue(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
+        playlist.add_track(track)
         self.needs_push_update = True
         request.finish()
 
