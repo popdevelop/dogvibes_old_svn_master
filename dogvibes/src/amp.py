@@ -111,6 +111,12 @@ class Amp():
     def next_track(self):
         self.change_track(1, True)
 
+    def get_active_playlist_id(self):
+        if self.is_in_tmpqueue():
+            return -1
+        else:
+            return self.active_playlist_id
+
     def get_status(self):
         status = {}
 
@@ -121,10 +127,7 @@ class Amp():
         playlist = self.fetch_active_playlist()
 
         # -1 is in tmpqueue
-        if self.is_in_tmpqueue():
-            status['playlist_id'] = -1
-        else:
-            status['playlist_id'] = self.active_playlist_id
+        status['playlist_id'] = self.get_active_playlist_id()
 
         track = self.fetch_active_track()
         if track != None:
@@ -211,21 +214,21 @@ class Amp():
 
     def API_nextTrack(self, request):
         self.next_track()
+        request.push({'playlist_id': self.get_active_playlist_id()})
         request.push({'state': self.get_state()})
-        request.push({'playlist_id': self.active_playlist_id})
         request.push(self.track_to_client())
         request.finish()
 
     def API_playTrack(self, playlist_id, nbr, request):
         self.play_track(playlist_id, nbr)
-        request.push({'playlist_id': self.active_playlist_id})
+        request.push({'playlist_id': self.get_active_playlist_id()})
         request.push({'state': self.get_state()})
         request.push(self.track_to_client())
         request.finish()
 
     def API_previousTrack(self, request):
         self.change_track(-1, True)
-        request.push({'playlist_id': self.active_playlist_id})
+        request.push({'playlist_id': self.get_active_playlist_id()})
         request.push({'state': self.get_state()})
         request.push(self.track_to_client())
         request.finish()
