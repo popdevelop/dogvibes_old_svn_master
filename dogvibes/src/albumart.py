@@ -44,7 +44,11 @@ class AlbumArt():
         # Resize upon request. Nothing special about 640. Just need a limit...
         if size > 0 and size < 640:
             buf = StringIO.StringIO(img_data)
-            img = Image.open(buf)
+            try:
+                img = Image.open(buf)
+            except:
+                logging.warning("Could not read image: %s" % img_path)
+
             # Won't grow the image since I couldn't get .resize() to work
             img.thumbnail((size, size), Image.ANTIALIAS)
 
@@ -85,7 +89,7 @@ class AlbumArt():
         try:
             return urllib.urlopen(art_uri).read()
         except IOError:
-            logging.warning("Could not open album art URI: '%s'" % art_uri)
+            logging.debug("Could not open album art URI for %s - %s" % (artist, album))
             return None
 
 if __name__ == '__main__':
