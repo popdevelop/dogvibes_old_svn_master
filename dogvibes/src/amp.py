@@ -218,6 +218,7 @@ class Amp():
 
     def API_playTrack(self, playlist_id, nbr, request):
         self.play_track(playlist_id, nbr)
+        request.push({'playlist_id': self.active_playlist_id})
         request.push({'state': self.get_state()})
         request.push(self.track_to_client())
         request.finish()
