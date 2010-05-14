@@ -2,7 +2,7 @@
 var Config =  {
   defServer: "http://dogvibes.com",
   defAmp: "/amp/0",
-  defAlbumArtURL: "img/michael.jpg",
+  defAlbumArtURL: "img/dummy.png",
   pollInterval: 1000 /* ms */
 };
 
