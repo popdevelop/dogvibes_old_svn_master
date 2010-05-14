@@ -11,6 +11,8 @@ art_dir = 'albumart'
 # TODO: perhaps an AlbumArt factory should be inited on startup instead of
 # using classmethods?
 
+uncached = []
+
 class AlbumArt():
     @classmethod
     def get_image(self, artist, album, size = 0):
@@ -25,7 +27,11 @@ class AlbumArt():
         img_hash = hashlib.sha224(artist + album).hexdigest()
         img_path = art_dir + '/' + img_hash + '.jpg'
 
-        if os.path.exists(img_path):
+        if img_path in uncached:
+            #print "uncached cover for %s - %s" % (artist, album)
+            img_data = self.get_standard_image()
+        elif os.path.exists(img_path):
+            #print "using existing cover for %s - %s" % (artist, album)
             # open a previously cached cover
             f = open(img_path, 'rb')
             img_data = f.read()
@@ -35,6 +41,8 @@ class AlbumArt():
             if img_data == None:
                 # open standard cover
                 img_data =  self.get_standard_image()
+                #print "standard cover for %s - %s" % (artist, album)
+                uncached.append(img_path)
             else:
                 # save cover to cache
                 f = open(img_path, 'wb')
@@ -42,22 +50,23 @@ class AlbumArt():
                 f.close()
 
         # Resize upon request. Nothing special about 640. Just need a limit...
-        if size > 0 and size < 640:
-            buf = StringIO.StringIO(img_data)
-            try:
-                img = Image.open(buf)
-            except:
-                logging.warning("Could not read image: %s" % img_path)
-
-            # Won't grow the image since I couldn't get .resize() to work
-            img.thumbnail((size, size), Image.ANTIALIAS)
-
-            # Need to create new buffer, otherwise changes won't take effect
-            out_buf = StringIO.StringIO()
-            img.save(out_buf, 'PNG')
-            out_buf.seek(0)
-            img_data = out_buf.getvalue()
-            buf.close()
+#        if size > 0 and size < 640:
+#            buf = StringIO.StringIO(img_data)
+#            try:
+#                img = Image.open(buf)
+#            except:
+#                logging.warning("Could not read image: %s" % img_path)
+#                return None
+#
+#            # Won't grow the image since I couldn't get .resize() to work
+#            img.thumbnail((size, size), Image.ANTIALIAS)
+#
+#            # Need to create new buffer, otherwise changes won't take effect
+#            out_buf = StringIO.StringIO()
+#            img.save(out_buf, 'PNG')
+#            out_buf.seek(0)
+#            img_data = out_buf.getvalue()
+#            buf.close()
 
         return img_data
 
