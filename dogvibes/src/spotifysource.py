@@ -171,8 +171,6 @@ class SpotifySource:
 
         ns = "http://www.spotify.com/ns/music/1"
 
-        root = ET.XML(urllib.urlopen(url).read())
-
         album = {}
         tracks = []
 
