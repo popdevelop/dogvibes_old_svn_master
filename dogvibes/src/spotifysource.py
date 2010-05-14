@@ -23,6 +23,8 @@ class SpotifySource:
 
     def create_track_from_uri(self, uri):
         uri = SpotifySource.strip_protocol(uri)
+        if uri == None:
+            return None
         url = "http://ws.spotify.com/lookup/1/?uri=" + uri
 
         try:
