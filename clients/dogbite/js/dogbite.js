@@ -178,7 +178,7 @@ var Server = {
     next:   Config.defAmp + "/nextTrack",
     seek:   Config.defAmp + "/seek?mseconds=",
     volume: Config.defAmp + "/setVolume?level=",
-    albumArt: "/dogvibes/getAlbumArt?size=320&uri=",
+    albumArt: "/dogvibes/getAlbumArt?size=320&artist=",
     playlists: "/dogvibes/getAllPlaylists",
     playlist: "/dogvibes/getAllTracksInPlaylist?playlist_id=",
     playqueue: Config.defAmp + "/getAllTracksInQueue"
@@ -297,13 +297,15 @@ var SongInfo = {
     UI.setText(SongInfo.ui.album, Status.data.album);
     UI.setText(SongInfo.ui.title, Status.data.title);
     /* Update album art */
-    var imgUrl = (typeof(Status.data.uri) == "undefined" ||
-                  Status.data.uri == "dummy")
+    var imgUrl = (Server.url == null ||
+                  Status.data.album == '' ||
+                  typeof(Status.data.album) == "undefined")
                  ?
                  Config.defAlbumArtURL
                  :
-                 Server.url + Server.cmd.albumArt + Status.data.uri;
-    $(UI.albArt).css('background-image', 'url(' + imgUrl + ')');
+                 Server.url + Server.cmd.albumArt + escape(Status.data.artist) + "&album=" + escape(Status.data.album);
+    console.debug(imgUrl);
+    $(UI.albArt).css('background-image', 'url(' + (imgUrl) + ')');
   },
   time: function() {
     /* TODO: implement slider */
