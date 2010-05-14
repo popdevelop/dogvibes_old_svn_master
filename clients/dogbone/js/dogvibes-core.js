@@ -101,18 +101,26 @@ var WSocket = {
   status: {},
   ws: false,
   connected: false,
+  attemps: 100,
+  delay: 1000,
+  timer: false,
+  server: false,
+  user: false,
   start: function(server, user) {
     if("WebSocket" in window) {
       WSocket.ws = new WebSocket(server + "/stream/" + user);
-      console.debug(server + "/stream/" + user);
+      WSocket.server = server;
+      WSocket.user = user;
       WSocket.ws.onopen = function() { 
         WSocket.connected = true;
         WSocket.getStatus();
+        WSocket.attempts = 100;
+        WSocket.delay = 1000;
         $(document).trigger("Server.connected"); 
       };
       WSocket.ws.onmessage = function(e){ eval(e.data); };
-      WSocket.ws.onclose = WSocket.stop;
-      WSocket.ws.onerror = WSocket.stop;
+      WSocket.ws.onclose = WSocket.error;
+      WSocket.ws.onerror = WSocket.error;
     }
   },
   stop: function() {
@@ -120,6 +128,19 @@ var WSocket = {
     WSocket.status = Dogvibes.defaultStatus;
     $(document).trigger("Server.error");
     $(document).trigger("Server.status");    
+  },
+  error: function() {
+    WSocket.status = Dogvibes.defaultStatus;  
+    $(document).trigger("Server.status");    
+    $(document).trigger("Server.connecting");
+    clearTimeout(WSocket.timer)
+    if(WSocket.attempts-- > 0) {
+      WSocket.timer = setTimeout(function() {
+        WSocket.start(WSocket.server, WSocket.user);
+      }, WSocket.delay*2);
+    }
+    /* Give up */
+    WSocket.stop();
   },
   send: function(URL, Success, Context) {
     Success = typeof(Success) == "undefined" ? "WSocket.getStatus" : Success;
@@ -363,5 +384,5 @@ window.Dogvibes.defaultStatus = {
     state: "stopped",
     playlist_id: ""
   },
-  error: "0"
+  error: 0
 };
