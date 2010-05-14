@@ -101,7 +101,10 @@ class Amp():
             logging.debug ("getPlayedMilliseconds in state==NULL")
             return 0
         try:
-            pos = (pos, form) = self.pipeline.query_position(gst.FORMAT_TIME)
+            if state == gst.STATE_PAUSED:
+                return self.elapsedmseconds
+            else:
+                pos = (pos, form) = self.pipeline.query_position(gst.FORMAT_TIME)
         except:
             pos = 0
         # We get nanoseconds from gstreamer elements, convert to ms
@@ -230,6 +233,7 @@ class Amp():
         request.finish()
 
     def API_pause(self, request):
+        self.elapsedmseconds = self.get_played_milliseconds()
         self.set_state(gst.STATE_PAUSED)
         request.push({'state': self.get_state()})
         request.finish()
@@ -381,8 +385,9 @@ class Amp():
         t = message.type
         if t == gst.MESSAGE_EOS:
             self.next_track()
-            request.push({'state': self.get_state()})
-            request.push(self.track_to_client())
+            #request.push({'state': self.get_state()})
+            #request.push(self.track_to_client())
+            self.needs_push_update
             # TODO: is this enough? An update is pushed to the clients
             # but will the info be correct?
 
