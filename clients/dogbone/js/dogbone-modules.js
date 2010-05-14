@@ -473,7 +473,8 @@ var PlayControl = {
     if(PlayControl.seekSliding) { return; }
     $(PlayControl.ui.seek).slider('option', 'value', (elapsed.result/Dogvibes.status.duration)*100); 
     /* Fetch another time update */
-    if(PlayControl.updateTimer) {
+    if(PlayControl.updateTimer && 
+       Dogvibes.status.state != 'stopped') {
       clearTimeout(PlayControl.updateTimer);
       PlayControl.updateTimer = setTimeout(function() {
         Dogvibes.getPlayedMilliSecs("PlayControl.setTime");
@@ -703,12 +704,6 @@ var Playlist = {
           Dogvibes.renamePlaylist(id, newname);
         }
       }).appendTo(item);      
-      
-      /* Double click to start playing */
-      item.dblclick(function() {
-        id = $(this).data("id");
-        Dogvibes.playTrack(0, id);
-      });
       Playlist.ui.list.addItem(el.id, item);
     });
     /* Update info */

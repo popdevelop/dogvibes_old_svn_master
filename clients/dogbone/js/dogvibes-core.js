@@ -329,7 +329,7 @@ window.Dogvibes =  {
     Dogvibes.server.send(URL, Success);
   },
   getAlbums: function(query, Success) {
-    var URL = Dogvibes.cmd.getAlbums + query;
+    var URL = Dogvibes.cmd.getAlbums + escape(query);
     Dogvibes.server.send(URL, Success);
   },
   getAlbum: function(uri, Success, Context) {
@@ -345,7 +345,7 @@ window.Dogvibes =  {
     if (artist == '' || album == '') {
       return "";
     }   
-    return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + album + "&artist=" + artist + "&size=" + size;
+    return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + escape(album) + "&artist=" + escape(artist) + "&size=" + size;
   }
 };
 
