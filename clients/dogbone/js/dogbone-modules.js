@@ -384,7 +384,7 @@ var Playqueue = {
     if(Dogvibes.status.state == "playing" ||
        Dogvibes.status.state == "paused") {
       $("li.playqueue").addClass(cls); 
-      Playqueue.table.options.highlightClass = cls;
+      Playqueue.table.options.highlightClass = 'list'+cls;
       Playqueue.table.highlightItem(Dogvibes.status.index);      
     }
   }
