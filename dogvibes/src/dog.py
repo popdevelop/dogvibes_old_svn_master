@@ -253,7 +253,7 @@ if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
 
     print "Connecting to %s" % cfg['MASTER_SERVER']
-    s.connect((cfg["MASTER_SERVER"], 11111))
+    s.connect((cfg["MASTER_SERVER"], 80))
     stream = iostream.IOStream(s)
 
     stream.write(cfg['DOGVIBES_USER'] + EOS)
