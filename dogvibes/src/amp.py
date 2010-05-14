@@ -151,6 +151,8 @@ class Amp():
 
     def track_to_client(self):
         track = self.fetch_active_track()
+        if track == None:
+            return None
         return { "album": track.album,
                  "artist": track.artist,
                  "title": track.title,
@@ -468,7 +470,7 @@ class Amp():
                 track = playlist.get_track_id(self.active_playlists_track_id)
                 return track
             except:
-                logging.debug("Could not get active track")
+                logging.debug("Could not get active track %d" % (self.active_playlists_track_id, self.active_playlist_id))
                 return None
         else:
             # Try the first active_play_list id
