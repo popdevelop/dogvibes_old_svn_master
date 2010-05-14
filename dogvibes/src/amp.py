@@ -101,10 +101,8 @@ class Amp():
             logging.debug ("getPlayedMilliseconds in state==NULL")
             return 0
         try:
-            if state == gst.STATE_PAUSED:
-                return self.elapsedmseconds
-            else:
-                pos = (pos, form) = self.pipeline.query_position(gst.FORMAT_TIME)
+             src = self.src.get_by_name("source")
+             pos = (pos, form) = src.query_position(gst.FORMAT_TIME)
         except:
             pos = 0
         # We get nanoseconds from gstreamer elements, convert to ms
@@ -171,7 +169,7 @@ class Amp():
         if nbr > len(self.dogvibes.speakers) - 1:
             logging.warning ("disconnect speaker - speaker does not exist")
 
-        speaker = self.dogvibes.speakers[nbr];
+        speaker = self.dogvibes.speakers[nbr]
 
         if self.pipeline.get_by_name(speaker.name) != None:
             (pending, state, timeout) = self.pipeline.get_state()
@@ -228,12 +226,11 @@ class Amp():
         playlist = self.fetch_active_playlist()
         track = self.fetch_active_track()
         if track != None:
-            self.play_only_if_null(track)
+            self.set_state(gst.STATE_PLAYING)
         request.push({'state': self.get_state()})
         request.finish()
 
     def API_pause(self, request):
-        self.elapsedmseconds = self.get_played_milliseconds()
         self.set_state(gst.STATE_PAUSED)
         request.push({'state': self.get_state()})
         request.finish()
@@ -390,6 +387,7 @@ class Amp():
             self.needs_push_update
             # TODO: is this enough? An update is pushed to the clients
             # but will the info be correct?
+
 
     def play_only_if_null(self, track):
         (pending, state, timeout) = self.pipeline.get_state()

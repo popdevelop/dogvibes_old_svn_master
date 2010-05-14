@@ -73,7 +73,7 @@ class SpotifySource:
     def get_src(self):
         if self.created == False:
             self.bin = gst.Bin(self.name)
-            self.spotify = gst.element_factory_make("spot", "spot")
+            self.spotify = gst.element_factory_make("spot", "source")
             self.spotify.set_property ("user", self.user);
             self.spotify.set_property ("pass", self.passw);
             self.spotify.set_property ("buffer-time", 10000000);
