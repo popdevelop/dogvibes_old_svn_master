@@ -176,9 +176,10 @@ class SpotifySource:
         album = {}
         tracks = []
 
-        album['name'] = tree.find('.//{%s}name' % ns).text
-        album['released'] = tree.find('.//{%s}released' % ns).text
         album['uri'] = album_uri
+        album['name'] = tree.find('.//{%s}name' % ns).text
+        album['artist'] = tree.find('.//{%s}artist//{%s}name' % (ns, ns)).text
+        album['released'] = tree.find('.//{%s}released' % ns).text
 
         territories = tree.find('.//{%s}availability/{%s}territories' % (ns, ns)).text
         if 'SE' not in territories and territories != 'worldwide':
