@@ -304,7 +304,6 @@ var SongInfo = {
                  Config.defAlbumArtURL
                  :
                  Server.url + Server.cmd.albumArt + escape(Status.data.artist) + "&album=" + escape(Status.data.album);
-    console.debug(imgUrl);
     $(UI.albArt).css('background-image', 'url(' + (imgUrl) + ')');
   },
   time: function() {
