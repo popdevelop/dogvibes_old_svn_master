@@ -162,6 +162,7 @@ window.Dogvibes =  {
     play:   "/play",
     playTrack: "/playTrack?nbr=",
     queue:  "/queue?uri=",
+    queueAndPlay: "/queueAndPlay?uri=",
     removeTrack : "/removeTrack?track_id=",
     removeTracks: "/removeTracks?track_ids=",    
     pause:  "/pause",
@@ -290,6 +291,10 @@ window.Dogvibes =  {
   },  
   play: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.play;
+    Dogvibes.server.send(URL, Success);
+  },
+  queueAndPlay: function(uri, Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAndPlay + uri;  
     Dogvibes.server.send(URL, Success);
   },
   prev: function(Success) {

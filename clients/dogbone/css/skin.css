@@ -194,10 +194,6 @@ tr.ui-sortable-helper td {
   background-image: url("img/skin-icon-rename.png");
 }
 
-.theme-navigation ul playlists li.playing {
-  background-image:url("img/skin-icon-playing.png");
-}
-
 .theme-navigation ul li.drophover {
   background-color: #666;
   -moz-border-radius: 3px;
@@ -218,6 +214,10 @@ tr.ui-sortable-helper td {
 
 .theme-navigation ul li.playing {
   background-image:url("img/skin-icon-playing.png");
+}
+
+.theme-navigation ul li.paused {
+  background-image:url("img/skin-icon-paused.png");
 }
 
 .theme-currentsong {
@@ -520,6 +520,7 @@ div.loading {
 }
 
 /* Indicate that a track is playing */
+.theme-tracktable tbody tr.paused,
 .theme-tracktable tbody tr.playing {
   background-image: url("img/skin-table-item-playing-bg.gif");
   background-repeat: repeat-x;
@@ -527,6 +528,8 @@ div.loading {
   height: 37px;
 }
 
+.theme-tracktable tbody tr.paused td a,
+.theme-tracktable tbody tr.paused td,
 .theme-tracktable tbody tr.playing td a,
 .theme-tracktable tbody tr.playing td {
   padding: 0 5px;
@@ -541,9 +544,21 @@ div.loading {
   width: 33px;
   text-indent: -999px;
 }
+.theme-tracktable tbody tr.paused td:first-child {
+  background-image: url("img/skin-table-item-paused.png");
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  width: 33px;
+  text-indent: -999px;
+}
 
 .theme-tracktable tbody tr.listplaying td:first-child {
   background-image: url("img/skin-icon-playing.png");
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+}
+.theme-tracktable tbody tr.listpaused td:first-child {
+  background-image: url("img/skin-icon-paused.png");
   background-repeat: no-repeat;
   background-position: 50% 50%;
 }
@@ -560,6 +575,7 @@ div.loading {
 }
 
 .theme-tracktable tbody tr.playing td:first-child span,
+.theme-tracktable tbody tr.listpaused td:first-child span,
 .theme-tracktable tbody tr.listplaying td:first-child span {
   display: none;
 }

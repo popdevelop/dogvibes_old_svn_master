@@ -377,14 +377,15 @@ var Playqueue = {
     });     
   },
   set: function() {
-    if(Dogvibes.status.state == "playing" &&
-       Dogvibes.status.playlist_id == -1) {
-      $("li.playqueue").addClass('playing'); 
+    $("li.playqueue").removeClass('playing paused');
+    Playqueue.table.clearHighlight();      
+    if(Dogvibes.status.playlist_id !== -1) { return; }
+    cls = Dogvibes.status.state;
+    if(Dogvibes.status.state == "playing" ||
+       Dogvibes.status.state == "paused") {
+      $("li.playqueue").addClass(cls); 
+      Playqueue.table.options.highlightClass = cls;
       Playqueue.table.highlightItem(Dogvibes.status.index);      
-    } 
-    else {
-      $("li.playqueue").removeClass('playing');    
-      Playqueue.table.clearHighlight();     
     }
   }
 };
@@ -731,13 +732,16 @@ var Playlist = {
   },
   set: function() {  
     Playlist.table.clearHighlight();
-    $('li', Playlist.ui.list.ul).removeClass('playing');    
-    if(Dogvibes.status.state == "playing") {
-      $("#Playlist-"+Dogvibes.status.playlist_id).addClass('playing');
+    $('li', Playlist.ui.list.ul).removeClass('playing paused');
+    cls = Dogvibes.status.state;
+    if(Dogvibes.status.state == "playing" ||
+       Dogvibes.status.state == "paused") {
+      $("#Playlist-"+Dogvibes.status.playlist_id).addClass(cls);
+      Playlist.table.options.highlightClass = 'list'+cls;
       if(Dogvibes.status.playlist_id == Playlist.selectedList) {    
         Playlist.table.highlightItem(Dogvibes.status.index);
       }
-    }
+    } 
   } 
 };
 
@@ -755,6 +759,9 @@ var Search = {
     /* Init search navigation section */
     Search.ui.list = new NavList.Section(Search.ui.section,'search');
     $(document).bind("Page.search", Search.setPage);
+    
+    $(document).bind("Status.songinfo", Search.set);
+    $(document).bind("Status.state", function() { Search.set(); });
     
     /* Handle offline/online */
     $(document).bind("Server.error", function() {
@@ -780,15 +787,12 @@ var Search = {
     /* Create result table */
     Search.table = new ResultTable(
     {
-      name: "Search",
       idTag: "uri",
+      name: "Search",
       sortable: true,
       dblclick: function() {
-        var uri = $(this).data("id");
-        Dogvibes.queue(uri);
-        Search.table.deselectAll();
-        $(this).effect("highlight");
-        $(this).addClass("queued");
+        var uri = $(this).data('uri');
+        Dogvibes.queueAndPlay(uri);    
       },
       callbacks: {
         popularity: function(element) {
@@ -867,7 +871,27 @@ var Search = {
     Search.table.display();
     $(function() {
       $(Search.table.ui.items + " tr").draggable(Config.draggableOptions);
-    });    
+    }); 
+    Search.set();   
+  },
+  set: function() {
+    /* Set playing if any song matches */
+    var cls = false;
+    switch(Dogvibes.status.state) {
+      case "playing":
+      case "paused":
+        cls = 'list'+Dogvibes.status.state;
+        break;
+    }
+    $("tr", Search.table.ui.items).removeClass('listplaying listpaused');
+    if(!cls) { return; }
+    $("tr", Search.table.ui.items).each(function(i, row) {
+      var uri = $(row).data('uri');
+      if(uri == Dogvibes.status.uri) {
+        $(row).addClass(cls);
+        return;
+      }
+    });
   }
 };
 
@@ -963,6 +987,10 @@ var AlbumEntry = function(entry) {
   this.resTbl = new ResultTable({ 
     name: tableName, 
     fields: [ 'track_number', 'title', 'duration' ],
+    dblclick: function() {
+      var uri = $(this).data('uri');
+      Dogvibes.queueAndPlay(uri);    
+    },
     callbacks: {
       track_number: function(element) {
         element.addClass('trackNo');
