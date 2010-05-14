@@ -66,8 +66,7 @@ def on_data(command):
     for c in commands:
         nbr, c = c.split(SEP) # remove nbr
         run_command(nbr, c)
-
-    push_status()
+        push_status()
 
     stream.read_until(EOS, on_data)
 
