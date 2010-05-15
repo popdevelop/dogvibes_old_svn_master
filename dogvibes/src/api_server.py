@@ -151,7 +151,7 @@ class WSHandler(websocket.WebSocketHandler):
         dog = Dog.find(username)
         if dog == None:
             logging.debug("Someone tried to access %s, but it's not connected" % username)
-
+            self.disconnect()
             return
         dog.active_handlers.append(self)
         self.receive_message(self.on_message)
@@ -162,7 +162,7 @@ class WSHandler(websocket.WebSocketHandler):
             self.receive_message(self.on_message)
         except IOError:
             logging.debug("Websocket read failed for %s: %s" % (self.username, command))
-            self._finished = True
+            self.disconnect()
             return
 
     def send_result(self, raw, data):
@@ -170,13 +170,14 @@ class WSHandler(websocket.WebSocketHandler):
             self.write_message(data)
         except IOError:
             logging.debug("Websocket write failed for %s: %s" % (self.username, data))
-            self._finished = True
+            self.disconnect()
             return
 
     def active(self):
         return not self._finished
 
     def disconnect(self):
+        self._finished = False
         self.close()
 
 def setup_dog_socket(io_loop):
