@@ -3,8 +3,8 @@
  */
 
 var Config = {
-  defaultUser: "",
-  defaultServer: "localhost:2000",
+  defaultUser: "thoughtmade",
+  defaultServer: "dogvib.es:8080",
   defaultProtocol: "ws",
   resizeable: true,
   draggableOptions: {
@@ -287,15 +287,6 @@ var Main = {
     });
     Main.ui.list.addItem("playqueue", Main.ui.playqueue);
     $(document).bind("Page.playqueue", Main.setQueue); 
-    
-    /* Online / Offline */
-    $(document).bind("Server.error", function() {
-      $(Main.ui.page).removeClass();
-      $(Main.ui.page).addClass("disconnected");
-    });
-    $(document).bind("Server.connected", function() {
-      $(Main.ui.page).removeClass("disconnected");
-    });
   },
   setQueue: function() {
     Titlebar.set("Play queue");
@@ -310,11 +301,13 @@ var Main = {
 
 var Playqueue = {
   ui: {
-    page: "#playqueue"
+    page: "#playqueue",
+    info: "#Playqueue-info"
   },
   table: false,
   hash: false,
   init: function() {
+    $(Playqueue.ui.info).text('Play queue not available when offline').hide();
     /* Create a table for our tracks */
     Playqueue.table = new ResultTable(
     {
@@ -355,8 +348,14 @@ var Playqueue = {
     $(document).bind("Status.playlistchange", function() { Playqueue.fetch(); });
     $(document).bind("Status.state", function() { Playqueue.set(); });
     $(document).bind("Status.playlist", function() { Playqueue.set(); });
-    $(document).bind("Server.connected", Playqueue.fetch);
-  },
+    $(document).bind("Server.connected", function() {
+      Playqueue.fetch();      
+    });
+    $(document).bind("Server.error", function() {
+      $(Playqueue.ui.info).show();
+      Playqueue.table.empty();      
+    });    
+  },  
   fetch: function() {
     if(Dogbone.page.id != "playqueue") { return; }
     if(Dogvibes.server.connected) { 
@@ -542,12 +541,14 @@ var TrackInfo = {
 var Playlist = {
   ui: {
     section : "#Playlist-section",
-    newPlist: "#Newlist-section"
+    newPlist: "#Newlist-section",
+    info : "#Playlist-info"
   },
   table: false,
   selectedList: "",
   playlistNames: {},
   init: function() {
+    $(Playlist.ui.info).text('Playlist not available when offline').hide();
     Playlist.ui.list =    new NavList.Section(Playlist.ui.section, 'playlists');
     Playlist.ui.newList = new NavList.Section(Playlist.ui.newPlist, 'last');
     Playlist.ui.newBtn  = $("<li class='newlist'><a>New playlist</a></li>");
@@ -558,16 +559,6 @@ var Playlist = {
       }
     });
     Playlist.ui.newList.addItem('newlist', Playlist.ui.newBtn);
-
-    /* Handle offline/online */
-    $(document).bind("Server.error", function() {
-      $(Playlist.table.ui.content).hide();
-      $("#playlist").addClass("disconnected");
-    });
-    $(document).bind("Server.connected", function() {
-      $(Playlist.table.ui.content).show();
-      $("#playlist").removeClass("disconnected");
-    });
     
     /* Create a table for the tracks */
     Playlist.table = new ResultTable(
@@ -613,8 +604,11 @@ var Playlist = {
     /* Setup events */
     $(document).bind("Page.playlist", Playlist.setPage);
     $(document).bind("Status.playlistchange", function() { Playlist.setPage(); Playlist.fetchAll(); });   
-    $(document).bind("Server.connected", function() { Playlist.fetchAll(); });
-    
+    $(document).bind("Server.connected", function() { $(Playlist.ui.info).hide(); Playlist.fetchAll(); });
+    $(document).bind("Server.error", function() {
+      $(Playlist.ui.info).show();
+      Playlist.table.empty();      
+    });
     $(document).bind("Status.state", function() { Playlist.set(); });    
     $(document).bind("Status.songinfo", function() { Playlist.set(); });    
     $(document).bind("Status.playlist", function() { Playlist.set(); });       
@@ -750,7 +744,8 @@ var Search = {
     form:    "#Search-form",
     input:   "#Search-input",
     section: "#Search-section",
-    page   : "#search"
+    page   : "#search",
+    info   : "#Search-info"
   },
   searches: [],
   param: "",
@@ -765,14 +760,14 @@ var Search = {
     
     /* Handle offline/online */
     $(document).bind("Server.error", function() {
-      $(Search.table.ui.content).hide();
       $(Search.ui.page).removeClass();
-      $(Search.ui.page).addClass("disconnected");
+      $(Search.table.ui.content).hide();
+      $(Search.ui.info).text('Search not available when offline').show();
     });
     $(document).bind("Server.connected", function() {
+      $(Search.ui.info).hide();
+      $(Search.table.ui.content).show();    
       Search.setPage();
-      $(Search.table.ui.content).show();
-      $(Search.ui.page).removeClass("disconnected");
     });
 
     $(Search.ui.form).submit(function(e) {
@@ -823,7 +818,7 @@ var Search = {
       Search.table.empty();
       $(Search.ui.page).addClass("loading");
       Search.addSearch(keyword);
-      
+      $(Search.ui.info).hide();
       Dogvibes.search(Search.param, "Search.handleResponse");
     }
     Search.setTitle();    
@@ -867,6 +862,10 @@ var Search = {
       alert("Search error!");
       return;
     }
+    /* Any results? */
+    if(json.result.length === 0) {
+      $(Search.ui.info).text('Sorry, no matches for "'+Dogbone.page.param+'"').show();
+    }
     Search.table.items = json.result;
     Search.table.display();
     $(function() {
@@ -898,15 +897,38 @@ var Search = {
 
 /* FIXME: correct artist/album handler in future */
 var Artist = {
+  ui:  {
+    artistInfo: "#Artist-info",
+    albumInfo: "#Album-info"   
+  },
   albums: [],
   album: [],
   currentArtist: "",
   init: function() {
     $(document).bind("Page.artist", Artist.setPage);
     $(document).bind("Page.album", function() { Artist.setPage(); });
-    $(document).bind("Server.connected", function() { Artist.setPage(); });    
+    /* Offline info */
+    $(document).bind("Server.connected", function() { 
+      $(Artist.ui.artistInfo).hide();
+      $(Artist.ui.albumInfo).hide();      
+      Artist.setPage(); 
+    });
+    $(document).bind("Server.error", function() { 
+      Artist.currentArtist = "";
+      $("#artist").empty();
+      $("#album").empty();      
+      $('<div></div>')
+        .text('View not available when offline')
+        .attr('id', 'Artist-info')
+        .appendTo("#artist");
+      $('<h3></h3>')
+        .text('View not available when offline')
+        .attr('id', 'Album-info')
+        .appendTo("#album");        
+    });
   },
   setPage: function() {
+    Titlebar.set("Artist");
     if(!Dogvibes.server.connected) { return; }
     if(Dogbone.page.id == "album") {
       Titlebar.set("Album");    
@@ -966,7 +988,7 @@ var AlbumEntry = function(entry) {
     .addClass('AlbumEntry');
   var title = 
     $('<h4></h4>')
-    .appendTo(this.ui)    
+    .appendTo(this.ui)   
     .text(entry.name + ' ('+entry.released+')');
   var art = 
     $('<div></div>')

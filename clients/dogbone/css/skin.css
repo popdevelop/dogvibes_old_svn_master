@@ -8,6 +8,13 @@
  
  * { font: 11px/1.65 Lucida Grande,Helvetica,Arial,'Liberation Sans',FreeSans,sans-serif; }
 
+h1, h2, h3, h4 {
+  font-weight: bold;
+  font-family: Helvetica,Arial,'Liberation Sans',FreeSans,sans-serif;
+  text-shadow: rgba(0,0,0, 0.8) 0 1px 0;
+  color: #EEE;
+}
+
 a, a:link, a:visited { 
   color: #C3C3C3;
   text-decoration: none;
@@ -195,7 +202,8 @@ tr.ui-sortable-helper td {
 }
 
 .theme-navigation ul li.drophover {
-  background-color: #666;
+  background-color: #EEE;
+  color: #000;
   -moz-border-radius: 3px;
   -webkit-border-raduis: 3px;
 }
@@ -454,10 +462,10 @@ div.loading {
   text-indent: -9999px;
 }
 
-#ConnectionIndicator-icon.connecting {
-  background-image: url("img/skin-connecting.gif");
+#ConnectionIndicator-icon.error {
+  background-image: url("img/skin-icon-error.png");
   background-repeat: no-repeat;
-  background-position: 50% 50%;
+  background-position: 0 50%;
 }
 
 .theme-tracktable {
@@ -634,7 +642,6 @@ div.loading {
 
 #artist h2 {
   font-size: 16px;
-  color: #EEE;
   padding-left: 15px;
 }
 #artist h3 {
@@ -642,7 +649,7 @@ div.loading {
   background-color: #666;
   color: #333;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 15px;
   text-shadow: rgba(255,255,255,0.2) 0 1px 0;  
 }
 
@@ -650,14 +657,16 @@ div.loading {
   font-size: 15px;
 }
 #artist h4 {
-  font-size: 12px;
-  color: #c3c3c3;
+  font-size: 14px;
+  margin: 10px 0 5px 0;
+  font-size: bold;
+  color: #ddd;
 }
 
 .AlbumEntry {
   display: block;
   clear: both;
-  padding: 0 0 10px 15px;
+  padding: 0 0 15px 15px;
   border-bottom: 1px solid #272727;
 }
 
@@ -688,3 +697,21 @@ div.loading {
   width: 600px;
 }
 
+#Album-info,
+#Artist-info,
+#Playqueue-info,
+#Playlist-info,
+#Search-info {
+  font-family: Helvetica,Arial,'Liberation Sans',FreeSans,sans-serif;
+  font-size: 18px;
+  font-weight: normal;
+  position: absolute;
+  top: 50%;
+  left: 50%;  
+  color: #999;
+  background-color: transparent;
+  width: 400px;
+  margin: 0 0 0 -200px;
+  text-align: center;
+  text-shadow: rgba(0,0,0,0.6) 0 -1px 0;  
+}
