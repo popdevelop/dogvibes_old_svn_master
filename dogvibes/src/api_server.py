@@ -4,8 +4,10 @@ import errno
 import functools
 import socket
 from tornado import ioloop, iostream, httpserver, websocket
+import albumart_api
 import logging
-import re
+import cgi
+import urlparse
 
 dogs = []
 
@@ -121,7 +123,20 @@ class HTTPHandler(tornado.web.RequestHandler):
             self.nbr = assign_nbr()
 
         command = self.request.uri[len(username)+1:]
-        process_command(self, username, command)
+
+        if 'AlbumArt' in command:
+            components = urlparse.urlsplit(self.request.uri)
+            arguments = cgi.parse_qs(components.query)
+            artist = arguments.get('artist', ['noneXYZ'])[0]
+            album = arguments.get('album', ['noneXYZ'])[0]
+
+            albumart = albumart_api.AlbumArt(self.albumart_callback)
+            albumart.fetch(artist, album, 0)
+        else:
+            process_command(self, username, command)
+
+    def albumart_callback(self, data):
+        self.send_result(RAW_YES, data)
 
     def send_result(self, raw, data):
         self.set_header("Content-Length", len(data))
@@ -192,7 +207,7 @@ def setup_dog_socket(io_loop):
 
 if __name__ == '__main__':
 #    logging.basicConfig(level=log_level, filename=options.log_file,
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
