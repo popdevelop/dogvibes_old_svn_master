@@ -126,7 +126,7 @@ class HTTPHandler(tornado.web.RequestHandler):
     def send_result(self, raw, data):
         self.set_header("Content-Length", len(data))
         if raw == RAW_YES:
-            self.set_header("Content-Type", "image/png")
+            self.set_header("Content-Type", "image/jpeg")
         else:
             self.set_header("Content-Type", "text/javascript")
 
@@ -151,6 +151,7 @@ class WSHandler(websocket.WebSocketHandler):
         dog = Dog.find(username)
         if dog == None:
             logging.debug("Someone tried to access %s, but it's not connected" % username)
+
             return
         dog.active_handlers.append(self)
         self.receive_message(self.on_message)
@@ -182,7 +183,7 @@ def setup_dog_socket(io_loop):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setblocking(0)
-    sock.bind(("", 11111))
+    sock.bind(("", 80))
     sock.listen(5000)
 
     callback = functools.partial(connection_ready, sock)
@@ -203,7 +204,7 @@ if __name__ == '__main__':
     setup_dog_socket(io_loop)
 
     http_server = httpserver.HTTPServer(application)
-    http_server.listen(2000)
+    http_server.listen(8080)
 
     print "Dogvibes API server started"
 
