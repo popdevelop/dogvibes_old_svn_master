@@ -288,6 +288,16 @@ tr.ui-sortable-helper td {
   color: #C3C3C3;
 }
 
+.theme-userinfo {
+  color: #000;
+  font-weight: bold;
+  font-size: 11px;
+  height: 20px;
+  padding: 2px 0 0 10px;
+  overflow: hidden;
+  text-shadow: rgba(255,255,255,0.4) 0 1px 0;  
+}
+
 .theme-titlebar {
   background-image: url('img/skin-titlebar-bg.png');
   background-repeat: repeat-x;
@@ -616,9 +626,12 @@ div.loading {
 }
 
 /*
- * Artist view style
+ * Artist/album view style
  */
- 
+#artist p {
+  padding-left: 15px;
+}
+
 #artist h2 {
   font-size: 16px;
   color: #EEE;
@@ -633,6 +646,9 @@ div.loading {
   text-shadow: rgba(255,255,255,0.2) 0 1px 0;  
 }
 
+#album h4 {
+  font-size: 15px;
+}
 #artist h4 {
   font-size: 12px;
   color: #c3c3c3;
@@ -644,6 +660,11 @@ div.loading {
   padding: 0 0 10px 15px;
   border-bottom: 1px solid #272727;
 }
+
+#album .AlbumEntry {
+  border-bottom: none;
+}
+
 .AlbumArt {
   width: 130px;
   height: 130px;

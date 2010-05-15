@@ -930,6 +930,11 @@ var Artist = {
   },
   display: function(data) {
     if(data.error > 0) { return false; }
+    /* Any results? */
+    if(data.result.length === 0) {
+      $('<p></p>').text('No albums for artist').appendTo('#artist');
+      return;
+    }
     var other = false;
     var artist = Dogbone.page.param;
     /* FIXME: will this always work? */
@@ -1090,6 +1095,9 @@ $(document).ready(function() {
   /****************************************
    * Misc. behaviour. Application specific
    ****************************************/
+   
+  /* Display username */
+  $('#userinfo').text(Config.defaultUser);
    
   /* FIXME:  */
   $(UI.trackinfo).click(function() {
