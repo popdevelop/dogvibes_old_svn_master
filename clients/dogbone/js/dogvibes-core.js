@@ -101,21 +101,24 @@ var WSocket = {
   status: {},
   ws: false,
   connected: false,
-  attemps: 100,
-  delay: 1000,
+  attemps: 300,
+  delay: 2000,
   timer: false,
   server: false,
   user: false,
   start: function(server, user) {
     if("WebSocket" in window) {
+      /* Start reconnection procedure after timeout */
+      WSocket.timer = setTimeout(WSocket.error, WSocket.delay);
       WSocket.ws = new WebSocket(server + "/stream/" + user);
       WSocket.server = server;
       WSocket.user = user;
       WSocket.ws.onopen = function() { 
+        clearTimeout(WSocket.timer);
         WSocket.connected = true;
         WSocket.getStatus();
-        WSocket.attempts = 100;
-        WSocket.delay = 1000;
+        WSocket.attempts = 300;
+        WSocket.delay = 2000;
         $(document).trigger("Server.connected"); 
       };
       WSocket.ws.onmessage = function(e){ eval(e.data); };
@@ -137,7 +140,7 @@ var WSocket = {
     if(WSocket.attempts-- > 0) {
       WSocket.timer = setTimeout(function() {
         WSocket.start(WSocket.server, WSocket.user);
-      }, WSocket.delay*2);
+      }, WSocket.delay);
     }
     /* Give up */
     WSocket.stop();
