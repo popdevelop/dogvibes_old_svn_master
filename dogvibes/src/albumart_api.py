@@ -101,7 +101,7 @@ class AlbumArt():
         self.http_client.fetch(art_uri, self.image_callback)
 
     def image_callback(self, response):
-        if (response.body == None or (response.body != None and len(response.body) < ):
+        if (response.body == None):
             self.callback(self.get_standard_image(self.size))
         else:
             f = open(self.img_path, 'wb')
