@@ -91,7 +91,7 @@ var ResultTable = function(config) {
     dblclick: $.noop,
     callbacks: {
       album: function(element) {
-        var a = $('<a/>').attr('href', '#album/' + element.album_uri);
+        var a = $('<a/>').attr('href', '#album/' + element.data.album_uri);
         element.contents().wrap(a);
       },      
       artist: function(element) {
@@ -169,7 +169,8 @@ var ResultTable = function(config) {
         if(field in self.options.callbacks) {
           content.id = id;
           content.nbr = i;
-          content.album_uri = el.album_uri;
+          content.tbl = self;
+          content.data = el;
           self.options.callbacks[field](content);
         }        
         tr.append(content);
@@ -349,6 +350,7 @@ var Playqueue = {
     $(document).bind("Status.state", function() { Playqueue.set(); });
     $(document).bind("Status.playlist", function() { Playqueue.set(); });
     $(document).bind("Server.connected", function() {
+      $(Playqueue.ui.info).hide();
       Playqueue.fetch();      
     });
     $(document).bind("Server.error", function() {
@@ -470,8 +472,9 @@ var PlayControl = {
   },
   setTime: function(elapsed) {
     //$(PlayControl.ui.elapsed).text(Dogvibes.status.elapsedmseconds.msec2time());
+    var newVal = (typeof(Dogvibes.status.duration) == 'undefined') ? 0 : (elapsed.result/Dogvibes.status.duration)*100;
     if(PlayControl.seekSliding) { return; }
-    $(PlayControl.ui.seek).slider('option', 'value', (elapsed.result/Dogvibes.status.duration)*100); 
+    $(PlayControl.ui.seek).slider('option', 'value', newVal); 
     /* Fetch another time update */
     if(PlayControl.updateTimer && 
        Dogvibes.status.state != 'stopped') {
