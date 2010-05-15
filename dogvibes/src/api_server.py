@@ -8,6 +8,7 @@ import albumart_api
 import logging
 import cgi
 import urlparse
+import urllib
 
 dogs = []
 
@@ -122,17 +123,16 @@ class HTTPHandler(tornado.web.RequestHandler):
             dog.active_handlers.append(self)
             self.nbr = assign_nbr()
 
-        command = self.request.uri[len(username)+1:]
-
-        if 'AlbumArt' in command:
-            components = urlparse.urlsplit(self.request.uri)
+        if 'AlbumArt' in self.request.uri:
+            uri = urllib.unquote(self.request.uri.decode('utf-8'))
+            components = urlparse.urlsplit(uri)
             arguments = cgi.parse_qs(components.query)
             artist = arguments.get('artist', ['noneXYZ'])[0]
             album = arguments.get('album', ['noneXYZ'])[0]
-
             albumart = albumart_api.AlbumArt(self.albumart_callback)
             albumart.fetch(artist, album, 0)
         else:
+            command = self.request.uri[len(username)+1:]
             process_command(self, username, command)
 
     def albumart_callback(self, data):

@@ -20,16 +20,15 @@ class AlbumArt():
         self.callback = callback
 
     def fetch(self, artist, album, size):
-        self.artist = artist
-        self.album = album
+        self.artist = artist.encode('utf-8')
+        self.album = album.encode('utf-8')
         self.size = size
 
-        t1 = time()
         size = int(size)
         if not os.path.exists(art_dir):
             os.mkdir(art_dir)
 
-        img_hash = hashlib.sha224(artist + album).hexdigest()
+        img_hash = hashlib.sha224(self.artist + self.album).hexdigest()
         img_path = art_dir + '/' + img_hash + '.jpg'
         self.img_path = img_path
 
@@ -44,7 +43,7 @@ class AlbumArt():
             self.callback(img_data)
             return
         else:
-            self.get_image_data(artist, album)
+            self.get_image_data(self.artist, self.album)
 
         # Resize upon request. Nothing special about 640. Just need a limit...
 #        if size > 0 and size < 640:
@@ -72,7 +71,6 @@ class AlbumArt():
         return img_data
 
     def get_image_data(self, artist, album):
-        t1 = time()
         url_template = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=%s&artist=%s&album=%s"
         api_key = "791d5539710d7aa73df0273149ac8761"
         secret_key = "71c595cf3ebae6ccfaebc364c65646a0" # kept for later
