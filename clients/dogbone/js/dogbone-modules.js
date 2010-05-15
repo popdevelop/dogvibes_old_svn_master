@@ -3,7 +3,7 @@
  */
 
 var Config = {
-  defaultUser: "thoughtmade",
+  defaultUser: "",
   defaultServer: "dogvib.es:8080",
   defaultProtocol: "ws",
   resizeable: true,
@@ -901,7 +901,12 @@ var Artist = {
     artistInfo: "#Artist-info",
     albumInfo: "#Album-info"   
   },
-  albums: [],
+  albums: {
+    data: {},
+    items: [],
+    chunkSize: 10, //Number of albums to load at a time
+    leftToDisplay: 0 //Number of albums left to display
+  },
   album: [],
   currentArtist: "",
   init: function() {
@@ -928,7 +933,6 @@ var Artist = {
     });
   },
   setPage: function() {
-    Titlebar.set("Artist");
     if(!Dogvibes.server.connected) { return; }
     if(Dogbone.page.id == "album") {
       Titlebar.set("Album");    
@@ -940,7 +944,8 @@ var Artist = {
       Titlebar.set("Artist");
       Artist.currentArtist = Dogbone.page.param;
       /* Reset and fetch new data */
-      Artist.albums = [];
+      Artist.albums.items = [];
+      Artist.albums.data = {};
       $('#artist').empty().append('<h2>'+Dogbone.page.param+'</h2>');
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
@@ -952,32 +957,67 @@ var Artist = {
   },
   display: function(data) {
     if(data.error > 0) { return false; }
+    
+    /* Fill in data */
+    Artist.albums.other = false;
+    Artist.albums.data = data.result;
+    Artist.albums.leftToDisplay = data.result.length;
+    
     /* Any results? */
     if(data.result.length === 0) {
       $('<p></p>').text('No albums for artist').appendTo('#artist');
       return;
     }
-    var other = false;
-    var artist = Dogbone.page.param;
+
     /* FIXME: will this always work? */
-    if(artist == data.result[0].artist) {
+    if(Dogbone.page.param == data.result[0].artist) {
       $('<h3></h3>').text("Albums").appendTo('#artist');
     }
-    $(data.result).each(function(i, element) {
-      if(!other && element.artist != artist) {
-        other = true;
+    /* Display first chunk of albums */
+    Artist.displayMore();
+  },
+  displayMore: function() {
+    /* Display another chunk of albums */
+    var offset = Artist.albums.data.length - Artist.albums.leftToDisplay;
+    var maxIdx = Math.min(Artist.albums.leftToDisplay, Artist.albums.chunkSize) + offset;
+    Artist.albums.leftToDisplay -= Artist.albums.chunkSize;
+    var element = false;
+    for(var i = offset; i < maxIdx; i++) {
+      element = Artist.albums.data[i];
+      if(!Artist.albums.other && element.artist != Dogbone.page.param) {
+        Artist.albums.other = true;
         $('<h3></h3>').text("Appears on").appendTo('#artist');
       }
-      var idx = Artist.albums.length;
-      Artist.albums[idx] = new AlbumEntry(element);
-      $('#artist').append(Artist.albums[idx].ui);
+      var idx = Artist.albums.items.length;
+      Artist.albums.items[idx] = new AlbumEntry(element);
+      $('#artist').append(Artist.albums.items[idx].ui);
       
       /* Get tracks for album, since we don't get them directly */
       /* FIXME: solve context problem nicer */
-      Dogvibes.getAlbum(element.uri, "Artist.albums["+idx+"].set", Artist.albums[idx]);
-    });
+      Dogvibes.getAlbum(element.uri, "Artist.albums.items["+idx+"].set", Artist.albums.items[idx]);      
+    }
   }
 };
+
+var ScrollHandler = {
+  /* Different handlers for pages */
+  handlers: {
+    artist: Artist.displayMore
+  },
+  container: false,
+  init: function() {
+    /* Invoke action on scroll bottom */
+    $("#content").scroll(function() { ScrollHandler.checkScroll() });  
+    ScrollHandler.container = $("#content");
+  },
+  checkScroll: function() {
+    if(Dogbone.page.id in ScrollHandler.handlers) {
+      if(ScrollHandler.container[0].scrollHeight - ScrollHandler.container.height() - ScrollHandler.container.scrollTop() <= 0) {
+        ScrollHandler.handlers[Dogbone.page.id]();
+      }
+    }  
+  }
+}
 
 var AlbumEntry = function(entry) {
   var self = this;
@@ -1111,6 +1151,7 @@ $(document).ready(function() {
   Playlist.init();
   Artist.init();
   EventManager.init();
+  ScrollHandler.init();
   /* Start server connection */
   Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
   
