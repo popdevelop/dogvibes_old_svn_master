@@ -243,8 +243,11 @@ class Amp():
 
     def API_pause(self, request):
         self.set_state(gst.STATE_PAUSED)
-        request.push({'state': self.get_state()})
-        request.finish()
+        # FIXME we need to push the state paused to all clients
+        # when play token lost, request == None
+        if request != None:
+            request.push({'state': self.get_state()})
+            request.finish()
 
     def API_queue(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)

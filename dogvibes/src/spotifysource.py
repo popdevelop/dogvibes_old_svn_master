@@ -212,7 +212,7 @@ class SpotifySource:
     def play_token_lost(self, data):
         # Pause connected amp if play_token_lost is recieved
         if self.amp != None:
-            self.amp.API_pause()
+            self.amp.API_pause(None)
 
 if __name__ == '__main__':
     src = SpotifySource(None, None, None)
