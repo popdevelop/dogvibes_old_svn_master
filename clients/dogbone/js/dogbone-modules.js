@@ -145,11 +145,11 @@ var ResultTable = function(config) {
   /***** Methods *****/
   this.display = function() {
     var self = this;
+    /* Reset */
     self.selectedItems = [];
-    /* Empty items */
     $(self.ui.items).empty();
-    var obj = $(self.ui.items);
-    
+    self.id2index = [];
+        
     /* Fill with new items */
     $(self.items).each(function(i, el) {
       var tr = $("<tr></tr>");
