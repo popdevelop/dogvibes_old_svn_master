@@ -81,6 +81,7 @@ var ResultTable = function(config) {
     idTag: "id",
     highlightClass: "playing",
     sortable: false,
+    selectable: true,
     click: function(e) {
       $(document).dblclick();
       var tbl = $(this).data('self');
@@ -116,6 +117,7 @@ var ResultTable = function(config) {
   this.selectedItems = [];
   this.fields = [];
   this.selectMulti = false;
+  this.id2index = {};
   
   /* Configure table fields by looking for table headers if not provided
    * in options */
@@ -134,6 +136,10 @@ var ResultTable = function(config) {
 
   if(self.options.sortable) {
     $(self.ui.content).tablesorter();
+  }
+  
+  if(!self.options.selectable) {
+    self.options.click = $.noop;
   }
   
   /***** Methods *****/
@@ -178,8 +184,9 @@ var ResultTable = function(config) {
       tr.click(self.options.click);
       tr.dblclick(self.options.dblclick);
       $(self.ui.items).append(tr);
-      /* Save rows internally */
-      self.data[i] = tr;      
+      /* Save rows internally and build map over id --> index */
+      self.data[i] = tr;
+      self.id2index[id] = i;
     });
     
     $("tr:visible",this.ui.items).filter(":odd").addClass("odd");
@@ -221,9 +228,18 @@ var ResultTable = function(config) {
     $("tr", this.ui.items).removeClass(this.options.highlightClass);  
   };
   this.highlightItem = function(index) {
+    /* Try index first */
     if(index in this.data) {
       this.data[index].addClass(this.options.highlightClass);
+      return;
     }
+    /* Next try id */
+    if(index in this.id2index) {
+      var idx = this.id2index[index];
+      this.data[idx].addClass(this.options.highlightClass);
+      return;
+    }
+    return false;
   };
 };
 
@@ -887,13 +903,9 @@ var Search = {
     }
     $("tr", Search.table.ui.items).removeClass('listplaying listpaused');
     if(!cls) { return; }
-    $("tr", Search.table.ui.items).each(function(i, row) {
-      var uri = $(row).data('uri');
-      if(uri == Dogvibes.status.uri) {
-        $(row).addClass(cls);
-        return;
-      }
-    });
+    
+    Search.table.options.highlightClass = cls;
+    Search.table.highlightItem(Dogvibes.status.uri);
   }
 };
 
@@ -910,11 +922,15 @@ var Artist = {
     chunkSize: 10, //Number of albums to load at a time
     leftToDisplay: 0 //Number of albums left to display
   },
-  album: [],
+  album: false,
   currentArtist: "",
   init: function() {
     $(document).bind("Page.artist", Artist.setPage);
     $(document).bind("Page.album", function() { Artist.setPage(); });
+    
+    $(document).bind("Status.songinfo", Artist.set);
+    $(document).bind("Status.state", function() { Artist.set(); });
+    
     /* Offline info */
     $(document).bind("Server.connected", function() { 
       $(Artist.ui.artistInfo).hide();
@@ -956,7 +972,8 @@ var Artist = {
   setAlbum: function(data) {  
     Artist.album = new AlbumEntry(data.result);
     $("#album").append(Artist.album.ui);  
-    Artist.album.set(data);  
+    Artist.album.set(data);
+    Artist.set(); 
   },
   display: function(data) {
     if(data.error > 0) { return false; }
@@ -999,6 +1016,26 @@ var Artist = {
       /* FIXME: solve context problem nicer */
       Dogvibes.getAlbum(element.uri, "Artist.albums.items["+idx+"].set", Artist.albums.items[idx]);      
     }
+  },
+  set: function() {
+    if(!Artist.album) { return; }
+    
+    /* Which class should apply? */
+    var cls = false;
+    switch(Dogvibes.status.state) {
+      case "playing":
+      case "paused":
+        cls = 'list'+Dogvibes.status.state;
+        break;
+    }
+    /* Remove previous classes */
+    $("tr", Artist.album.resTbl.ui.items).removeClass('listplaying listpaused');
+    
+    if(!cls) { return; }
+    
+    /* Set new class */
+    Artist.album.resTbl.options.highlightClass = cls;
+    Artist.album.resTbl.highlightItem(Dogvibes.status.uri);
   }
 };
 
@@ -1055,7 +1092,8 @@ var AlbumEntry = function(entry) {
     .appendTo(this.ui);
   
   this.resTbl = new ResultTable({ 
-    name: tableName, 
+    name: tableName,
+    idTag: 'uri',
     fields: [ 'track_number', 'title', 'duration' ],
     dblclick: function() {
       var uri = $(this).data('uri');

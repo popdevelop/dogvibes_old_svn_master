@@ -574,11 +574,15 @@ div.loading {
   background-image: url("img/skin-icon-playing.png");
   background-repeat: no-repeat;
   background-position: 50% 50%;
+  text-indent: -999px;
+  text-align: left;   
 }
 .theme-tracktable tbody tr.listpaused td:first-child {
   background-image: url("img/skin-icon-paused.png");
   background-repeat: no-repeat;
   background-position: 50% 50%;
+  text-indent: -999px;
+  text-align: left; 
 }
 
 /* Remove-icon */
