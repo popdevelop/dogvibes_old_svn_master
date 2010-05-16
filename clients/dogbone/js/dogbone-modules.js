@@ -1065,6 +1065,7 @@ var AlbumEntry = function(entry) {
   tableName = tableName.replace(/\//g, '')
   this.ui = 
     $('<div></div>')
+    .addClass('loading')
     .addClass('AlbumEntry');
   var title = 
     $('<h4></h4>')
@@ -1077,6 +1078,11 @@ var AlbumEntry = function(entry) {
   var artimg = 
     $('<img></img>')
     .attr('src', Dogvibes.albumArt(entry.artist, entry.name, 130))
+    /* Fade in when loaded */   
+    .hide()
+    .load(function() {
+      $(this).fadeIn(500);
+    })
     .appendTo(art);
   this.table =  
     $('<table></table>')
@@ -1110,7 +1116,8 @@ var AlbumEntry = function(entry) {
     /* XXX: compensate for different behaviours in AJAX/WS */
     var self = typeof(this.context) == "undefined" ? this : this.context;
     self.resTbl.items = data.result.tracks;
-    self.resTbl.display(); 
+    self.resTbl.display();
+    self.ui.removeClass('loading');
     $(function() {
       $("tr", self.resTbl.ui.items).draggable(Config.draggableOptions);
     });    
