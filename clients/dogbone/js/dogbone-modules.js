@@ -910,7 +910,7 @@ var Search = {
 };
 
 
-/* FIXME: correct artist/album handler in future */
+/* Combined handler for Artist/album view. TODO: Maybe split up */
 var Artist = {
   ui:  {
     artistInfo: "#Artist-info",
@@ -970,7 +970,7 @@ var Artist = {
     }
   },
   setAlbum: function(data) {  
-    Artist.album = new AlbumEntry(data.result);
+    Artist.album = new AlbumEntry(data.result, { albumLink: false });
     $("#album").append(Artist.album.ui);  
     Artist.album.set(data);
     Artist.set(); 
@@ -1059,8 +1059,15 @@ var ScrollHandler = {
   }
 }
 
-var AlbumEntry = function(entry) {
+/*
+ * Class for displaying/fetching an album from uri
+ */
+var AlbumEntry = function(entry, options) {
   var self = this;
+  this.options = {
+    albumLink: true
+  }
+  $.extend(this.options, options);
   var tableName = entry.uri.replace(/:/g, '_');
   tableName = tableName.replace(/\//g, '')
   this.ui = 
@@ -1069,8 +1076,7 @@ var AlbumEntry = function(entry) {
     .addClass('AlbumEntry');
   var title = 
     $('<h4></h4>')
-    .appendTo(this.ui)   
-    .text(entry.name + ' ('+entry.released+')');
+    .appendTo(this.ui);
   var art = 
     $('<div></div>')
     .addClass('AlbumArt')
@@ -1084,6 +1090,20 @@ var AlbumEntry = function(entry) {
       $(this).fadeIn(500);
     })
     .appendTo(art);
+        
+  if(this.options.albumLink) {
+    var titlelink = 
+      $('<a />')
+      .attr('href', "#album/" + entry.uri)
+      .text(entry.name + ' ('+entry.released+')')
+      .appendTo(title);
+    artimg.wrap(
+      $('<a></a>')
+      .attr('href', "#album/" + entry.uri)
+    );
+  } else {
+    title.text(entry.name + ' ('+entry.released+')');
+  }
   this.table =  
     $('<table></table>')
     .attr('id', tableName+"-content")

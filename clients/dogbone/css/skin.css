@@ -208,6 +208,11 @@ tr.ui-sortable-helper td {
   -webkit-border-raduis: 3px;
 }
 
+.theme-navigation ul li.drophover a {
+  color: #000;
+  text-shadow: none;
+}
+
 .theme-navigation ul li.playqueue {
   background-image:url("img/skin-icon-playqueue.gif");
 }
@@ -657,14 +662,17 @@ div.loading {
   text-shadow: rgba(255,255,255,0.2) 0 1px 0;  
 }
 
-#album h4 {
-  font-size: 15px;
-}
+#album h4 a,
+#album h4,
+#artist h4 a,
 #artist h4 {
   font-size: 14px;
+  font-family: Helvetica,Arial,'Liberation Sans',FreeSans,sans-serif;  
+  font-weight: bold;
   margin: 10px 0 5px 0;
   font-size: bold;
   color: #ddd;
+  text-decoration: none;
 }
 
 .AlbumEntry {
@@ -687,9 +695,10 @@ div.loading {
   background-image: url('img/skin-no-albumart-small.png');
 }
 
-.AlbumArt > img {
+.AlbumArt img {
   height: 130px;
   width: 130px;
+  border: 0;
 }
 
 #artist .AlbumTracks {
