@@ -61,7 +61,8 @@ struct spot_work
 {
   GMutex *spot_mutex;
   GCond *spot_cond;
-  int ret;
+  int retval;
+  sp_error error;
   gint64 opt;
   enum spot_cmd cmd;
 };

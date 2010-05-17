@@ -83,7 +83,7 @@ enum
 static guint gst_spot_signals[LAST_SIGNAL] = { 0 };
 
 /* thread safe functions */
-static int run_spot_cmd (GstSpotSrc *spot, enum spot_cmd cmd, gint64 opt);
+static sp_error run_spot_cmd (GstSpotSrc *spot, enum spot_cmd cmd, guint64 *retval, gint64 opt);
 static void do_end_of_track (GstSpotSrc *spot);
 
 /* libspotify */
@@ -205,7 +205,7 @@ spotify_cb_logged_in (sp_session *spotify_session, sp_error error)
                          sp_user_canonical_name (me));
   GST_CAT_DEBUG_OBJECT (gst_spot_src_debug_cb, ugly_spot, "Logged_in callback, user=%s", my_name);
   /* set default bitrate to audiofility */
-  sp_session_preferred_bitrate(spotify_session, SP_BITRATE_320k);
+  sp_session_preferred_bitrate (spotify_session, SP_BITRATE_320k);
   GST_SPOT_SRC_LOGGED_IN (ugly_spot) = TRUE;
 }
 
@@ -306,18 +306,19 @@ do_end_of_track (GstSpotSrc *spot)
   gst_object_unref (peer_pad);
 }
 
-static int
-run_spot_cmd (GstSpotSrc *spot, enum spot_cmd cmd, gint64 opt)
+static sp_error
+run_spot_cmd (GstSpotSrc *spot, enum spot_cmd cmd, guint64 *retval, gint64 opt)
 {
   struct spot_work *spot_work;
-  int ret;
+  sp_error error;
 
   /* create work struct */
   spot_work = g_new0 (struct spot_work, 1);
   spot_work->spot_cond = g_cond_new ();
   spot_work->spot_mutex = g_mutex_new ();
   spot_work->cmd = cmd;
-  spot_work->ret = 0;
+  spot_work->retval = 0;
+  spot_work->error = SP_ERROR_OK;
   spot_work->opt = opt;
 
   /* add work struct to list of works */
@@ -333,14 +334,15 @@ run_spot_cmd (GstSpotSrc *spot, enum spot_cmd cmd, gint64 opt)
   g_mutex_unlock (spot_work->spot_mutex);
 
   /* save return value */
-  ret = spot_work->ret;
+  *retval = spot_work->retval;
+  error = spot_work->error;
 
   /* remove work struct */
   g_cond_free (spot_work->spot_cond);
   g_mutex_free (spot_work->spot_mutex);
   g_free (spot_work);
 
-  return ret;
+  return error;
 }
 
 static gboolean spotify_create_session (GstSpotSrc *spot)
@@ -421,7 +423,7 @@ spotify_thread_func (void *data)
     spot->spotify_thread_initiated = TRUE;
     while (spot->spot_works) {
       struct spot_work *spot_work;
-      sp_error ret = SP_ERROR_INVALID_INDATA;
+      sp_error error = SP_ERROR_INVALID_INDATA;
       spot_work = (struct spot_work *)spot->spot_works->data;
       g_mutex_lock (spot_work->spot_mutex);
       switch (spot_work->cmd) {
@@ -467,16 +469,16 @@ spotify_thread_func (void *data)
 
           GST_DEBUG_OBJECT (spot, "Now playing \"%s\"", sp_track_name (GST_SPOT_SRC_CURRENT_TRACK (spot)));
 
-          ret = sp_session_player_load (GST_SPOT_SRC_SPOTIFY_SESSION (spot), GST_SPOT_SRC_CURRENT_TRACK (spot));
-          if (ret != SP_ERROR_OK) {
+          error = sp_session_player_load (GST_SPOT_SRC_SPOTIFY_SESSION (spot), GST_SPOT_SRC_CURRENT_TRACK (spot));
+          if (error != SP_ERROR_OK) {
             GST_ERROR_OBJECT (spot, "Failed to load track '%s' uri=%s", sp_track_name (GST_SPOT_SRC_CURRENT_TRACK (spot)),
                 (GST_SPOT_SRC_URI_LOCATION (spot)));
             break;
           }
 
           sp_session_process_events (GST_SPOT_SRC_SPOTIFY_SESSION (spot), &timeout);
-          ret = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), TRUE);
-          if (ret != SP_ERROR_OK) {
+          error = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), TRUE);
+          if (error != SP_ERROR_OK) {
             GST_ERROR_OBJECT (spot, "Failed to play track '%s' uri=%s", sp_track_name (GST_SPOT_SRC_CURRENT_TRACK (spot)),
                 (GST_SPOT_SRC_URI_LOCATION (spot)));
             break;
@@ -487,29 +489,35 @@ spotify_thread_func (void *data)
           break;
 
         case SPOT_CMD_PLAY:
-          ret = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), TRUE);
+          error = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), TRUE);
           break;
 
         case SPOT_CMD_DURATION:
           if (GST_SPOT_SRC_CURRENT_TRACK (spot)) {
-            ret = sp_track_duration (GST_SPOT_SRC_CURRENT_TRACK (spot));
+            int dur = sp_track_duration (GST_SPOT_SRC_CURRENT_TRACK (spot));
+            if (dur == 0){
+              error = SP_ERROR_RESOURCE_NOT_LOADED;
+            }
+            spot_work->retval = dur;
+            
+
           }
           break;
 
         case SPOT_CMD_STOP:
           if (GST_SPOT_SRC_CURRENT_TRACK (spot)) {
-            ret = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), FALSE);
-            if (ret != SP_ERROR_OK)  {
+            error = sp_session_player_play (GST_SPOT_SRC_SPOTIFY_SESSION (spot), FALSE);
+            if (error != SP_ERROR_OK)  {
               break;
             }
-            ret = SP_ERROR_OK;
+            error = SP_ERROR_OK;
             sp_session_player_unload (GST_SPOT_SRC_SPOTIFY_SESSION (spot));
           }
           break;
 
         case SPOT_CMD_SEEK:
           if (GST_SPOT_SRC_CURRENT_TRACK (spot)) {
-            ret = sp_session_player_seek (GST_SPOT_SRC_SPOTIFY_SESSION (spot), spot_work->opt);
+            error = sp_session_player_seek (GST_SPOT_SRC_SPOTIFY_SESSION (spot), spot_work->opt);
           }
           break;
         default:
@@ -519,10 +527,10 @@ spotify_thread_func (void *data)
       }
 
       /* print all errors caught and propagate to calling thread */
-      if (ret != SP_ERROR_OK) {
-            GST_ERROR_OBJECT (spot, "Failed with SPOT_CMD=%d, ret=%d, error=%s", spot_work->cmd, ret, sp_error_message (ret));
+      if (error != SP_ERROR_OK) {
+            GST_ERROR_OBJECT (spot, "Failed with SPOT_CMD=%d, error=%d, error=%s", spot_work->cmd, error, sp_error_message (error));
       }
-      spot_work->ret = ret;
+      spot_work->error = error;
 
       spot->spot_works = g_list_remove (spot->spot_works, spot->spot_works->data);
       g_mutex_unlock (spot_work->spot_mutex);
@@ -807,6 +815,7 @@ gst_spot_src_create_read (GstSpotSrc * spot, guint64 offset, guint length, GstBu
 
   if (G_UNLIKELY (spot->read_position != offset)) {
     sp_error error;
+    guint64 retval;
     /* implement spotify seek here */
     gint sample_rate = GST_SPOT_SRC_FORMAT (spot)->sample_rate;
     gint channels = GST_SPOT_SRC_FORMAT (spot)->channels;
@@ -820,14 +829,19 @@ gst_spot_src_create_read (GstSpotSrc * spot, guint64 offset, guint length, GstBu
         "Perform seek to %" G_GINT64_FORMAT " bytes and %" G_GINT64_FORMAT " usec",
         offset, seek_usec);
 
-    error = run_spot_cmd (spot, SPOT_CMD_SEEK, seek_usec);
+    error = run_spot_cmd (spot, SPOT_CMD_SEEK, &retval, seek_usec);
+    if (error != SP_ERROR_OK) {
+      GST_CAT_ERROR_OBJECT (gst_spot_src_debug_audio, spot, "Seek failed");
+      goto create_seek_failed;
+    }
+
     g_mutex_lock (GST_SPOT_SRC_ADAPTER_MUTEX (spot));
     gst_adapter_clear (GST_SPOT_SRC_ADAPTER (spot));
     g_mutex_unlock (GST_SPOT_SRC_ADAPTER_MUTEX (spot));
-    run_spot_cmd (spot, SPOT_CMD_PLAY, 0);
 
+    error = run_spot_cmd (spot, SPOT_CMD_PLAY, &retval, 0);
     if (error != SP_ERROR_OK) {
-      GST_CAT_ERROR_OBJECT (gst_spot_src_debug_audio, spot, "Seek failed");
+      GST_CAT_ERROR_OBJECT (gst_spot_src_debug_audio, spot, "Play failed");
       goto create_seek_failed;
     }
     spot->read_position = offset;
@@ -835,7 +849,7 @@ gst_spot_src_create_read (GstSpotSrc * spot, guint64 offset, guint length, GstBu
 
   /* see if we have bytes to write */
   GST_CAT_DEBUG_OBJECT (gst_spot_src_debug_audio, spot, "Length=%u offset=%" G_GINT64_FORMAT " end=%" G_GINT64_FORMAT " read_position=%" G_GINT64_FORMAT,
-                    length, offset, offset+length, spot->read_position);
+      length, offset, offset+length, spot->read_position);
 
   g_mutex_lock (GST_SPOT_SRC_ADAPTER_MUTEX (spot));
   while (1) {
@@ -873,10 +887,17 @@ gst_spot_src_create (GstBaseSrc * basesrc, guint64 offset, guint length, GstBuff
 {
   GstSpotSrc *spot;
   GstFlowReturn ret;
+  sp_error error;
+  guint64 retval;
+
   spot = GST_SPOT_SRC (basesrc);
 
   if (spot->play_token_lost) {
-    run_spot_cmd (spot, SPOT_CMD_PLAY, 0);
+    error = run_spot_cmd (spot, SPOT_CMD_PLAY, &retval, 0);
+    if (error != SP_ERROR_OK) {
+      GST_CAT_ERROR_OBJECT (gst_spot_src_debug_audio, spot, "Playtokenlost play failed");
+      return error;
+    }
     spot->play_token_lost = FALSE;
   }
 
@@ -923,9 +944,16 @@ gst_spot_src_query (GstBaseSrc * basesrc, GstQuery * query)
       GstFormat format;
       guint64 duration;
       gint64 value;
+      sp_error error;
+
       gst_query_parse_duration (query, &format, &value);
       /* duration in ms */
-      duration = run_spot_cmd (spot, SPOT_CMD_DURATION, 0);
+      error = run_spot_cmd (spot, SPOT_CMD_DURATION, &duration, 0);
+      if (error != SP_ERROR_OK) {
+        GST_CAT_ERROR_OBJECT (gst_spot_src_debug_audio, spot, "Query duration play failed");
+        ret = FALSE;
+      }
+
       /* duration in ns */
       duration = 1000000 * duration;
       switch (format) {
@@ -1077,10 +1105,16 @@ gst_spot_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
   GstSpotSrc *spot;
   guint64 duration = 0;
+  sp_error error;
 
   spot = GST_SPOT_SRC (basesrc);
   /* duration in ms */
-  duration = run_spot_cmd (spot, SPOT_CMD_DURATION, 0);
+  error = run_spot_cmd (spot, SPOT_CMD_DURATION, &duration, 0);
+  if (error != SP_ERROR_OK) {
+    GST_CAT_ERROR_OBJECT (gst_spot_src_debug, spot, "Query duration play failed");
+    goto no_duration;
+  }
+
   /* duration in ns */
   duration = 1000000 * duration;
 
@@ -1101,24 +1135,38 @@ no_duration:
 static gboolean
 gst_spot_src_start (GstBaseSrc * basesrc)
 {
-  int error;
+  guint64 retval;
+  sp_error error;
+
   GstSpotSrc *spot = (GstSpotSrc *) basesrc;
 
   GST_DEBUG_OBJECT (spot, "Start");
-  error = run_spot_cmd (spot, SPOT_CMD_START, 0);
+  error = run_spot_cmd (spot, SPOT_CMD_START, &retval, 0);
+  if (error != SP_ERROR_OK) {
+    GST_CAT_ERROR_OBJECT (gst_spot_src_debug, spot, "Start failed");
+    return FALSE;
+  }
 
-  return error != -1;
+  return TRUE;
 }
 
 static gboolean
 gst_spot_src_stop (GstBaseSrc * basesrc)
 {
+  sp_error error;
+  guint64 retval;
+
   GstSpotSrc *spot = (GstSpotSrc *) basesrc;
 
   GST_DEBUG_OBJECT (spot, "Stop");
   spot = GST_SPOT_SRC (basesrc);
 
-  run_spot_cmd (spot, SPOT_CMD_STOP, 0);
+  error = run_spot_cmd (spot, SPOT_CMD_STOP, &retval, 0);
+  if (error != SP_ERROR_OK) {
+    GST_CAT_ERROR_OBJECT (gst_spot_src_debug, spot, "Stop failed");
+    return FALSE;
+  }
+
   spot->read_position = 0;
   /* clear adapter (we are stopped and do not continue from same place) */
   g_mutex_lock (GST_SPOT_SRC_ADAPTER_MUTEX (spot));
