@@ -34,6 +34,7 @@ var AJAX = {
   start: function(server, user) {
     AJAX.server = server + "/" + user;
     AJAX.timer = setTimeout(AJAX.getStatus, 0);
+    return true;
   },
   stop: function() {
     AJAX.connected = false;
@@ -124,7 +125,9 @@ var WSocket = {
       WSocket.ws.onmessage = function(e){ eval(e.data); };
       WSocket.ws.onclose = WSocket.error;
       WSocket.ws.onerror = WSocket.error;
+      return true;
     }
+    return false;
   },
   stop: function() {
     WSocket.connected = false;
@@ -171,7 +174,6 @@ var WSocket = {
 /* Workaround for server hard coded callback */
 var pushHandler = WSocket.handleStatus;
 
-
 /********************************
  * Dogvibes server API functions
  ********************************/
@@ -180,6 +182,11 @@ window.Dogvibes =  {
   serverURL: false,
   status: {},
   defAmp: "/amp/0" , /* TODO: dynamic */
+  /* Translation table protocol -> connection object */  
+  protHandlers: {
+    ws: WSocket,
+    http: AJAX
+  },
   cmd: {
     status: "/getStatus",
     prev:   "/previousTrack",
@@ -215,11 +222,21 @@ window.Dogvibes =  {
    *****************/
   init: function(protocol, server, user) {   
     $(document).bind("Server.status", Dogvibes.handleStatus);
-    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
-    Dogvibes.albumartURL = "http://" + server + "/" + user;    
-    server = protocol + "://" + server;
-    Dogvibes.server.start(server, user);
-    Dogvibes.serverURL = server;
+//    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
+    Dogvibes.albumartURL = "http://" + server + "/" + user;
+    
+    /* Try all protocols */
+    for(var prot in protocol) {
+      prot = protocol[prot];
+      var tempServer = prot + "://" + server;
+      if(prot in Dogvibes.protHandlers &&
+         Dogvibes.protHandlers[prot].start(tempServer, user)) {
+        /* Protocol available and working, settle for it */
+        Dogvibes.server = Dogvibes.protHandlers[prot];
+        Dogvibes.serverURL = tempServer;
+        break;
+      }
+    }
   },
   /* Handle new status event from connection object and dispatch events */
   handleStatus: function() {

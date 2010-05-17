@@ -559,22 +559,6 @@ div.loading {
 }
 
 /* Indicate that a track is playing */
-.theme-tracktable tbody tr.paused,
-.theme-tracktable tbody tr.playing {
-  background-image: url("img/skin-table-item-playing-bg.gif");
-  background-repeat: repeat-x;
-  background-position: top left;
-  height: 37px;
-}
-
-.theme-tracktable tbody tr.paused td a,
-.theme-tracktable tbody tr.paused td,
-.theme-tracktable tbody tr.playing td a,
-.theme-tracktable tbody tr.playing td {
-  padding: 0 5px;
-  color: #000;
-  height: 37px;
-}
 
 .theme-tracktable tbody tr td:first-child {
   background-repeat: no-repeat;
@@ -582,33 +566,22 @@ div.loading {
 }
 
 .theme-tracktable tbody tr.playing td:first-child {
-  background-image: url("img/skin-table-item-playing.gif");
-  width: 33px;
-  text-indent: -9999px;
-}
-.theme-tracktable tbody tr.paused td:first-child {
-  background-image: url("img/skin-table-item-paused.png");
-  width: 33px;
-  text-indent: -9999px;
-}
-
-.theme-tracktable tbody tr.listplaying td:first-child {
   background-image: url("img/skin-icon-playing.png");
   text-indent: -9999px;
   text-align: left;   
 }
-.theme-tracktable tbody tr.listpaused td:first-child {
+.theme-tracktable tbody tr.paused td:first-child {
   background-image: url("img/skin-icon-paused.png");
   text-indent: -9999px;
   text-align: left; 
 }
 
-.theme-tracktable tbody tr.listplaying.selected td:first-child {
+.theme-tracktable tbody tr.playing.selected td:first-child {
   background-image: url("img/skin-icon-playing-selected.png");
   text-indent: -9999px;
   text-align: left;   
 }
-.theme-tracktable tbody tr.listpaused.selected td:first-child {
+.theme-tracktable tbody tr.paused.selected td:first-child {
   background-image: url("img/skin-icon-paused-selected.png");
   text-indent: -9999px;
   text-align: left; 
@@ -626,9 +599,8 @@ div.loading {
   text-indent: -9999px;
 }
 
-.theme-tracktable tbody tr.playing td:first-child span,
-.theme-tracktable tbody tr.listpaused td:first-child span,
-.theme-tracktable tbody tr.listplaying td:first-child span {
+.theme-tracktable tbody tr.paused td:first-child span,
+.theme-tracktable tbody tr.playing td:first-child span {
   display: none;
 }
 

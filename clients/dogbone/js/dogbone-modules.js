@@ -5,7 +5,7 @@
 var Config = {
   defaultUser: "",
   defaultServer: "dogvib.es:8080",
-  defaultProtocol: "ws",
+  defaultProtocol: ["ws", "http"], //Order to try protocols 
   resizeable: true,
   draggableOptions: {
     revert: 'invalid', 
@@ -224,22 +224,23 @@ var ResultTable = function(config) {
     this.selectedItems = [];
     $("tr", this.ui.items).removeClass("selected");
   };
-  this.clearHighlight = function() {
-    $("tr", this.ui.items).removeClass(this.options.highlightClass);  
+  this.clearHighlight = function(cls) {
+    cls = typeof(cls) == "undefined" ? this.options.highlightClass : cls;
+    $("tr", this.ui.items).removeClass(cls);  
   };
-  this.highlightItem = function(index) {
+  this.highlightItem = function(index, cls) {
+    if(typeof(cls) == "undefined") { cls = this.options.highlightClass; }
     /* Try index first */
     if(index in this.data) {
-      this.data[index].addClass(this.options.highlightClass);
+      this.data[index].addClass(cls);
       return;
     }
     /* Next try id */
     if(index in this.id2index) {
       var idx = this.id2index[index];
-      this.data[idx].addClass(this.options.highlightClass);
+      this.data[idx].addClass(cls);
       return;
     }
-    return false;
   };
 };
 
@@ -395,14 +396,13 @@ var Playqueue = {
   },
   set: function() {
     $("li.playqueue").removeClass('playing paused');
-    Playqueue.table.clearHighlight();      
+    Playqueue.table.clearHighlight('playing paused');      
     if(Dogvibes.status.playlist_id !== -1) { return; }
     cls = Dogvibes.status.state;
     if(Dogvibes.status.state == "playing" ||
        Dogvibes.status.state == "paused") {
       $("li.playqueue").addClass(cls); 
-      Playqueue.table.options.highlightClass = 'list'+cls;
-      Playqueue.table.highlightItem(Dogvibes.status.index);      
+      Playqueue.table.highlightItem(Dogvibes.status.index, cls);      
     }
   }
 };
@@ -420,17 +420,13 @@ var PlayControl = {
   },
   volSliding: false,
   seekSliding: false,
-  updateTimer: false,
+  updateTimer: true,
   init: function() {
     $(document).bind("Status.state", PlayControl.set);
     $(document).bind("Status.volume", PlayControl.setVolume);
     $(document).bind("Status.elapsed", function() {
       PlayControl.setTime({result: Dogvibes.status.elapsedmseconds});
     });
-    
-    PlayControl.updateTimer = setTimeout(function() {
-      Dogvibes.getPlayedMilliSecs("PlayControl.setTime");
-    }, 100);
     
     $(PlayControl.ui.volume).slider( {
       start: function(e, ui) { PlayControl.volSliding = true; },
@@ -493,6 +489,7 @@ var PlayControl = {
     $(PlayControl.ui.seek).slider('option', 'value', newVal); 
     /* Fetch another time update */
     if(PlayControl.updateTimer && 
+       Dogvibes.server.connected &&
        Dogvibes.status.state != 'stopped') {
       clearTimeout(PlayControl.updateTimer);
       PlayControl.updateTimer = setTimeout(function() {
@@ -583,7 +580,7 @@ var Playlist = {
     Playlist.table = new ResultTable(
     {
       name: 'Playlist',
-      highlightClass: "listplaying",
+      highlightClass: "playing",
       /* Dblclick event */
       dblclick: function() {
         var index = $(this).data('id');
@@ -744,15 +741,15 @@ var Playlist = {
     }
   },
   set: function() {  
-    Playlist.table.clearHighlight();
+    Playlist.table.clearHighlight('playing paused');
     $('li', Playlist.ui.list.ul).removeClass('playing paused');
     cls = Dogvibes.status.state;
     if(Dogvibes.status.state == "playing" ||
        Dogvibes.status.state == "paused") {
       $("#Playlist-"+Dogvibes.status.playlist_id).addClass(cls);
-      Playlist.table.options.highlightClass = 'list'+cls;
+      //Playlist.table.options.highlightClass = cls;
       if(Dogvibes.status.playlist_id == Playlist.selectedList) {    
-        Playlist.table.highlightItem(Dogvibes.status.index);
+        Playlist.table.highlightItem(Dogvibes.status.index, cls);
       }
     } 
   } 
@@ -898,14 +895,13 @@ var Search = {
     switch(Dogvibes.status.state) {
       case "playing":
       case "paused":
-        cls = 'list'+Dogvibes.status.state;
+        cls = Dogvibes.status.state;
         break;
     }
-    $("tr", Search.table.ui.items).removeClass('listplaying listpaused');
+    $("tr", Search.table.ui.items).removeClass('playing paused');
     if(!cls) { return; }
     
-    Search.table.options.highlightClass = cls;
-    Search.table.highlightItem(Dogvibes.status.uri);
+    Search.table.highlightItem(Dogvibes.status.uri, cls);
   }
 };
 
@@ -953,6 +949,7 @@ var Artist = {
   },
   setPage: function() {
     if(!Dogvibes.server.connected) { return; }
+    /* FIXME: clean up this mess */
     if(Dogbone.page.id == "album") {
       Titlebar.set("Album");    
       var album = Dogbone.page.param;
@@ -1009,7 +1006,7 @@ var Artist = {
         $('<h3></h3>').text("Appears on").appendTo('#artist');
       }
       var idx = Artist.albums.items.length;
-      Artist.albums.items[idx] = new AlbumEntry(element);
+      Artist.albums.items[idx] = new AlbumEntry(element, { onLoaded: Artist.albumCallback });
       $('#artist').append(Artist.albums.items[idx].ui);
       
       /* Get tracks for album, since we don't get them directly */
@@ -1018,24 +1015,53 @@ var Artist = {
     }
   },
   set: function() {
-    if(!Artist.album) { return; }
-    
-    /* Which class should apply? */
+    /* FIXME: this could perhaps be more efficient */
+      /* Which class should apply? */
     var cls = false;
     switch(Dogvibes.status.state) {
       case "playing":
       case "paused":
-        cls = 'list'+Dogvibes.status.state;
+        cls = Dogvibes.status.state;
         break;
     }
-    /* Remove previous classes */
-    $("tr", Artist.album.resTbl.ui.items).removeClass('listplaying listpaused');
     
-    if(!cls) { return; }
+    /* First set single album-view */
+    if(Artist.album) {     
+      /* Remove previous classes */
+      $("tr", Artist.album.resTbl.ui.items).removeClass("playing paused");
     
-    /* Set new class */
-    Artist.album.resTbl.options.highlightClass = cls;
-    Artist.album.resTbl.highlightItem(Dogvibes.status.uri);
+      if(cls) { 
+        /* Set new class */
+        Artist.album.resTbl.highlightItem(Dogvibes.status.uri, cls);
+      }
+    }
+    
+    /* Now, the album listing for artist */
+    var noAlbums = Artist.albums.items.length;
+    if(noAlbums > 0) {
+      for(var i = 0; i < noAlbums; i++) {
+        var a = Artist.albums.items[i];
+        /* Remove current */
+        $("tr", a.resTbl.ui.items).removeClass("playing paused");
+        if(cls) {
+          /* Set new class */
+          a.resTbl.highlightItem(Dogvibes.status.uri, cls);
+        }       
+      }
+    }
+  },
+  /* Things to do when an album has loaded */
+  albumCallback: function() {
+    var cls = false;
+    switch(Dogvibes.status.state) {
+      case "playing":
+      case "paused":
+        cls = Dogvibes.status.state;
+        break;
+    }
+    if(cls) {
+      this.resTbl.highlightItem(Dogvibes.status.uri, cls);
+    }
   }
 };
 
@@ -1065,7 +1091,8 @@ var ScrollHandler = {
 var AlbumEntry = function(entry, options) {
   var self = this;
   this.options = {
-    albumLink: true
+    albumLink: true,
+    onLoaded: $.noop
   }
   $.extend(this.options, options);
   var tableName = entry.uri.replace(/:/g, '_');
@@ -1131,6 +1158,7 @@ var AlbumEntry = function(entry, options) {
       }
     }
   });
+  /****** Some functions ******/
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
@@ -1140,9 +1168,10 @@ var AlbumEntry = function(entry, options) {
     self.ui.removeClass('loading');
     $(function() {
       $("tr", self.resTbl.ui.items).draggable(Config.draggableOptions);
-    });    
+    });
+    /* Invoke callback */
+    self.options.onLoaded.call(self);
   }
-  
 };
 
 var EventManager = {
