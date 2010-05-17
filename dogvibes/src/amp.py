@@ -485,7 +485,7 @@ class Amp():
     def track_to_client(self):
         track = self.fetch_active_track()
         if track == None:
-            return None
+            return []
         return { "album": track.album,
                  "artist": track.artist,
                  "title": track.title,
