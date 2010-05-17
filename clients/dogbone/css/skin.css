@@ -169,8 +169,12 @@ tr.ui-sortable-helper td {
 }
 
 .theme-navigation ul.playlists li {
-  background-image:url("img/skin-icon-playlist.gif");
+  background-image:url("img/skin-icon-playlist.png");
 }
+.theme-navigation ul.playlists li.drophover {
+  background-image:url("img/skin-icon-playlist-selected.png");
+}
+
 .theme-navigation ul.playlists li em, 
 .theme-navigation ul.playlists li span {  
   position:absolute;
@@ -181,7 +185,7 @@ tr.ui-sortable-helper td {
   background-image: none;
   background-repeat: no-repeat;
   background-position: 50% 50%;
-  text-indent: -999px;
+  text-indent: -9999px;
 }
 .theme-navigation ul.playlists li:hover span {
   background-image: url("img/skin-icon-remove-weak.png");
@@ -214,8 +218,12 @@ tr.ui-sortable-helper td {
 }
 
 .theme-navigation ul li.playqueue {
-  background-image:url("img/skin-icon-playqueue.gif");
+  background-image:url("img/skin-icon-playqueue.png");
 }
+.theme-navigation ul li.playqueue.drophover {
+  background-image:url("img/skin-icon-playqueue-selected.png");
+}
+
 
 .theme-navigation ul li.home {
   background-image:url("img/skin-icon-home.gif");
@@ -231,6 +239,14 @@ tr.ui-sortable-helper td {
 
 .theme-navigation ul li.paused {
   background-image:url("img/skin-icon-paused.png");
+}
+
+.theme-navigation ul li.playing.drophover {
+  background-image:url("img/skin-icon-playing-selected.png");
+}
+
+.theme-navigation ul li.paused.drophover {
+  background-image:url("img/skin-icon-paused-selected.png");
 }
 
 .theme-currentsong {
@@ -560,35 +576,44 @@ div.loading {
   height: 37px;
 }
 
-.theme-tracktable tbody tr.playing td:first-child {
-  background-image: url("img/skin-table-item-playing.gif");
+.theme-tracktable tbody tr td:first-child {
   background-repeat: no-repeat;
   background-position: 50% 50%;
+}
+
+.theme-tracktable tbody tr.playing td:first-child {
+  background-image: url("img/skin-table-item-playing.gif");
   width: 33px;
-  text-indent: -999px;
+  text-indent: -9999px;
 }
 .theme-tracktable tbody tr.paused td:first-child {
   background-image: url("img/skin-table-item-paused.png");
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
   width: 33px;
-  text-indent: -999px;
+  text-indent: -9999px;
 }
 
 .theme-tracktable tbody tr.listplaying td:first-child {
   background-image: url("img/skin-icon-playing.png");
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
-  text-indent: -999px;
+  text-indent: -9999px;
   text-align: left;   
 }
 .theme-tracktable tbody tr.listpaused td:first-child {
   background-image: url("img/skin-icon-paused.png");
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
-  text-indent: -999px;
+  text-indent: -9999px;
   text-align: left; 
 }
+
+.theme-tracktable tbody tr.listplaying.selected td:first-child {
+  background-image: url("img/skin-icon-playing-selected.png");
+  text-indent: -9999px;
+  text-align: left;   
+}
+.theme-tracktable tbody tr.listpaused.selected td:first-child {
+  background-image: url("img/skin-icon-paused-selected.png");
+  text-indent: -9999px;
+  text-align: left; 
+}
+
 
 /* Remove-icon */
 .theme-tracktable tbody tr td span {  
@@ -598,7 +623,7 @@ div.loading {
   background-image: none;
   background-repeat: no-repeat;
   background-position: 50% 50%;
-  text-indent: -999px;
+  text-indent: -9999px;
 }
 
 .theme-tracktable tbody tr.playing td:first-child span,
@@ -620,7 +645,7 @@ div.loading {
   height: 8px;
   margin-bottom: 2px;
   background-color: #EEE;
-  text-indent: -999px;
+  text-indent: -9999px;
 }
 
 /* Default cell props */
