@@ -95,91 +95,6 @@ class Amp():
         #self.needs_push_update = True
         # FIXME: activate when client connection has been fixed!
 
-    def get_played_milliseconds(self):
-        (pending, state, timeout) = self.pipeline.get_state ()
-        if (state == gst.STATE_NULL):
-            logging.debug ("getPlayedMilliseconds in state==NULL")
-            return 0
-        try:
-             src = self.src.get_by_name("source")
-             pos = (pos, form) = src.query_position(gst.FORMAT_TIME)
-        except:
-            pos = 0
-        # We get nanoseconds from gstreamer elements, convert to ms
-        return pos / 1000000
-
-    def next_track(self):
-        self.change_track(1, True)
-
-    def get_active_playlist_id(self):
-        if self.is_in_tmpqueue():
-            return -1
-        else:
-            return self.active_playlist_id
-
-    def get_status(self):
-        status = {}
-
-        # FIXME this should be speaker specific
-        status['volume'] = self.dogvibes.speakers[0].get_volume()
-        status['playlistversion'] = Playlist.get_version()
-
-        playlist = self.fetch_active_playlist()
-
-        # -1 is in tmpqueue
-        status['playlist_id'] = self.get_active_playlist_id()
-
-        track = self.fetch_active_track()
-        if track != None:
-            status['uri'] = track.uri
-            status['title'] = track.title
-            status['artist'] = track.artist
-            status['album'] = track.album
-            status['duration'] = int(track.duration)
-            status['elapsedmseconds'] = self.get_played_milliseconds()
-            status['id'] = self.active_playlists_track_id
-            status['index'] = track.position - 1
-        else:
-            status['uri'] = "dummy"
-
-        (pending, state, timeout) = self.pipeline.get_state()
-        if state == gst.STATE_PLAYING:
-            status['state'] = 'playing'
-        elif state == gst.STATE_NULL:
-            status['state'] = 'stopped'
-        else:
-            status['state'] = 'paused'
-
-        return status
-
-    def track_to_client(self):
-        track = self.fetch_active_track()
-        if track == None:
-            return None
-        return { "album": track.album,
-                 "artist": track.artist,
-                 "title": track.title,
-                 "uri": track.uri,
-                 "duration": track.duration,
-                 "id": self.active_playlists_track_id,
-                 "index": track.position - 1 }
-
-    def play_track(self, playlist_id, nbr):
-        nbr = int(nbr)
-        playlist_id = int(playlist_id)
-
-        # -1 is tmpqueue
-        if (playlist_id == -1):
-            # Save last known playlist that is not the tmpqueue
-            if (not self.is_in_tmpqueue()):
-                self.fallback_playlist_id = self.active_playlist_id
-                self.fallback_playlists_track_id = self.active_playlists_track_id
-            self.active_playlist_id = self.tmpqueue_id
-        else:
-            self.active_playlist_id = playlist_id
-
-        self.change_track(nbr, False)
-
     # API
     def API_connectSpeaker(self, nbr, request):
         self.connect_speaker(nbr)
@@ -399,7 +314,7 @@ class Amp():
 
         self.active_playlists_track_id = track.ptid
         self.set_state(gst.STATE_NULL)
-        self.play_only_if_null(playlist.get_track_id(self.active_playlists_track_id))
+        self.start_track(playlist.get_track_id(self.active_playlists_track_id))
 
     def pipeline_message(self, bus, message):
         t = message.type
@@ -412,10 +327,8 @@ class Amp():
             # but will the info be correct?
 
 
-    def play_only_if_null(self, track):
+    def start_track(self, track):
         (pending, state, timeout) = self.pipeline.get_state()
-        if state != gst.STATE_NULL:
-            self.set_state(gst.STATE_PLAYING)
 
         if self.src:
             self.pipeline.remove(self.src)
@@ -499,3 +412,87 @@ class Amp():
             self.active_playlists_track_id = track.ptid
             return track
 
+    def get_played_milliseconds(self):
+        (pending, state, timeout) = self.pipeline.get_state ()
+        if (state == gst.STATE_NULL):
+            logging.debug ("getPlayedMilliseconds in state==NULL")
+            return 0
+        try:
+             src = self.src.get_by_name("source")
+             pos = (pos, form) = src.query_position(gst.FORMAT_TIME)
+        except:
+            pos = 0
+        # We get nanoseconds from gstreamer elements, convert to ms
+        return pos / 1000000
+
+    def next_track(self):
+        self.change_track(1, True)
+
+    def get_active_playlist_id(self):
+        if self.is_in_tmpqueue():
+            return -1
+        else:
+            return self.active_playlist_id
+
+    def get_status(self):
+        status = {}
+
+        # FIXME this should be speaker specific
+        status['volume'] = self.dogvibes.speakers[0].get_volume()
+        status['playlistversion'] = Playlist.get_version()
+
+        playlist = self.fetch_active_playlist()
+
+        # -1 is in tmpqueue
+        status['playlist_id'] = self.get_active_playlist_id()
+
+        track = self.fetch_active_track()
+        if track != None:
+            status['uri'] = track.uri
+            status['title'] = track.title
+            status['artist'] = track.artist
+            status['album'] = track.album
+            status['duration'] = int(track.duration)
+            status['elapsedmseconds'] = self.get_played_milliseconds()
+            status['id'] = self.active_playlists_track_id
+            status['index'] = track.position - 1
+        else:
+            status['uri'] = "dummy"
+
+        (pending, state, timeout) = self.pipeline.get_state()
+        if state == gst.STATE_PLAYING:
+            status['state'] = 'playing'
+        elif state == gst.STATE_NULL:
+            status['state'] = 'stopped'
+        else:
+            status['state'] = 'paused'
+
+        return status
+
+    def track_to_client(self):
+        track = self.fetch_active_track()
+        if track == None:
+            return None
+        return { "album": track.album,
+                 "artist": track.artist,
+                 "title": track.title,
+                 "uri": track.uri,
+                 "duration": track.duration,
+                 "id": self.active_playlists_track_id,
+                 "index": track.position - 1 }
+
+    def play_track(self, playlist_id, nbr):
+        nbr = int(nbr)
+        playlist_id = int(playlist_id)
+
+        # -1 is tmpqueue
+        if (playlist_id == -1):
+            # Save last known playlist that is not the tmpqueue
+            if (not self.is_in_tmpqueue()):
+                self.fallback_playlist_id = self.active_playlist_id
+                self.fallback_playlists_track_id = self.active_playlists_track_id
+            self.active_playlist_id = self.tmpqueue_id
+        else:
+            self.active_playlist_id = playlist_id
+
+        self.change_track(nbr, False)
