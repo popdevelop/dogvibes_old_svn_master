@@ -174,9 +174,22 @@ class Amp():
     def API_queueAndPlay(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
+
+        rmtrack = None
+
+        # If in tmpqueue and state is playing and there are tracks in tmpqueue.
+        # Then remove the currently playing track. Since we do not want to queue tracks
+        # from just "clicking around".
+        if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
+            rmtrack = playlist.get_track_nbr(0).ptid
+
         id = playlist.add_track(track)
         playlist.move_track(id, 1)
         self.play_track(playlist.id, id)
+
+        if rmtrack != None:                 
+            playlist.remove_track_id(rmtrack)
+
         self.needs_push_update = True
         request.finish()
 
