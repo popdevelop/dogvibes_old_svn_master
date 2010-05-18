@@ -242,6 +242,19 @@ class Amp():
         self.set_state(gst.STATE_NULL)
         request.push({'state': 'stopped'})
         request.finish()
+		
+    def API_queueAlbum(self, uri, request):
+        for source in self.sources:
+            album = source.get_album(uri);
+            if album != None:
+                break
+        album = source.get_album(uri);
+        for track in album['tracks']:
+            track = self.dogvibes.create_track_from_uri(track['uri'])
+            playlist = Playlist.get(self.tmpqueue_id)
+            playlist.add_track(track)
+        self.needs_push_update = True
+        request.finish()
 
     # Internal functions
 
