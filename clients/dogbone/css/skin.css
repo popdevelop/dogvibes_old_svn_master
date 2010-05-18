@@ -1,8 +1,7 @@
-
 /*
  * Colors:
  * #474747
- * #C3C3C3 - Font color
+ * #d8d8d8 - Font color
  * #373737 - Right (main) column background
  */
  
@@ -16,7 +15,7 @@ h1, h2, h3, h4 {
 }
 
 a, a:link, a:visited { 
-  color: #C3C3C3;
+  color: #d8d8d8;
   text-decoration: none;
 }
 
@@ -59,7 +58,7 @@ div.clear {
   width: 200px;
   padding: 5px 15px 5px 10px;
   margin:0 0 5px 0;
-  background-color: #000;
+  background-color: #111;
   color: #FFF;
   
   /* Round corners */
@@ -93,7 +92,7 @@ tr.ui-sortable-helper {
 tr.ui-draggable-dragging td,
 tr.ui-sortable-helper td {
   cursor: default;
-  color: #000;
+  color: #111;
   padding: 1px 10px; 
 }
 
@@ -119,7 +118,7 @@ tr.ui-sortable-helper td {
 
 .theme-leftcol {
   background-color: #474747;
-  color: #C3C3C3;
+  color: #d8d8d8;
 }
 
 .theme-navigation ul {
@@ -141,7 +140,7 @@ tr.ui-sortable-helper td {
 
 .theme-navigation ul li a {
   font-size: 11px;  
-  color: #C3C3C3;  
+  color: #d8d8d8;  
   text-shadow: rgba(0,0,0,0.6) 0 1px 0;
   display: inline-block;
   width: 90%;
@@ -207,13 +206,13 @@ tr.ui-sortable-helper td {
 
 .theme-navigation ul li.drophover {
   background-color: #EEE;
-  color: #000;
+  color: #111;
   -moz-border-radius: 3px;
   -webkit-border-raduis: 3px;
 }
 
 .theme-navigation ul li.drophover a {
-  color: #000;
+  color: #111;
   text-shadow: none;
 }
 
@@ -264,7 +263,7 @@ tr.ui-sortable-helper td {
 }
 
 .theme-trackinfo li {
-  color: #000;
+  color: #111;
   text-align: center;
   width: 100%;
   text-shadow: rgba(255,255,255,0.4) 0 1px 0;    
@@ -314,11 +313,11 @@ tr.ui-sortable-helper td {
 
 .theme-rightcol {
   background-color: #373737;
-  color: #C3C3C3;
+  color: #d8d8d8;
 }
 
 .theme-userinfo {
-  color: #000;
+  color: #111;
   font-weight: bold;
   font-size: 11px;
   height: 20px;
@@ -347,7 +346,7 @@ tr.ui-sortable-helper td {
 
 .theme-titlebar li.keyword {
   background: none;
-  color: #000;
+  color: #111;
   font-weight: bold;
   float: right;
   width: auto;
@@ -356,7 +355,7 @@ tr.ui-sortable-helper td {
 .theme-titlebar li.selected {
   background-image: url('img/skin-titlebar-item-bg.gif');
   background-repeat: repeat-x;
-  background-color: #C3C3C3;
+  background-color: #d8d8d8;
   color: #FFF;
   text-shadow: rgba(0,0,0,0.8) 0 1px 0;
 }
@@ -507,7 +506,7 @@ div.loading {
  
 .theme-tracktable thead tr th {
   height: 19px;
-  color: #000;
+  color: #111;
   font-size: 11px;
   font-weight: bold;
   text-align: left;
@@ -530,7 +529,7 @@ div.loading {
 }
 
 .theme-tracktable tbody tr {
-  background-color: #404040;
+  background-color: #313131;
 }
 
 /* Selected (clicked) rows */
@@ -540,7 +539,7 @@ div.loading {
 
 .theme-tracktable tbody tr.selected td a,
 .theme-tracktable tbody tr.selected td{
-  color: #000;
+  color: #111;
 }
 
 /* Indicate that a track has been queued (from search) */
@@ -624,18 +623,18 @@ div.loading {
 .theme-tracktable tbody tr td {
   padding:1px 5px;
   font-size: 11px;
-  color: #C3C3C3;
+  color: #d8d8d8;
   cursor: default;
 }
 
 .theme-tracktable tbody tr td.time {
   text-align: right;
-  color: #696969;  
+  color: #848484;  
 }
 
 .theme-tracktable tbody tr td.trackNo {
   text-align: right;
-  color: #696969;
+  color: #848484;
   padding-right: 5px;
 }
 
@@ -651,11 +650,13 @@ div.loading {
   padding-left: 15px;
 }
 #artist h3 {
-  padding-left: 15px;
-  background-color: #666;
+  padding: 1px 0 0 15px;
+  height: 22px;
+  overflow: hidden;
+  background-color: #616161;
   color: #333;
   font-weight: bold;
-  font-size: 15px;
+  font-size: 14px;
   text-shadow: rgba(255,255,255,0.2) 0 1px 0;  
 }
 
@@ -672,11 +673,19 @@ div.loading {
   text-decoration: none;
 }
 
+#artist h4,
+#album h4 {
+  margin-left: 150px;
+}
+
 .AlbumEntry {
+  position: relative;
   display: block;
   clear: both;
-  padding: 0 0 15px 15px;
+  padding: 10px 0 10px 15px;
   border-bottom: 1px solid #272727;
+  min-height: 180px;
+  height: auto;
 }
 
 #album .AlbumEntry {
@@ -684,10 +693,12 @@ div.loading {
 }
 
 .AlbumArt {
+  position: absolute;
+  top: 25px;
+  left: 15px;
   width: 130px;
   height: 130px;
   display: inline-block;
-  float: left;
   margin-right: 15px;
   background-image: url('img/skin-no-albumart-small.png');
 }
@@ -698,13 +709,21 @@ div.loading {
   border: 0;
 }
 
-#artist .AlbumTracks {
-  margin-left: 10px;
-  display: inline-block;
-}
-
 .AlbumEntry .theme-tracktable {
   width: 600px;
+  margin: 0 0 15px 150px;
+}
+
+.AlbumEntry h5 {
+  display: block;
+  background-image: url('img/skin-album-disc-bg.png');
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  width: 36px
+  height: 17px;
+  overflow: hidden;
+  margin: 0 0 5px 150px;
+  padding-left: 20px;
 }
 
 #Album-info,

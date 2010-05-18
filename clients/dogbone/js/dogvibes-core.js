@@ -110,7 +110,7 @@ var WSocket = {
   start: function(server, user) {
     if("WebSocket" in window) {
       /* Start reconnection procedure after timeout */
-      WSocket.timer = setTimeout(WSocket.error, WSocket.delay);
+      WSocket.timer = setTimeout(WSocket.error, WSocket.delay*3);
       WSocket.ws = new WebSocket(server + "/stream/" + user);
       WSocket.server = server;
       WSocket.user = user;

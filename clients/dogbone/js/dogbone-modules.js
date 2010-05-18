@@ -1028,11 +1028,11 @@ var Artist = {
     /* First set single album-view */
     if(Artist.album) {     
       /* Remove previous classes */
-      $("tr", Artist.album.resTbl.ui.items).removeClass("playing paused");
+      Artist.album.clearHighlight("playing paused");
     
       if(cls) { 
         /* Set new class */
-        Artist.album.resTbl.highlightItem(Dogvibes.status.uri, cls);
+        Artist.album.highlightItem(Dogvibes.status.uri, cls);
       }
     }
     
@@ -1042,10 +1042,10 @@ var Artist = {
       for(var i = 0; i < noAlbums; i++) {
         var a = Artist.albums.items[i];
         /* Remove current */
-        $("tr", a.resTbl.ui.items).removeClass("playing paused");
+        a.clearHighlight("playing paused");
         if(cls) {
           /* Set new class */
-          a.resTbl.highlightItem(Dogvibes.status.uri, cls);
+          a.highlightItem(Dogvibes.status.uri, cls);
         }       
       }
     }
@@ -1060,7 +1060,7 @@ var Artist = {
         break;
     }
     if(cls) {
-      this.resTbl.highlightItem(Dogvibes.status.uri, cls);
+      this.highlightItem(Dogvibes.status.uri, cls);
     }
   }
 };
@@ -1095,8 +1095,8 @@ var AlbumEntry = function(entry, options) {
     onLoaded: $.noop
   }
   $.extend(this.options, options);
-  var tableName = entry.uri.replace(/:/g, '_');
-  tableName = tableName.replace(/\//g, '')
+  this.tableName = entry.uri.replace(/:/g, '_');
+  this.tableName = this.tableName.replace(/\//g, '')
   this.ui = 
     $('<div></div>')
     .addClass('loading')
@@ -1117,7 +1117,7 @@ var AlbumEntry = function(entry, options) {
       $(this).fadeIn(500);
     })
     .appendTo(art);
-        
+  /* Clickable album? */
   if(this.options.albumLink) {
     var titlelink = 
       $('<a />')
@@ -1131,46 +1131,79 @@ var AlbumEntry = function(entry, options) {
   } else {
     title.text(entry.name + ' ('+entry.released+')');
   }
-  this.table =  
-    $('<table></table>')
-    .attr('id', tableName+"-content")
-    .data('self', this)
-    .addClass('theme-tracktable')
-    .appendTo(this.ui);
-  var items = $('<tbody></tbody>').attr('id', tableName+'-items').appendTo(this.table);
   
-  var clear = 
-    $('<div></div>')
-    .attr('class', 'clear')
-    .appendTo(this.ui);
-  
-  this.resTbl = new ResultTable({ 
-    name: tableName,
-    idTag: 'uri',
-    fields: [ 'track_number', 'title', 'duration' ],
-    dblclick: function() {
-      var uri = $(this).data('uri');
-      Dogvibes.queueAndPlay(uri);    
-    },
-    callbacks: {
-      track_number: function(element) {
-        element.addClass('trackNo');
-      }
-    }
-  });
+  /* Create the first table */
+  this.resTbl = [];
+
   /****** Some functions ******/
+  this.createTable = function(id) {
+    /* Create table */
+    var name = this.tableName + "_" + id;
+    var table =  
+      $('<table></table>')
+      .attr('id', name +"-content")
+      .data('self', this)
+      .addClass('theme-tracktable')
+      .appendTo(this.ui);
+    var items = $('<tbody></tbody>').attr('id', name+'-items').appendTo(table);  
+    return new ResultTable({ 
+      name: name,
+      idTag: 'uri',
+      fields: [ 'track_number', 'title', 'duration' ],
+      dblclick: function() {
+        var uri = $(this).data('uri');
+        Dogvibes.queueAndPlay(uri);    
+      },
+      callbacks: {
+        track_number: function(element) {
+          element.addClass('trackNo');
+        }
+      }
+    });    
+  },
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
     var self = typeof(this.context) == "undefined" ? this : this.context;
-    self.resTbl.items = data.result.tracks;
-    self.resTbl.display();
+    var discs = [];
+    /* Split album into several discs, if any */
+    var prev_disc = 0;
+    var curr_disc = 0;
+    for(var i in data.result.tracks) {
+      curr_disc = data.result.tracks[i].disc_number;
+      if(curr_disc != prev_disc) {
+        discs[curr_disc] = [];
+        prev_disc = curr_disc;
+      }
+      discs[curr_disc].push(data.result.tracks[i]);
+    }
+    
+    for(var no in discs) {
+      if(curr_disc > 1) {
+        $('<h5></h5>').text(no).appendTo(this.ui);
+      }
+      self.resTbl[no] = self.createTable(no);
+      self.resTbl[no].items = discs[no];
+      self.resTbl[no].display();
+      $(function() {
+        $("tr", self.resTbl[no].ui.items).draggable(Config.draggableOptions);
+      });
+    }
+      
     self.ui.removeClass('loading');
-    $(function() {
-      $("tr", self.resTbl.ui.items).draggable(Config.draggableOptions);
-    });
     /* Invoke callback */
     self.options.onLoaded.call(self);
+  },
+  /* Ivokes highlight for all tables (discs) in album */
+  this.highlightItem = function(id, cls) {
+    for(var i in this.resTbl) {
+      this.resTbl[i].highlightItem(id, cls)
+    }
+  },
+  this.clearHighlight = function(cls) {
+    for(var i in this.resTbl) {
+      this.resTbl[i].clearHighlight(cls)
+    }  
   }
 };
 
