@@ -10,7 +10,7 @@ import cgi
 import urlparse
 import urllib
 
-dogs = []
+dogs = {}
 
 LOG_LEVELS = {'0': logging.CRITICAL,
               '1': logging.ERROR,
@@ -35,7 +35,7 @@ class Dog():
         dog = Dog.find(username)
         if dog != None:
             dog.destroy()
-        dogs.append(self)
+        dogs[username] = self
 
         logging.info("Welcome, %s!" % username)
         self.username = username
@@ -72,15 +72,17 @@ class Dog():
         self.stream.close()
         for handler in self.active_handlers:
             handler.disconnect()
-        dogs.remove(self)
+        if dogs.has_key(username):
+            del dogs[username]
         logging.info("Bye, %s!" % self.username)
 
     @classmethod
     def find(self, username):
-        for dog in dogs:
-            if dog.username == username:
-                return dog
-        return None
+        #if dogs.has_key(username), is this faster?
+        try:
+            return dogs[username]
+        except:
+            return None
 
 def process_command(handler, username, command):
     dog = Dog.find(username)
