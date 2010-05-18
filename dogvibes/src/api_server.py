@@ -72,8 +72,8 @@ class Dog():
         self.stream.close()
         for handler in self.active_handlers:
             handler.disconnect()
-        if dogs.has_key(username):
-            del dogs[username]
+        if dogs.has_key(self.username):
+            del dogs[self.username]
         logging.info("Bye, %s!" % self.username)
 
     @classmethod
