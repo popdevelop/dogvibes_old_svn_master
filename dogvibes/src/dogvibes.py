@@ -72,6 +72,15 @@ class Dogvibes():
                     return track
         raise ValueError('Could not create track from URI')
 
+    def create_tracks_from_album(self, album):
+        tracks = []
+        for source in self.sources:
+            if source:
+                tracks = source.create_tracks_from_album(album);
+                if tracks != None:
+                    return tracks
+        raise ValueError('Could not create track from Album')
+
     def create_spotifysource(self, user, passw):
         spotifysource = SpotifySource("spotify", user, passw)
         # FIXME: this logs in to the spotify source for the moment
@@ -179,8 +188,7 @@ class Dogvibes():
             if album != None:
                 break
         album = source.get_album(uri);
-        for track in album['tracks']:
-            track = self.create_track_from_uri(track['uri'])
+        for track in self.create_tracks_from_album(album):
             playlist.add_track(track)
         self.needs_push_update = True
         request.finish()

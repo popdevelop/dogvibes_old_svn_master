@@ -249,8 +249,7 @@ class Amp():
             if album != None:
                 break
         album = source.get_album(uri);
-        for track in album['tracks']:
-            track = self.dogvibes.create_track_from_uri(track['uri'])
+        for track in self.dogvibes.create_tracks_from_album(album):
             playlist = Playlist.get(self.tmpqueue_id)
             playlist.add_track(track)
         self.needs_push_update = True

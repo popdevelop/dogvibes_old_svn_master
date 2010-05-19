@@ -55,7 +55,19 @@ class SpotifySource:
         track.duration = duration
 
         return track
-
+        
+    def create_tracks_from_album(self, album):
+        tracks = []
+        for track in album['tracks']:
+            tmptrack = Track("spotify://"+track['uri'])
+            tmptrack.title = track['title']
+            tmptrack.artist = track['artist']
+            tmptrack.album = album['name']
+            tmptrack.album_uri = album['uri']
+            tmptrack.duration = track['duration']
+            tracks.append(tmptrack)
+        return tracks
+        
     def create_playlists(self, spot_user, spot_pass):
         pass
         # Use this when connection to spotify works
