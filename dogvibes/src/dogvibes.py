@@ -168,6 +168,22 @@ class Dogvibes():
             raise
         self.needs_push_update = True
         request.finish(playlist.add_track(track))
+        
+    def API_addAlbumToPlaylist(self, playlist_id, uri, request):
+        try:
+            playlist = Playlist.get(playlist_id)
+        except ValueError as e:
+            raise
+        for source in self.sources:
+            album = source.get_album(uri);
+            if album != None:
+                break
+        album = source.get_album(uri);
+        for track in album['tracks']:
+            track = self.create_track_from_uri(track['uri'])
+            playlist.add_track(track)
+        self.needs_push_update = True
+        request.finish()
 
     def API_removeTrackFromPlaylist(self, playlist_id, track_id, request):
         try:
