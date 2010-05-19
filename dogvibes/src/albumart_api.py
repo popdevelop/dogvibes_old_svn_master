@@ -80,7 +80,15 @@ class AlbumArt():
         url = url_template % (api_key, artist, album)
         print url
         fd = urllib.urlopen(url)
-        xml = fd.read()
+        self.http_client.fetch(url, self.xml_callback)
+
+    def xml_callback(self, response):
+        if (response.body == None):
+            self.uncached.append(self.img_path)
+            self.callback(self.get_standard_image())
+            return
+
+        xml = response.body
 
         sizes = re.findall('<image size="(small|medium|large|extralarge)">(.*)</image>', xml)
         if sizes == []:
