@@ -34,10 +34,7 @@ class Amp():
         self.tmpqueue_id = tqplaylist.id
 
         self.active_playlist_id = self.tmpqueue_id
-        if (tqplaylist.length() > 0):
-            self.active_playlists_track_id = tqplaylist.get_track_nbr(0).ptid
-        else:
-            self.active_playlists_track_id = -1
+        self.active_playlists_track_id = -1
         self.fallback_playlist_id = -1
         self.fallback_playlists_track_id = -1
 
@@ -46,6 +43,8 @@ class Amp():
 
         # the gstreamer source that is currently used for playback
         self.src = None
+
+        logging.debug("Initiated amp %s", id)
 
         self.needs_push_update = False
 
@@ -153,6 +152,7 @@ class Amp():
         track = self.fetch_active_track()
         if track != None:
             self.set_state(gst.STATE_PLAYING)
+
         request.push({'state': self.get_state()})
         request.finish()
 
@@ -268,8 +268,8 @@ class Amp():
             raise DogError, "Relative change track greater/less than 1 not implemented"
 
         playlist = self.fetch_active_playlist()
-
         track = self.fetch_active_track()
+
         if track == None:
             logging.warning("Could not find any active track")
             return
@@ -325,7 +325,7 @@ class Amp():
                 except:
                     self.set_state(gst.STATE_NULL)
                     self.active_playlists_track_id = -1
-                    logging.warning("Could not find this id in the active playlist")
+                    logging.debug("Could not find this id in the active playlist might be the end of the playlist")
                     self.set_state(gst.STATE_NULL)
                     return
 
@@ -354,6 +354,8 @@ class Amp():
 
     def start_track(self, track):
         (pending, state, timeout) = self.pipeline.get_state()
+
+        logging.debug ("Start track %s", track.uri)
 
         if self.src:
             self.pipeline.remove(self.src)
@@ -435,6 +437,8 @@ class Amp():
             # Try the first active_play_list id
             track = playlist.get_track_nbr(0)
             self.active_playlists_track_id = track.ptid
+            self.start_track(track)
+            self.set_state(gst.STATE_PAUSED)
             return track
 
     def get_played_milliseconds(self):
@@ -509,6 +513,8 @@ class Amp():
     def play_track(self, playlist_id, nbr):
         nbr = int(nbr)
         playlist_id = int(playlist_id)
+
+        logging.debug("Playing track %d on playlist %d", playlist_id, nbr)
 
         # -1 is tmpqueue
         if (playlist_id == -1):
