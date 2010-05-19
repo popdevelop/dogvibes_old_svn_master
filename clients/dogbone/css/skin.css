@@ -44,6 +44,16 @@ div.clear {
   width: 100%;
 }
 
+#drag-dummy img {
+  width: 130px;
+  height: 130px;
+  /* Opacity */
+  filter:alpha(opacity=60);
+  -moz-opacity:0.6;
+  -khtml-opacity: 0.6;
+  opacity: 0.6;  
+}
+
 /* Notfications */
 #EventContainer { 
   position: absolute;

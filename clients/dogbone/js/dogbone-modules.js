@@ -8,7 +8,8 @@ var Config = {
   defaultProtocol: ["ws", "http"], //Order to try protocols 
   resizeable: true,
   draggableOptions: {
-    revert: 'invalid', 
+    revert: 'invalid',
+    distance: 10,
     scroll: false,
     revertDuration: 100, 
     helper: 'clone', 
@@ -19,7 +20,8 @@ var Config = {
     start: function() { $(this).click(); }
   },
   sortableOptions: {
-    revert: 100, 
+    revert: 100,
+    distance: 10,
     scroll: false, 
     helper: 'clone', 
     appendTo: "#drag-dummy", 
@@ -300,7 +302,15 @@ var Main = {
       tolerance: 'pointer',
       drop: function(event, ui) {
         var uri = ui.draggable.data("uri");
-        Dogvibes.queue(uri);
+        if(uri) {
+          Dogvibes.queue(uri);
+          return;
+        }
+        /* try album_uri aswell */
+        uri = ui.draggable.data("album_uri");
+        if(uri) {
+          Dogvibes.queueAlbum(uri);
+        }        
       }
     });
     Main.ui.list.addItem("playqueue", Main.ui.playqueue);
@@ -687,7 +697,15 @@ var Playlist = {
         drop: function(event, ui) {
           var id = $(this).attr("id").removePrefix("Playlist-");
           var uri = ui.draggable.data("uri");
-          Dogvibes.addToPlaylist(id, uri);
+          if(uri) {
+            Dogvibes.addToPlaylist(id, uri);
+            return;
+          }
+          /* try album_uri aswell */
+          uri = ui.draggable.data("album_uri");
+          if(uri) {
+            Dogvibes.addAlbumToPlaylist(id, uri);
+          }
         }
       });
       /* Remove-button */
@@ -1111,12 +1129,21 @@ var AlbumEntry = function(entry, options) {
   var artimg = 
     $('<img></img>')
     .attr('src', Dogvibes.albumArt(entry.artist, entry.name, 130))
+    .data('album_uri', entry.uri)
     /* Fade in when loaded */   
     .hide()
     .load(function() {
       $(this).fadeIn(500);
     })
+    .draggable(Config.draggableOptions)
+    .dblclick(function() {
+      uri = $(this).data("album_uri");
+      if(uri) {
+        Dogvibes.queueAlbum(uri);
+      } 
+    })
     .appendTo(art);
+    
   /* Clickable album? */
   if(this.options.albumLink) {
     var titlelink = 

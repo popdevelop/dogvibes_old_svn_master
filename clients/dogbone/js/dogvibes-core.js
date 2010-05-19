@@ -193,6 +193,7 @@ window.Dogvibes =  {
     play:   "/play",
     playTrack: "/playTrack?nbr=",
     queue:  "/queue?uri=",
+    queueAlbum: "/queueAlbum?uri=",
     queueAndPlay: "/queueAndPlay?uri=",
     removeTrack : "/removeTrack?track_id=",
     removeTracks: "/removeTracks?track_ids=",    
@@ -205,6 +206,7 @@ window.Dogvibes =  {
     playlists: "/dogvibes/getAllPlaylists",
     playlist: "/dogvibes/getAllTracksInPlaylist?playlist_id=",
     addtoplaylist: "/dogvibes/addTrackToPlaylist?playlist_id=",
+    addAlbumToPlaylist: "/dogvibes/addAlbumToPlaylist?playlist_id=",
     removeFromPlaylist: "/dogvibes/removeTrackFromPlaylist?track_id=",
     removeTracksFromPlaylist: "/dogvibes/removeTracksFromPlaylist?track_ids=",  
     createPlaylist: "/dogvibes/createPlaylist?name=",
@@ -324,6 +326,14 @@ window.Dogvibes =  {
   queue: function(uri, Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.queue + uri;
     Dogvibes.server.send(URL, Success);     
+  },
+  queueAlbum: function(uri, Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAlbum + uri;
+    Dogvibes.server.send(URL, Success);   
+  },
+  addAlbumToPlaylist: function(id, uri, Success) {
+    var URL = Dogvibes.cmd.addAlbumToPlaylist + id + "&uri=" + uri;
+    Dogvibes.server.send(URL, Success); 
   },
   removeTrack: function(id, Success) {
     var cmd = (id.indexOf(',') != -1) ? Dogvibes.cmd.removeTrack : Dogvibes.cmd.removeTracks;
