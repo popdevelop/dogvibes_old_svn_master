@@ -38,7 +38,7 @@ def register_dog():
         int_ip = socket.gethostbyname(socket.gethostname())
 
     try:
-        response = urllib.urlopen('http://dogvibes.com/registerDog?name=%s&password=%s&int_ip=%s&api_version=%s' % (cfg['DOGVIBES_USER'], cfg['DOGVIBES_PASS'], int_ip, API_VERSION))
+        response = urllib.urlopen('http://dogvibes.com/registerDog?username=%s&password=%s&host=%s' % (cfg['DOGVIBES_USER'], cfg['DOGVIBES_PASS'], int_ip))
     except:
         print 'Could access dogvibes.com'
         return
@@ -207,7 +207,6 @@ def return_data(nbr, data, error, raw, js_callback, msg_id, broadcast):
     stream.write(nbr + SEP + RAW_NO + SEP + is_broadcast + SEP + res + EOS)
 
 if __name__ == "__main__":
-
     print "Running Dogvibes"
     print
     print "  Vibe the dog!"
@@ -251,11 +250,15 @@ if __name__ == "__main__":
     dogvibes = Dogvibes()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    try:
+        s.connect((cfg["MASTER_SERVER"], 80))
+    except socket.error:
+        print "Oops! Could not connect to API server at '%s'" % cfg['MASTER_SERVER']
+        exit()
 
-    print "Connecting to %s" % cfg['MASTER_SERVER']
-    s.connect((cfg["MASTER_SERVER"], 80))
+    print "Connected to API server at '%s'" % cfg['MASTER_SERVER']
+
     stream = iostream.IOStream(s)
-
     stream.write(cfg['DOGVIBES_USER'] + EOS)
 
     register_dog()
