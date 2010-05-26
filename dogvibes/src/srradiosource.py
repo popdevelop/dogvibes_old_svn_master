@@ -35,8 +35,20 @@ class SRRadioSource:
         track.album_uri = None
         track.duration = 1
 
-        return track
-        
+        return track     
+
+    def create_tracks_from_uri(self, uri):
+        if 'asx' not in uri:
+            return None
+        else:
+            return [self.create_track_from_uri(uri)]
+
+    def get_albums(self, query):
+        return []
+
+    def get_album(self, query):
+        return None
+
     def search(self, query):
         tracks = []
         #FIXME: these should be used, and maybe cached or something
