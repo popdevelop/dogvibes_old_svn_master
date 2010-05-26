@@ -39,7 +39,7 @@ define("mysql_password", default="pass", help="blog database password")
 
 db = None
 
-class MyStaticFileHandler(web.StaticFileHandler):
+class ClientHandler(web.StaticFileHandler):
     def get(self, path, include_body=True):
         # Redirect when not adding slash after username, i.e. dogvib.es/user
         if not self.request.path.endswith("/") and self.request.path.find("/", 1) == -1:
@@ -62,7 +62,7 @@ class Application(web.Application):
         handlers = [
             (r"/api/stream/([a-zA-Z0-9]+).*", WSHandler),
             (r"/api/([a-zA-Z0-9]+).*", HTTPHandler),
-            (r"/[a-zA-Z0-9]+/?(.*)", MyStaticFileHandler,
+            (r"/[a-zA-Z0-9]+/?(.*)", ClientHandler,
              {"path": os.path.join(os.path.dirname(__file__), "../../clients")}),
             ]
         web.Application.__init__(self, handlers)
@@ -275,7 +275,6 @@ class ClientGenerator(web.OutputTransform):
                 self.username = None
                 return
 
-            print "Yo"
             db_dog = db.get("SELECT * FROM dogs WHERE username = %s", self.username)
             if db_dog == None:
                 self.username = None
@@ -287,7 +286,6 @@ class ClientGenerator(web.OutputTransform):
 
     def transform_chunk(self, block):
         if "dogbone-modules.js" in self.request.uri and self.username != None:
-            print "llllo"
             block = block.replace('defaultUser: ""',
                                   'defaultUser: "%s"' % self.username)
             block = block.replace('defaultServer: "dogvib.es:8080"',
