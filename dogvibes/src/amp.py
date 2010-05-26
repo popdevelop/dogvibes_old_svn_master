@@ -167,7 +167,7 @@ class Amp():
     def API_queue(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_track(track)
+        playlist.add_track(track, request)
         self.needs_push_update = True
         request.finish()
 
@@ -183,7 +183,7 @@ class Amp():
         if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
             rmtrack = playlist.get_track_nbr(0).ptid
 
-        id = playlist.add_track(track)
+        id = playlist.add_track(track, request)
         playlist.move_track(id, 1)
         self.play_track(playlist.id, id)
 

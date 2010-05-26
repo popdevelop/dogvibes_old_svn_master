@@ -98,14 +98,19 @@ def run_command(nbr, command):
     # use only the first value for each key (feel free to clean up):
     params = dict(zip(params.keys(), map(lambda x: x[0], params.values())))
 
+    # Safety before user is added everywhere
+    user = None
+
     if 'callback' in params:
         js_callback = params.pop('callback')
     if 'msg_id' in params:
         msg_id = params.pop('msg_id')
+    if 'user' in params:
+        user = params.pop('user')
     if '_' in params:
         params.pop('_')
 
-    request = DogRequest(nbr, msg_id, js_callback)
+    request = DogRequest(nbr, user, msg_id, js_callback)
 
     try:
         if (len(c) < 3):
@@ -165,8 +170,9 @@ def run_command(nbr, command):
     # The request is not ended here, but instead in the DogRequest.callback
 
 class DogRequest:
-    def __init__(self, nbr, msg_id, js_callback):
+    def __init__(self, nbr, user, msg_id, js_callback):
         self.nbr = nbr
+        self.user = user
         self.msg_id = msg_id
         self.js_callback = js_callback
         self.pushes = []

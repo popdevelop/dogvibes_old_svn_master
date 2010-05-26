@@ -15,6 +15,7 @@ from albumart import AlbumArt
 
 # import speakers
 from devicespeaker import DeviceSpeaker
+from fakespeaker import FakeSpeaker
 
 from track import Track
 from playlist import Playlist
@@ -24,6 +25,8 @@ class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
 
     def __init__(self):
+        
+
         try: cfg = config.load("dogvibes.conf")
         except Exception, e:
             print "ERROR: Cannot load configuration file\n"
@@ -49,7 +52,7 @@ class Dogvibes():
                 self.create_filesource(cfg["FILE_SOURCE_ROOT"])
 
         # add all speakers, should also be stored in database as sources
-        self.speakers = [DeviceSpeaker("devicesink")]
+        self.speakers = [DeviceSpeaker("devicesink"), FakeSpeaker("fakespeaker")]
 
         self.needs_push_update = False
 
@@ -176,7 +179,7 @@ class Dogvibes():
         except ValueError as e:
             raise
         self.needs_push_update = True
-        request.finish(playlist.add_track(track))
+        request.finish(playlist.add_track(track, request))
         
     def API_addAlbumToPlaylist(self, playlist_id, uri, request):
         try:
@@ -189,7 +192,7 @@ class Dogvibes():
                 break
         album = source.get_album(uri);
         for track in self.create_tracks_from_album(album):
-            playlist.add_track(track)
+            playlist.add_track(track, request)
         self.needs_push_update = True
         request.finish()
 
