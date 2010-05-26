@@ -74,6 +74,15 @@ class Dogvibes():
                 if track != None:
                     return track
         raise ValueError('Could not create track from URI')
+        
+    def create_tracks_from_uri(self, uri):
+        tracks = []
+        for source in self.sources:
+            if source:
+                tracks = source.create_tracks_from_uri(uri);
+                if tracks != None:
+                    return tracks
+        raise ValueError('Could not create track from URI')
 
     def create_tracks_from_album(self, album):
         tracks = []
@@ -181,21 +190,15 @@ class Dogvibes():
         self.needs_push_update = True
         request.finish(playlist.add_track(track, request))
         
-    def API_addAlbumToPlaylist(self, playlist_id, uri, request):
+    def API_addTracksToPlaylist(self, playlist_id, uri, request):
+        tracks = self.create_tracks_from_uri(uri)
         try:
             playlist = Playlist.get(playlist_id)
         except ValueError as e:
             raise
-        for source in self.sources:
-            album = source.get_album(uri);
-            if album != None:
-                break
-        album = source.get_album(uri);
-        for track in self.create_tracks_from_album(album):
-            playlist.add_track(track, request)
         self.needs_push_update = True
-        request.finish()
-
+        request.finish(playlist.add_tracks(tracks, request))
+        
     def API_removeTrackFromPlaylist(self, playlist_id, track_id, request):
         try:
             playlist = Playlist.get(playlist_id)

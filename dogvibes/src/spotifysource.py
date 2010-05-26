@@ -56,10 +56,52 @@ class SpotifySource:
 
         return track
         
+    def create_tracks_from_uri(self, uri):
+        if uri == None:
+            return None
+        if uri[18:23] == "album":
+            album = self.get_album(uri)
+            return self.create_tracks_from_album(album)
+        else:
+            tracks = []
+            uri = SpotifySource.strip_protocol(uri)
+            if uri == None:
+                return None
+            url = "http://ws.spotify.com/lookup/1/?uri=" + uri
+
+            try:
+                e = ET.parse(urllib.urlopen(url))
+            except Exception as e:
+                return None
+
+            ns = "http://www.spotify.com/ns/music/1"
+
+            if 'album' in uri:
+                title = ""
+                artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+                album = e.find('.//{%s}name' % ns).text
+                duration = 0
+                album_uri = uri
+            else:
+                title = e.find('.//{%s}name' % ns).text
+                artist = e.find('.//{%s}artist/{%s}name' % (ns, ns)).text
+                album = e.find('.//{%s}album/{%s}name' % (ns, ns)).text
+                duration = int(float(e.find('.//{%s}length' % ns).text) * 1000)
+                album_uri = "spotify://" + e.find('.//{%s}album' % ns).attrib['href']
+
+            track = Track("spotify://"+uri)
+            track.title = title
+            track.artist = artist
+            track.album = album
+            track.album_uri = album_uri
+            track.duration = duration
+            tracks.append(track)
+            return tracks
+
     def create_tracks_from_album(self, album):
         tracks = []
         for track in album['tracks']:
-            tmptrack = Track("spotify://"+track['uri'])
+            tmptrack = Track(track['uri'])
             tmptrack.title = track['title']
             tmptrack.artist = track['artist']
             tmptrack.album = album['name']

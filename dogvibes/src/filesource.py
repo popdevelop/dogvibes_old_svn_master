@@ -16,6 +16,9 @@ class FileSource:
     def create_track_from_uri(self, uri):
         return self.collection.create_track_from_uri(uri)
 
+    def create_tracks_from_uri(self, uri):
+        return self.collection.create_tracks_from_uri(uri)
+
     def search(self, query):
         return self.collection.search(query)
 

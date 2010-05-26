@@ -111,6 +111,28 @@ class Playlist():
 
         self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, user) values (?, ?, ?, ?)''', [self.id, track_id, position, user])
         return self.db.inserted_id()
+        
+     # returns: the id so client don't have to look it up right after add
+    def add_tracks(self, tracks, request):
+        for track in tracks:
+            track_id = track.store()
+            self.db.commit_statement('''select max(position) from playlist_tracks where playlist_id = ?''', [self.id])
+            row = self.db.fetchone()
+
+            # Do not assume that user is set always
+            user = request.user
+            if user == None:
+                user = ""
+        
+            if row['max(position)'] == None:
+                position = 1
+            else:
+                position = row['max(position)'] + 1
+
+            self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, user) values (?, ?, ?, ?)''', [self.id, track_id, position, user])
+        
+        self.tick_version()
+        return self.db.inserted_id()
 
     # returns: an array of Track objects
     def get_all_tracks(self):

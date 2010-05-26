@@ -23,6 +23,18 @@ class Collection:
             del row['id'] # the id isn't part of a Track object
             return Track(**row)
         return None
+        
+    def create_tracks_from_uri(self, uri): 
+        db = Database()
+        # TODO: better way than searching through ALL tracks?
+        db.commit_statement('''select * from tracks where uri = ?''', [uri])
+        row = db.fetchone()
+        tracks = []
+        if row != None:
+            del row['id'] # the id isn't part of a Track object
+            tracks.append(Track(**row))
+            return tracks
+        return None
 
     def index(self, path):
         for top, dirnames, filenames in os.walk(path):

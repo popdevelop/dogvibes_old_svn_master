@@ -165,14 +165,14 @@ class Amp():
             request.finish()
 
     def API_queue(self, uri, request):
-        track = self.dogvibes.create_track_from_uri(uri)
+        tracks = self.dogvibes.create_tracks_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_track(track, request)
+        playlist.add_tracks(tracks, request)
         self.needs_push_update = True
         request.finish()
 
     def API_queueAndPlay(self, uri, request):
-        track = self.dogvibes.create_track_from_uri(uri)
+        track = self.dogvibes.create_tracks_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
 
         rmtrack = None
@@ -243,18 +243,6 @@ class Amp():
         request.push({'state': 'stopped'})
         request.finish()
 		
-    def API_queueAlbum(self, uri, request):
-        for source in self.sources:
-            album = source.get_album(uri);
-            if album != None:
-                break
-        album = source.get_album(uri);
-        for track in self.dogvibes.create_tracks_from_album(album):
-            playlist = Playlist.get(self.tmpqueue_id)
-            playlist.add_track(track)
-        self.needs_push_update = True
-        request.finish()
-
     # Internal functions
 
     def pad_added(self, element, pad, last):
