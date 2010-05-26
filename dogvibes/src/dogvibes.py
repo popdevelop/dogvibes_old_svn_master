@@ -11,6 +11,7 @@ from amp import Amp
 # import spources
 from spotifysource import SpotifySource
 from filesource import FileSource
+from srradiosource import SRRadioSource
 from albumart import AlbumArt
 
 # import speakers
@@ -34,8 +35,11 @@ class Dogvibes():
 
         self.sources = []
 
+        srradiosource = SRRadioSource("srradiosource")
+        self.sources.append(srradiosource)
+
         # Hackidooda and laziness to always create correct source, remove in real release
-        if Source.length() > 0:
+        if Source.length() > 1:
             allsources = Source.get_all()
             # FIXME this should be dynamic
             for source in allsources:
@@ -65,6 +69,7 @@ class Dogvibes():
 
         # add sources to amp, assume spotify source on first position, laziness
         amp0.connect_source(0)
+        amp0.connect_source(1)
 
     def create_track_from_uri(self, uri):
         track = None
