@@ -252,14 +252,16 @@ class Amp():
     def change_track(self, tracknbr, relative):
         tracknbr = int(tracknbr)
 
+        logging.debug("Change to track %d, is relative:%d", tracknbr, relative)
+
         if relative and (tracknbr > 1 or tracknbr < -1):
             raise DogError, "Relative change track greater/less than 1 not implemented"
 
         playlist = self.fetch_active_playlist()
         track = self.fetch_active_track()
 
-        if track == None:
-            logging.warning("Could not find any active track")
+        if track == None and relative:
+            logging.warning("I am lost can not call relative because i do no know where I am")
             return
 
         # If we are in tmpqueue either removetrack or push it to the top
@@ -310,11 +312,9 @@ class Amp():
             else:
                 try:
                     next_position = playlist.get_track_id(tracknbr).position - 1
+                    logging.debug("In a playlist trying position %d", next_position)
                 except:
-                    self.set_state(gst.STATE_NULL)
-                    self.active_playlists_track_id = -1
-                    logging.debug("Could not find this id in the active playlist might be the end of the playlist")
-                    self.set_state(gst.STATE_NULL)
+                    logging.debug("Could not find this position in the active playlist, no action")
                     return
 
         try:
@@ -322,7 +322,7 @@ class Amp():
         except:
             self.set_state(gst.STATE_NULL)
             self.active_playlists_track_id = -1
-            logging.debug("Could not get to next posiiton in the active playlist")
+            logging.debug("Could not get to next positon in the active playlist")
             return
 
         self.active_playlists_track_id = track.ptid
@@ -404,13 +404,14 @@ class Amp():
         except:
             # The play list have been removed or disapperd use tmpqueue as fallback
             self.active_playlist_id = self.tmpqueue_id
-            self.active_playlists_track_id = 0
+            self.active_playlists_track_id = -1
             playlist = Playlist.get(self.active_playlist_id)
             return playlist
 
     def fetch_active_track(self):
         # Assume that fetch active playlist alreay been run
         playlist = Playlist.get(self.active_playlist_id)
+
         if playlist.length() <= 0:
             return None
 
@@ -419,7 +420,7 @@ class Amp():
                 track = playlist.get_track_id(self.active_playlists_track_id)
                 return track
             except:
-                logging.debug("Could not get active track %d" % (self.active_playlists_track_id, self.active_playlist_id))
+                logging.debug("Could find any active track, %d on playlist %d", self.active_playlists_track_id, self.active_playlist_id)
                 return None
         else:
             # Try the first active_play_list id
@@ -502,7 +503,7 @@ class Amp():
         nbr = int(nbr)
         playlist_id = int(playlist_id)
 
-        logging.debug("Playing track %d on playlist %d", playlist_id, nbr)
+        logging.debug("Playing track %d on playlist %d", nbr, playlist_id)
 
         # -1 is tmpqueue
         if (playlist_id == -1):
