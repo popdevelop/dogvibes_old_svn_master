@@ -9,6 +9,7 @@ class SRRadioSource:
     def __init__(self, name):
         self.name = name
         self.amp = None
+        self.search_prefix = "sr"
 
     def create_track_from_uri(self, uri):
         if 'asx' not in uri:

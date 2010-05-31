@@ -36,16 +36,13 @@ class YoutubeSource:
     def __init__(self, name):
         self.name = name
         self.amp = None
+        self.search_prefix = "youtube"
 
     def create_track_from_uri(self, uri):
         if 'youtube' not in uri:
             return None
-        print uri
         p = re.compile('http://www.youtube.com/v/(.*)\?.*$')
         m = p.match(uri)
-
-        print m.group(0)
-        print m.group(1)
 
         client = gdata.youtube.service.YouTubeService()
         client.ssl = False

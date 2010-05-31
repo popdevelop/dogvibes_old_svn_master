@@ -11,6 +11,7 @@ class SpotifySource:
         self.user = user
         self.created = False
         self.amp = None
+        self.search_prefix = "spotify"
 
         #spotifydogvibes.login(user, passw);
 

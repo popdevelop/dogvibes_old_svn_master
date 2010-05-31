@@ -49,34 +49,33 @@ class Amp():
         self.needs_push_update = False
 
     # Soon to be API
-    def connect_source(self, nbr):
-        nbr = int(nbr)
-        if nbr > len(self.dogvibes.sources) - 1:
+    def connect_source(self, name):
+        if not self.dogvibes.sources.has_key(name):
             logging.warning ("Connect source - source does not exist")
             return
 
-        if self.dogvibes.sources[nbr].amp != None:
+        if self.dogvibes.sources[name].amp != None:
             logging.warning ("Connect source - source is already connected to amp")
             return
 
         # Add amp as owner of source
-        self.dogvibes.sources[nbr].amp = self
-        self.sources.append(self.dogvibes.sources[nbr])
+        self.dogvibes.sources[name].amp = self
+        self.sources.append(self.dogvibes.sources[name])
 
-    def disconnect_source(self, nbr):
-        nbr = int(nbr)
-        if nbr > len(self.dogvibes.sources) - 1:
-            logging.warning ("Disonnect source - source does not exist")
+    def disconnect_source(self, name):
+        if not self.dogvibes.sources.has_key(name):
+            logging.warning ("Connect source - source does not exist")
             return
 
-        if self.dogvibes.sources[nbr].amp == None:
+        if self.dogvibes.sources[name].amp == None:
             logging.warning ("Source has no owner")
             return
-        if self.dogvibes.sources[nbr].amp != self:
+
+        if self.dogvibes.sources[name].amp != self:
             logging.warning ("Amp not owner of this source")
             return
 
-        self.sources.remove(self.dogvibes.sources[nbr])
+        del self.sources[name]
 
     def connect_speaker(self, nbr, request = None):
         nbr = int(nbr)

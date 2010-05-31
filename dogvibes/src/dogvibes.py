@@ -9,9 +9,11 @@ import threading
 from amp import Amp
 
 # import spources
-from spotifysource import SpotifySource
 from filesource import FileSource
+from spotifysource import SpotifySource
 from srradiosource import SRRadioSource
+from youtubesource import YoutubeSource
+
 from albumart import AlbumArt
 
 # import speakers
@@ -26,17 +28,15 @@ class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
 
     def __init__(self):
-        
+
 
         try: cfg = config.load("dogvibes.conf")
         except Exception, e:
             print "ERROR: Cannot load configuration file\n"
             sys.exit(1)
 
-        self.sources = []
+        self.sources = {}
 
-        srradiosource = SRRadioSource("srradiosource")
-        self.sources.append(srradiosource)
 
         # Hackidooda and laziness to always create correct source, remove in real release
         if Source.length() > 1:
@@ -44,8 +44,8 @@ class Dogvibes():
             # FIXME this should be dynamic
             for source in allsources:
                 if source.type == "spotify":
-                    spotifysource = SpotifySource("spotify", source.user, source.passw)
-                    self.sources.append(spotifysource)
+                    spotifysource = SpotifySource("Spotify", source.user, source.passw)
+                    self.sources[spotifysource.name] = spotifysource
         else:
             # This is just here because of laziness
             if(cfg['ENABLE_SPOTIFY_SOURCE'] == '1'):
@@ -54,6 +54,11 @@ class Dogvibes():
                 self.create_spotifysource(spot_user, spot_pass)
             if(cfg['ENABLE_FILE_SOURCE'] == '1'):
                 self.create_filesource(cfg["FILE_SOURCE_ROOT"])
+
+        srradiosource = SRRadioSource("SR")
+        self.sources[srradiosource.name] = srradiosource
+        youtubesource = YoutubeSource("Youtube")
+        self.sources[youtubesource.name] = youtubesource
 
         # add all speakers, should also be stored in database as sources
         self.speakers = [DeviceSpeaker("devicesink"), FakeSpeaker("fakespeaker")]
@@ -68,41 +73,42 @@ class Dogvibes():
         self.amps = [amp0]
 
         # add sources to amp, assume spotify source on first position, laziness
-        amp0.connect_source(0)
-        amp0.connect_source(1)
+        amp0.connect_source('SR')
+        amp0.connect_source('Spotify')
+        amp0.connect_source('Youtube')
 
     def create_track_from_uri(self, uri):
         track = None
-        for source in self.sources:
+        for name,source in self.sources.iteritems():
             if source:
-                track = source.create_track_from_uri(uri);
+                track = source.create_track_from_uri(uri)
                 if track != None:
                     return track
         raise ValueError('Could not create track from URI')
         
     def create_tracks_from_uri(self, uri):
         tracks = []
-        for source in self.sources:
+        for name,source in self.sources.iteritems():
             if source:
-                tracks = source.create_tracks_from_uri(uri);
+                tracks = source.create_tracks_from_uri(uri)
                 if tracks != None:
                     return tracks
         raise ValueError('Could not create track from URI')
 
     def create_tracks_from_album(self, album):
         tracks = []
-        for source in self.sources:
+        for name,source in self.sources.iteritems():
             if source:
-                tracks = source.create_tracks_from_album(album);
+                tracks = source.create_tracks_from_album(album)
                 if tracks != None:
                     return tracks
         raise ValueError('Could not create track from Album')
 
     def create_spotifysource(self, user, passw):
-        spotifysource = SpotifySource("spotify", user, passw)
+        spotifysource = SpotifySource("Spotify", user, passw)
         # FIXME: this logs in to the spotify source for the moment
         spotifysource.get_src()
-        self.sources.append(spotifysource)
+        self.sources[spotifysource.name] = spotifysource
         Source.add(user, passw, "spotify")
 
     def create_filesource(self, dir):
@@ -117,7 +123,16 @@ class Dogvibes():
 
     def do_search(self, query, request):
         ret = []
-        for source in self.sources:
+        for name,source in self.sources.iteritems():
+            if query.startswith(source.search_prefix+":"):
+                newquery = query.split(":",1)
+                ret = source.search(newquery[1])
+                request.finish(ret)
+                return
+                
+        #if no prefix, just return answer in the order they were added
+        #FIXME: add support for "spotify:...." strings in spotifysource as a special case?
+        for name,source in self.sources.iteritems():
             if source:
                 ret += source.search(query)
         request.finish(ret)
@@ -133,8 +148,8 @@ class Dogvibes():
 
     def get_album(self, album_uri, request):
         album = None
-        for source in self.sources:
-            album = source.get_album(album_uri);
+        for name, source in self.sources.iteritems():
+            album = source.get_album(album_uri)
             if album != None:
                 break
         request.finish(album)
@@ -157,7 +172,7 @@ class Dogvibes():
 
     def API_getAlbums(self, query, request):
         ret = []
-        for source in self.sources:
+        for name, source in self.sources.iteritems():
             if source:
                 ret += source.get_albums(query)
         request.finish(ret)
@@ -168,7 +183,7 @@ class Dogvibes():
 
     def API_list(self, type, request):
         ret = []
-        for source in self.sources:
+        for name, source in self.sources.itermitems():
             if source:
                 ret += source.list(type)
         request.finish(ret)
@@ -217,7 +232,8 @@ class Dogvibes():
         try:
             playlist = Playlist.get(playlist_id)
             for track_id in track_ids.split(','):
-                if track_id != '': # don't crash on railing comma
+                # don't crash on railing comma
+                if track_id != '':
                     playlist.remove_track_id(int(track_id))
         except ValueError as e:
             raise
