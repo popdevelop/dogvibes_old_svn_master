@@ -113,26 +113,41 @@ class Playlist():
         return self.db.inserted_id()
         
      # returns: the id so client don't have to look it up right after add
-    def add_tracks(self, tracks, request):
+    def add_tracks(self, tracks, request, position):
+        first = True
+        tid = 0
+        
+        self.db.commit_statement('''select max(position) from playlist_tracks where playlist_id = ?''', [self.id])
+        row = self.db.fetchone()
+        
+        if row['max(position)'] == None:
+            # no tracks in queue, put it first
+            position = 1
+        else:
+            # sanity check index
+            if int(position) > int(row['max(position)']) + 1 or int(position) < 0:
+                position = int(row['max(position)']) + 1
+            else:
+                self.db.commit_statement('''update playlist_tracks set position = position + ? where playlist_id = ? and position >= ?''', [str(len(tracks)), self.id, position])
+            
+        # add new tracks    
         for track in tracks:
             track_id = track.store()
-            self.db.commit_statement('''select max(position) from playlist_tracks where playlist_id = ?''', [self.id])
-            row = self.db.fetchone()
-
+        
             # Do not assume that user is set always
             user = request.user
             if user == None:
                 user = ""
-        
-            if row['max(position)'] == None:
-                position = 1
-            else:
-                position = row['max(position)'] + 1
 
             self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, user) values (?, ?, ?, ?)''', [self.id, track_id, position, user])
-        
+            position = int(position) + 1    
+            
+            if first:
+                first = False
+                tid = self.db.inserted_id()
+
         self.tick_version()
-        return self.db.inserted_id()
+        return tid
 
     # returns: an array of Track objects
     def get_all_tracks(self):
@@ -228,56 +243,7 @@ class Playlist():
 
 if __name__ == '__main__':
 
-#    p = Playlist.create("testlist 1")
-#    p = Playlist.create("testlist 2")
-#    p = Playlist.create("testlist 3")
-#    print p.name
-#    t = Track("dummy-uri0")
-#    p.add_track(t)
-#    print p.get_all_tracks()
-#    try:
-#        p = Playlist.get('1000') # should not crash
-#    except ValueError: pass
-#    p = Playlist.get('2')
-#    print p.name
-#    ps = Playlist.get_all()
-#    print ps[1].name
-#    t = Track("dummy-uri1")
-#    ps[0].add_track(t)
-#    t = Track("dummy-uri2")
-#    ps[0].add_track(t)
-#    t = Track("dummy-uri3")
-#    ps[0].add_track(t)
-#    print ps[0].get_all_tracks()
-#    ps[0].remove_track('2')
-#    print ps[0].get_all_tracks()
-#    print [playlist.to_dict() for playlist in Playlist.get_all()]
-
-#    import pprint
-#    pp = pprint.PrettyPrinter(indent=2)
-
     from dogvibes import Dogvibes
     global dogvibes
     dogvibes = Dogvibes()
-
-#    p = Playlist.create("Sortable")
-    playlist = Playlist.get(1)
-#    playlist.move_track(2,4)
-
-    playlist.remove_track_nbr(6)
-
-#    t = dogvibes.create_track_from_uri('spotify:track:4lnFwlk4m7hhFHCWmMbLqW')
-#    playlist.add_track(t)
-#    t = dogvibes.create_track_from_uri('spotify:track:3XjhVyOmumNu3uY5DrB6cj')
-#    playlist.add_track(t)
-#    t = dogvibes.create_track_from_uri('spotify:track:7FKhuZtIPchBVNIhFnNL5W')
-#    playlist.add_track(t)
-
-
-#    playlist.add_track(Track('spotify:track:4lnFwlk4m7hhFHCWmMbLqW'))
-#    playlist.add_track(Track('spotify:track:3XjhVyOmumNu3uY5DrB6cj'))
-#    playlist.add_track(Track('spotify:track:7FKhuZtIPchBVNIhFnNL5W'))
-
-
-#    t = playlist.get_track_nbr(0)
-#    print t
+    
