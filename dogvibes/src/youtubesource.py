@@ -2,6 +2,7 @@ from track import Track
 import logging
 import gdata.youtube
 import gdata.youtube.service
+import urlparse, urllib
 import re
 
 def PrintVideoFeed(feed):
@@ -41,18 +42,39 @@ class YoutubeSource:
     def create_track_from_uri(self, uri):
         if 'youtube' not in uri:
             return None
-        p = re.compile('http://www.youtube.com/v/(.*)\?.*$')
-        m = p.match(uri)
+        
+            
+        print "create track from uri=", uri
+        #FIXME UGLY STUFF,
+        # somehow the uri i shortened outside this function, no clue were :)
+        # but i rebuild it again, fast and nice!!
+
+        #m = re.search('http://www.youtube.com/get_video.video_id=(.*?)&t=.*',uri)
+        m = re.search('http://www.youtube.com/get_video.video_id=(.*)',uri)
 
         client = gdata.youtube.service.YouTubeService()
         client.ssl = False
 
         entry = client.GetYouTubeVideoEntry(video_id=m.group(1))
         logging.debug("Created track from uri %s in youtubesource", uri)
+        PrintEntryDetails(entry)
+        swfuri = entry.GetSwfUrl()
 
-        track = Track(entry.media.title.text)
+        video_id = m.group(1)
+        uri = "http://www.youtube.com/watch?v="+video_id
+        u = urllib.urlopen(uri)
+        str = re.search('\"t\": +\"(.+?)\"',u.read())
+        t = str.group(1)
+
+
+        print t, video_id
+        newuri= "http://www.youtube.com/get_video?video_id=" + video_id + "&" + "t=" + t
+        print newuri
+        track = Track(newuri)
+        track.title = entry.media.title.text
         track.artist = "YOUTUBE VIDEO"
         track.album = entry.media.category[0].text
+        #FIXME add search for author on album?
         track.album_uri = None
         track.duration = int(entry.media.duration.seconds)*1000
 
@@ -94,6 +116,7 @@ class YoutubeSource:
         #for thumbnail in entry.media.thumbnail:
         #print 'Thumbnail url: %s' % thumbnail.url              
 
+
         tracks = []
         for entry in feed.entry:
             track = {}
@@ -102,8 +125,23 @@ class YoutubeSource:
             track['album'] = entry.media.category[0].text
             track['album_uri'] = None
             track['duration'] = int(entry.media.duration.seconds)*1000
-            track['uri'] = entry.GetSwfUrl()
-            track['popularity'] = "0"
+
+            swfuri = entry.GetSwfUrl()
+            print swfuri
+            p = re.compile('http://www.youtube.com/v/(.*)\?.*$')
+            video_id = p.match(swfuri).group(1)
+
+            uri = "http://www.youtube.com/watch?v="+video_id
+            u = urllib.urlopen(uri)
+            str = re.search('\"t\": +\"(.+?)\"',u.read())
+            t = str.group(1)
+
+
+            print t, video_id
+            track['uri'] = "http://www.youtube.com/get_video?video_id=" + video_id + "&" + "t=" + t
+            print track['uri']
+
+            track['popularity'] = "3"
             tracks.append(track)
         return tracks
 
