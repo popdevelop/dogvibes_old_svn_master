@@ -85,7 +85,7 @@ class Dogvibes():
                 if track != None:
                     return track
         raise ValueError('Could not create track from URI')
-        
+
     def create_tracks_from_uri(self, uri):
         tracks = []
         for name,source in self.sources.iteritems():
@@ -124,17 +124,14 @@ class Dogvibes():
     def do_search(self, query, request):
         ret = []
         for name,source in self.sources.iteritems():
-            if query.startswith(source.search_prefix+":"):
+            if query.startswith(source.search_prefix + ":"):
                 newquery = query.split(":",1)
                 ret = source.search(newquery[1])
                 request.finish(ret)
                 return
-                
-        #if no prefix, just return answer in the order they were added
-        #FIXME: add support for "spotify:...." strings in spotifysource as a special case?
-        for name,source in self.sources.iteritems():
-            if source:
-                ret += source.search(query)
+
+        #if no prefix, just use spotify
+        ret = self.sources['Spotify'].search(query)
         request.finish(ret)
 
     def fetch_albumart(self, artist, album, size, request):

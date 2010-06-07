@@ -182,7 +182,7 @@ class Amp():
             
             self.play_track(playlist.id, id)
                         
-            if rmtrack != None:                 
+            if rmtrack != None:
                 playlist.remove_track_id(rmtrack)
         else:
             playlist.add_tracks(tracks, request, position)
