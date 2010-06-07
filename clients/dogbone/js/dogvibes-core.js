@@ -1,7 +1,7 @@
 
 /*************************************
  * Dogvibes server API
- * Requires jQuery and jsonp plugin 
+ * Requires jQuery and jsonp plugin
  *************************************/
 
 
@@ -26,11 +26,11 @@ var AJAX = {
   interval: 500,
   request: false,
   timer: false,
-  
+
   /* reconnection params */
   delay: 2000,
   attemps: 4,
-  
+
   start: function(server, user) {
     AJAX.server = server + "/" + user;
     AJAX.timer = setTimeout(AJAX.getStatus, 0);
@@ -38,7 +38,7 @@ var AJAX = {
   },
   stop: function() {
     AJAX.connected = false;
-    AJAX.request.abort();    
+    AJAX.request.abort();
     clearTimeout(AJAX.timer);
     AJAX.status = Dogvibes.defaultStatus;
     $(document).trigger("Server.status");
@@ -54,12 +54,12 @@ var AJAX = {
     }
     /* Give up */
     $(document).trigger("Server.error");
-    AJAX.stop(); 
+    AJAX.stop();
   },
   send: function(URL, Success, Context) {
     /* Changing state? */
     if(!AJAX.status.connected) {
-      $(document).trigger("Server.connecting");    
+      $(document).trigger("Server.connecting");
     }
     var opts = {
       url: AJAX.server + URL,
@@ -90,7 +90,7 @@ var AJAX = {
     }
     clearTimeout(AJAX.timer);
     AJAX.timer = setTimeout(AJAX.getStatus, AJAX.interval);
-    
+
     AJAX.status = data;
     $(document).trigger("Server.status");
   }
@@ -114,13 +114,13 @@ var WSocket = {
       WSocket.ws = new WebSocket(server + "/stream/" + user);
       WSocket.server = server;
       WSocket.user = user;
-      WSocket.ws.onopen = function() { 
+      WSocket.ws.onopen = function() {
         clearTimeout(WSocket.timer);
         WSocket.connected = true;
         WSocket.getStatus();
         WSocket.attempts = 300;
         WSocket.delay = 2000;
-        $(document).trigger("Server.connected"); 
+        $(document).trigger("Server.connected");
       };
       WSocket.ws.onmessage = function(e){ eval(e.data); };
       WSocket.ws.onclose = WSocket.error;
@@ -133,11 +133,11 @@ var WSocket = {
     WSocket.connected = false;
     WSocket.status = Dogvibes.defaultStatus;
     $(document).trigger("Server.error");
-    $(document).trigger("Server.status");    
+    $(document).trigger("Server.status");
   },
   error: function() {
-    WSocket.status = Dogvibes.defaultStatus;  
-    $(document).trigger("Server.status");    
+    WSocket.status = Dogvibes.defaultStatus;
+    $(document).trigger("Server.status");
     $(document).trigger("Server.connecting");
     clearTimeout(WSocket.timer)
     if(WSocket.attempts-- > 0) {
@@ -158,7 +158,7 @@ var WSocket = {
       }
     }
     catch (e){
-      
+
     }
   },
   getStatus: function() {
@@ -168,7 +168,7 @@ var WSocket = {
   handleStatus: function(json) {
     WSocket.status = json;
     $(document).trigger("Server.status");
-    
+
   }
 };
 /* Workaround for server hard coded callback */
@@ -182,7 +182,7 @@ window.Dogvibes =  {
   serverURL: false,
   status: {},
   defAmp: "/amp/0" , /* TODO: dynamic */
-  /* Translation table protocol -> connection object */  
+  /* Translation table protocol -> connection object */
   protHandlers: {
     ws: WSocket,
     http: AJAX
@@ -196,7 +196,7 @@ window.Dogvibes =  {
     queueAlbum: "/queueAlbum?uri=",
     queueAndPlay: "/queueAndPlay?uri=",
     removeTrack : "/removeTrack?track_id=",
-    removeTracks: "/removeTracks?track_ids=",    
+    removeTracks: "/removeTracks?track_ids=",
     pause:  "/pause",
     next:   "/nextTrack",
     seek:   "/seek?mseconds=",
@@ -208,7 +208,7 @@ window.Dogvibes =  {
     addtoplaylist: "/dogvibes/addTrackToPlaylist?playlist_id=",
     addAlbumToPlaylist: "/dogvibes/addAlbumToPlaylist?playlist_id=",
     removeFromPlaylist: "/dogvibes/removeTrackFromPlaylist?track_id=",
-    removeTracksFromPlaylist: "/dogvibes/removeTracksFromPlaylist?track_ids=",  
+    removeTracksFromPlaylist: "/dogvibes/removeTracksFromPlaylist?track_ids=",
     createPlaylist: "/dogvibes/createPlaylist?name=",
     removePlaylist: "/dogvibes/removePlaylist?id=",
     renamePlaylist: "/dogvibes/renamePlaylist?playlist_id=",
@@ -222,11 +222,11 @@ window.Dogvibes =  {
   /*****************
    * Initialization
    *****************/
-  init: function(protocol, server, user) {   
+  init: function(protocol, server, user) {
     $(document).bind("Server.status", Dogvibes.handleStatus);
 //    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
     Dogvibes.albumartURL = "http://" + server + "/" + user;
-    
+
     /* Try all protocols */
     for(var prot in protocol) {
       prot = protocol[prot];
@@ -282,7 +282,7 @@ window.Dogvibes =  {
     if(Dogvibes.status.playlist_id != oldStatus.playlist_id) {
       $(document).trigger("Status.playlist");
     }
-    
+
     if(Dogvibes.status.playlistversion != oldStatus.playlistversion) {
       $(document).trigger("Status.playlistchange");
     }
@@ -290,11 +290,11 @@ window.Dogvibes =  {
     if(Dogvibes.status.elapsedmseconds != oldStatus.elapsedmseconds) {
       $(document).trigger("Status.elapsed");
     }
-    
+
     /* TODO: add more */
   },
   /****************
-   * API functions 
+   * API functions
    ****************/
   search: function(keyword, Success) {
     var URL = Dogvibes.cmd.search + escape(keyword);
@@ -307,7 +307,7 @@ window.Dogvibes =  {
     Dogvibes.server.send(Dogvibes.cmd.playlist + id, Success);
   },
   addToPlaylist: function(id, uri, Success) {
-    var URL = Dogvibes.cmd.addtoplaylist + id + "&uri=" + uri;
+    var URL = Dogvibes.cmd.addtoplaylist + id + "&uri=" + escape(uri);
     Dogvibes.server.send(URL, Success);
   },
   removeFromPlaylist: function(id, pid, Success) {
@@ -321,31 +321,31 @@ window.Dogvibes =  {
   },
   getAllTracksInQueue: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.playqueue;
-    Dogvibes.server.send(URL, Success);  
+    Dogvibes.server.send(URL, Success);
   },
   queue: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.queue + uri;
-    Dogvibes.server.send(URL, Success);     
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.queue + escape(uri);
+    Dogvibes.server.send(URL, Success);
   },
   queueAlbum: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAlbum + uri;
-    Dogvibes.server.send(URL, Success);   
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAlbum + escape(uri);
+    Dogvibes.server.send(URL, Success);
   },
   addAlbumToPlaylist: function(id, uri, Success) {
-    var URL = Dogvibes.cmd.addAlbumToPlaylist + id + "&uri=" + uri;
-    Dogvibes.server.send(URL, Success); 
+    var URL = Dogvibes.cmd.addAlbumToPlaylist + id + "&uri=" + escape(uri);
+    Dogvibes.server.send(URL, Success);
   },
   removeTrack: function(id, Success) {
     var cmd = (id.indexOf(',') != -1) ? Dogvibes.cmd.removeTrack : Dogvibes.cmd.removeTracks;
     var URL = Dogvibes.defAmp + cmd + id;
     Dogvibes.server.send(URL, Success);
-  },  
+  },
   play: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.play;
     Dogvibes.server.send(URL, Success);
   },
   queueAndPlay: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAndPlay + uri;  
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.queueAndPlay + escape(uri);
     Dogvibes.server.send(URL, Success);
   },
   prev: function(Success) {
@@ -355,22 +355,22 @@ window.Dogvibes =  {
   next: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.next;
     Dogvibes.server.send(URL, Success);
-  },    
+  },
   pause: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.pause;
     Dogvibes.server.send(URL, Success);
-  },  
+  },
   createPlaylist: function(name, Success) {
     var URL = Dogvibes.cmd.createPlaylist + name;
-    Dogvibes.server.send(URL, Success);  
+    Dogvibes.server.send(URL, Success);
   },
   removePlaylist: function(id, Success) {
     var URL = Dogvibes.cmd.removePlaylist + id;
-    Dogvibes.server.send(URL, Success);  
-  },  
+    Dogvibes.server.send(URL, Success);
+  },
   renamePlaylist: function(id, name, Success) {
     var URL = Dogvibes.cmd.renamePlaylist + id + "&name=" + name;
-    Dogvibes.server.send(URL, Success);    
+    Dogvibes.server.send(URL, Success);
   },
   setVolume: function(vol, Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.setVolume + vol;
@@ -389,8 +389,8 @@ window.Dogvibes =  {
     Dogvibes.server.send(URL, Success);
   },
   getAlbum: function(uri, Success, Context) {
-    var URL = Dogvibes.cmd.getAlbum + uri;
-    Dogvibes.server.send(URL, Success, Context);  
+    var URL = Dogvibes.cmd.getAlbum + escape(uri);
+    Dogvibes.server.send(URL, Success, Context);
   },
   getPlayedMilliSecs: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.getPlayedMilliSecs;
@@ -400,7 +400,7 @@ window.Dogvibes =  {
   albumArt: function(artist, album, size) {
     if (artist == '' || album == '') {
       return "";
-    }   
+    }
     return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + escape(album) + "&artist=" + escape(artist) + "&size=" + size;
   }
 };
