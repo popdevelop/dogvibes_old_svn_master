@@ -20,16 +20,16 @@ function dogvibes {
 
 amp "connectSpeaker?nbr=0"
 
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
-amp "queue?uri=spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+amp "queue?uri=spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
 
 amp "play"
 

@@ -32,23 +32,23 @@ amp "connectSpeaker?nbr=0"
 dogvibes "createPlaylist?name=Vivaldi"
 dogvibes "getAllPlaylists"
 
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:0TzrlYVXQGb5kCK25JBXqS"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:0DwnNRCM2r5WM4dh57UA3V"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:3JoEE48ZUdFL74WdJsMsYO"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:13GSFj7uIxqL9eNItNob3p"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:6jyIZtAufT0Qbyp200KRqz"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:0TzrlYVXQGb5kCK25JBXqS"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:0DwnNRCM2r5WM4dh57UA3V"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:3JoEE48ZUdFL74WdJsMsYO"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:13GSFj7uIxqL9eNItNob3p"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:6jyIZtAufT0Qbyp200KRqz"
 
 echo "Added 5 Vivaldi songs"
 
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:32xwTZyYlaiO7AyEXSepVs"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:1O1F0vRllauVmCGhItXxu2"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:6cPbVV2I3AjhSHxB5J4Ozd"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:05ShrFZEGDlxrzIt7Qo0nU"
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:24uQzxG85ONf3w2DVeStG3"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:32xwTZyYlaiO7AyEXSepVs"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:1O1F0vRllauVmCGhItXxu2"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:6cPbVV2I3AjhSHxB5J4Ozd"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:05ShrFZEGDlxrzIt7Qo0nU"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:24uQzxG85ONf3w2DVeStG3"
 
 echo "Adde 5 Vivaldi  more songs"
 
-dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify:track:2ycZ6jD05mCUWYJZHF6Rml"
+dogvibes "addTrackToPlaylist?playlist_id=1&uri=spotify://spotify:track:2ycZ6jD05mCUWYJZHF6Rml"
 
 dogvibes "getAllTracksInPlaylist?playlist_id=1"
 
