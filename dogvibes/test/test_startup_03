@@ -1,10 +1,11 @@
 #!/bin/bash
 
 host=$1
+user=$2
 
 function amp {
   echo "============================================="
-  call=http://$host/amp/0/$1
+  call=http://$host:8080/$user/amp/0/$1
   echo $call
   curl $call
   echo
@@ -12,7 +13,7 @@ function amp {
 
 function dogvibes {
   echo "============================================="
-  call=http://$host/dogvibes/$1
+  call=http://$host:8080/$user/dogvibes/$1
   echo $call
   curl $call
   echo
