@@ -12,7 +12,7 @@ from amp import Amp
 from filesource import FileSource
 from spotifysource import SpotifySource
 from srradiosource import SRRadioSource
-from youtubesource import YoutubeSource
+#from youtubesource import YoutubeSource
 
 from albumart import AlbumArt
 
@@ -57,8 +57,8 @@ class Dogvibes():
 
         srradiosource = SRRadioSource("SR")
         self.sources[srradiosource.name] = srradiosource
-        youtubesource = YoutubeSource("Youtube")
-        self.sources[youtubesource.name] = youtubesource
+        #youtubesource = YoutubeSource("Youtube")
+        #self.sources[youtubesource.name] = youtubesource
 
         # add all speakers, should also be stored in database as sources
         self.speakers = [DeviceSpeaker("devicesink"), FakeSpeaker("fakespeaker")]
@@ -75,7 +75,7 @@ class Dogvibes():
         # add sources to amp, assume spotify source on first position, laziness
         amp0.connect_source('SR')
         amp0.connect_source('Spotify')
-        amp0.connect_source('Youtube')
+        #amp0.connect_source('Youtube')
 
     def create_track_from_uri(self, uri):
         track = None
