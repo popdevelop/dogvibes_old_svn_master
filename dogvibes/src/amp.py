@@ -177,17 +177,16 @@ class Amp():
             # from just "clicking around".
             if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
                 rmtrack = playlist.get_track_nbr(0).ptid
-            
+
             id = playlist.add_tracks(tracks, request, position)
-            
+
             self.play_track(playlist.id, id)
-                        
+
             if rmtrack != None:
                 playlist.remove_track_id(rmtrack)
         else:
             playlist.add_tracks(tracks, request, position)
-            
-            
+
         self.needs_push_update = True
         request.finish()
 
@@ -206,7 +205,7 @@ class Amp():
         id = playlist.add_tracks(tracks, request, 1)
         self.play_track(playlist.id, id)
 
-        if rmtrack != None:                 
+        if rmtrack != None:
             playlist.remove_track_id(rmtrack)
 
         self.needs_push_update = True
@@ -227,7 +226,8 @@ class Amp():
 
     def API_removeTracks(self, track_ids, request):
         for track_id in track_ids.split(','):
-            if track_id != '': # don't crash on trailing comma
+            # don't crash on trailing comma
+            if track_id != '':
                 track_id = int(track_id)
 
                 # For now if we are trying to remove the existing playing track. Do nothing.
@@ -261,7 +261,7 @@ class Amp():
         self.set_state(gst.STATE_NULL)
         request.push({'state': 'stopped'})
         request.finish()
-		
+
     # Internal functions
 
     def pad_added(self, element, pad, last):
