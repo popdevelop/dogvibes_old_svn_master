@@ -4,7 +4,7 @@
 
 var Config = {
   defaultUser: "",
-  defaultServer: "dogvib.es:8080",
+  defaultServer: "dogvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols 
   resizeable: true,
   draggableOptions: {
