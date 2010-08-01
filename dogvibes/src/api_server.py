@@ -107,6 +107,23 @@ def connection_ready(sock, fd, events):
         # The first thing a Dog will send is its username. Catch it!
         stream.read_until(EOS, dog.set_username)
 
+class LoginHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header("Content-Type", "text/javascript")
+        callback = self.get_argument("callback", None)
+        twitter_name = self.get_secure_cookie("twitter_name")
+        if not twitter_name:
+            if callback:
+                self.write("%s({'error': 5})" % callback)
+            else:
+                self.write("{'error': 5}")
+            return
+        twitter_avatar = self.get_secure_cookie("twitter_avatar")
+        if callback:
+            self.write("%s({'error':0,'result':{'username':'%s','avatar':'%s'}})" % (callback, twitter_name, twitter_avatar))
+        else:
+            self.write("{'error':0,'result':{'username':'%s','avatar':'%s'}}" % (twitter_name, twitter_avatar))
+
 #
 # Authorize agains Twitter.com
 #
@@ -137,6 +154,12 @@ def assign_nbr():
 class HTTPHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, username):
+        self.login = self.get_secure_cookie("twitter_name")
+        if not self.login:
+            self.login = "anonymous"
+#            print "Not authorized"
+#            return
+
         dog = Dog.find(username)
         if dog == None:
             logging.warning("Someone tried to access %s, but it's not connected" % username)
@@ -146,8 +169,6 @@ class HTTPHandler(tornado.web.RequestHandler):
         if self not in dog.active_handlers:
             dog.active_handlers.append(self)
             self.nbr = assign_nbr()
-
-        self.login = self.get_secure_cookie("twitter_name")
 
         if 'AlbumArt' in self.request.uri:
             uri = urllib.unquote(self.request.uri.decode('utf-8'))
@@ -187,6 +208,13 @@ class HTTPHandler(tornado.web.RequestHandler):
 
 class WSHandler(websocket.WebSocketHandler):
     def open(self, username):
+        self.login = self.get_secure_cookie("twitter_name")
+        if not self.login:
+            self.login = "anonymous"
+#            print "Not authorized"
+#            self.disconnect()
+#            return
+
         self.username = username
         self.nbr = assign_nbr()
         dog = Dog.find(username)
@@ -194,7 +222,6 @@ class WSHandler(websocket.WebSocketHandler):
             logging.debug("Someone tried to access %s, but it's not connected" % username)
             self.disconnect()
             return
-        self.login = self.get_secure_cookie("twitter_name")
         dog.active_handlers.append(self)
         self.receive_message(self.on_message)
 
@@ -236,6 +263,7 @@ def setup_dog_socket(io_loop):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
+            (r"/getLoginInfo/*", LoginHandler), # TODO: split only on '/', avoids favicon
             (r"/authTwitter/([a-zA-Z0-9]+).*", TwitterHandler), # TODO: split only on '/', avoids favicon
             (r"/stream/([a-zA-Z0-9]+).*", WSHandler),
             (r"/([a-zA-Z0-9]+).*", HTTPHandler), # TODO: split only on '/', avoids favicon
