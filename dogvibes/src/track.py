@@ -10,7 +10,8 @@ class Track:
         self.album_uri = album_uri
         self.uri = uri
         self.duration = duration
-
+        self.id = -1
+        self.votes = -1
     def __str__(self):
         return self.artist + ' - ' + self.title
 
@@ -23,6 +24,15 @@ class Track:
         if row == None:
             db.commit_statement('''insert into tracks (title, artist, album, album_uri, uri, duration) values (?, ?, ?, ?, ?, ?)''',
                                 (self.title, self.artist, self.album, self.album_uri, self.uri, self.duration))
-            return db.inserted_id()
+            self.id = db.inserted_id()
         else:
-            return row['id']
+            self.id = row['id']
+        return self.id
+
+    def has_vote_from(self, user_id):
+        db = Database()
+
+        db.commit_statement('''select * from votes where track_id = ? AND user_id = ?''', [self.id, user_id])
+        row = db.fetchone()
+        return row != None
+    

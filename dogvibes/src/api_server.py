@@ -47,7 +47,6 @@ class Dog():
 
         # clean up dangling requests to they are garbage collected
         self.active_handlers = [ h for h in self.active_handlers if h.active() ]
-
         for handler in self.active_handlers:
             # only return result to the waiting connection
             # however, if this is a push message, all websockets want it

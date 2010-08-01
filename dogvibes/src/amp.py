@@ -164,6 +164,14 @@ class Amp():
             request.finish()
 
     #def API_queue(self, uri, position, request): update when clients are ready...
+    def API_addVote(self, uri, request):
+        print "request.user", request.user
+        track = self.dogvibes.create_track_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+        playlist.add_vote(track, request)
+        request.finish()
+
+
     def API_queue(self, uri, request):
         position = -1 #put tracks last in queue as temporary default...
         tracks = self.dogvibes.create_tracks_from_uri(uri)
@@ -535,3 +543,5 @@ class Amp():
             self.active_playlist_id = playlist_id
 
         self.change_track(nbr, False)
+
+

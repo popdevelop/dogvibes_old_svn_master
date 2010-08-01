@@ -119,7 +119,9 @@ class Dogvibes():
             playlist = Playlist.get(playlist_id)
         except ValueError as e:
             raise
-        return [track.__dict__ for track in playlist.get_all_tracks()]
+        tracks = playlist.get_all_tracks()
+        ret = [track.__dict__ for track in tracks]
+        return ret
 
     def do_search(self, query, request):
         ret = []
