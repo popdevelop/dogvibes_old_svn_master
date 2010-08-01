@@ -143,7 +143,7 @@ class RequestHandler(object):
         a string. All header values are then encoded as UTF-8.
         """
         if isinstance(value, datetime.datetime):
-            t = calendar.timegm(value.utctimetuple())
+            t = int(time.mktime(value.utctimetuple()))
             value = email.utils.formatdate(t, localtime=False, usegmt=True)
         elif isinstance(value, int) or isinstance(value, long):
             value = str(value)
@@ -214,7 +214,7 @@ class RequestHandler(object):
             expires = datetime.datetime.utcnow() + datetime.timedelta(
                 days=expires_days)
         if expires:
-            timestamp = calendar.timegm(expires.utctimetuple())
+            timestamp = int(time.mktime(expires.utctimetuple()))
             new_cookie[name]["expires"] = email.utils.formatdate(
                 timestamp, localtime=False, usegmt=True)
         if path:
