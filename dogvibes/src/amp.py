@@ -165,10 +165,10 @@ class Amp():
 
     #def API_queue(self, uri, position, request): update when clients are ready...
     def API_addVote(self, uri, request):
-        print "request.user", request.user
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_vote(track, request)
+        playlist.add_vote(track, request.user)
+        self.needs_push_update = True
         request.finish()
 
 
@@ -176,6 +176,7 @@ class Amp():
         position = -1 #put tracks last in queue as temporary default...
         tracks = self.dogvibes.create_tracks_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
+
         if position == "1":
             #act as queue and play
             rmtrack = None
@@ -186,14 +187,14 @@ class Amp():
             if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
                 rmtrack = playlist.get_track_nbr(0).ptid
 
-            id = playlist.add_tracks(tracks, request, position)
+            id = playlist.add_tracks(tracks, request.user, position)
 
             self.play_track(playlist.id, id)
 
             if rmtrack != None:
                 playlist.remove_track_id(rmtrack)
         else:
-            playlist.add_tracks(tracks, request, position)
+            playlist.add_tracks(tracks, request.user, position)
 
         self.needs_push_update = True
         request.finish()
@@ -210,7 +211,7 @@ class Amp():
         if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
             rmtrack = playlist.get_track_nbr(0).ptid
 
-        id = playlist.add_tracks(tracks, request, 1)
+        id = playlist.add_tracks(tracks, request.user, 1)
         self.play_track(playlist.id, id)
 
         if rmtrack != None:
@@ -413,7 +414,6 @@ class Amp():
         if res != gst.STATE_CHANGE_FAILURE:
             (pending, res, timeout) = self.pipeline.get_state()
             while (res != state):
-                print res
                 time.sleep(0.1)
                 (pending, res, timeout) = self.pipeline.get_state()
             logging.debug("set state success: "+ str(state))
@@ -528,7 +528,7 @@ class Amp():
 
     def play_track(self, playlist_id, nbr):
         nbr = int(nbr)
-        playlist_id = int(playlist_id)
+        playlist_id = int(playlist_id) # TODO: should extract this from track
 
         logging.debug("Playing track %d on playlist %d", nbr, playlist_id)
 

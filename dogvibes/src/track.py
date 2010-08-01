@@ -3,7 +3,7 @@ from database import Database
 class Track:
     # Set all attributes as parateters to be able to initialize with a **dict
     def __init__(self, uri, title = 'Name', artist = 'Artist', album = 'Album',
-                 duration = 0, album_uri = ''):
+                 duration = 0, album_uri = '', votes = -1):
         self.title = title
         self.artist = artist
         self.album = album
@@ -11,9 +11,27 @@ class Track:
         self.uri = uri
         self.duration = duration
         self.id = -1
-        self.votes = -1
+        self.votes = votes
     def __str__(self):
         return self.artist + ' - ' + self.title
+
+    @classmethod
+    def find(self, id):
+        db = Database()
+        db.commit_statement('''select * from playlist_tracks where id = ?''', [int(id)])
+        row = db.fetchone()
+        if row == None:
+            raise ValueError('Could not get track with id=' + str(id))
+        track_id = row['track_id']
+        votes = row['votes']
+
+        # TODO: this could be a part of the previous statement
+        db.commit_statement('''select * from tracks where id = ?''', [track_id])
+        row = db.fetchone()
+
+        return Track(row['uri'], row['title'], row['artist'], row['album'],
+                     row['duration'], row['album_uri'], votes)
+
 
     # Store track for the future
     def store(self):
@@ -35,4 +53,6 @@ class Track:
         db.commit_statement('''select * from votes where track_id = ? AND user_id = ?''', [self.id, user_id])
         row = db.fetchone()
         return row != None
-    
+
+if __name__ == '__main__':
+    print Track.find(13)

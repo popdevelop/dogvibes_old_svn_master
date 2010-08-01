@@ -140,6 +140,7 @@ class TwitterHandler(tornado.web.RequestHandler,
     def _on_auth(self, user):
         if not user:
             raise tornado.web.HTTPError(500, "Twitter auth failed")
+        logging.info("@%s authorized" % user["username"])
         self.set_secure_cookie("twitter_name", user["username"])
         self.set_secure_cookie("twitter_avatar", user["profile_image_url"])
         self.redirect("http://dogvibes.com/" + self.get_cookie("username"))
