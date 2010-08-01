@@ -133,6 +133,8 @@ class SpotifySource:
             self.spotify = gst.element_factory_make("spot", "source")
             self.spotify.set_property ("user", self.user);
             self.spotify.set_property ("pass", self.passw);
+            self.spotify.set_property ("spotifykeyfile", "dogspotkey.key");
+            self.spotify.set_property ("logged-in", True);
             self.spotify.set_property ("buffer-time", 10000000);
             self.bin.add(self.spotify)
             gpad = gst.GhostPad("src", self.spotify.get_static_pad("src"))
