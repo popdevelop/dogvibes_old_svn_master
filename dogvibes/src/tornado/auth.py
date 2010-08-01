@@ -365,10 +365,10 @@ class TwitterMixin(OAuthMixin):
     the user; it is required to make requests on behalf of the user later
     with twitter_request().
     """
-    _OAUTH_REQUEST_TOKEN_URL = "http://twitter.com/oauth/request_token"
-    _OAUTH_ACCESS_TOKEN_URL = "http://twitter.com/oauth/access_token"
-    _OAUTH_AUTHORIZE_URL = "http://twitter.com/oauth/authorize"
-    _OAUTH_AUTHENTICATE_URL = "http://twitter.com/oauth/authenticate"
+    _OAUTH_REQUEST_TOKEN_URL = "http://api.twitter.com/oauth/request_token"
+    _OAUTH_ACCESS_TOKEN_URL = "http://api.twitter.com/oauth/access_token"
+    _OAUTH_AUTHORIZE_URL = "http://api.twitter.com/oauth/authorize"
+    _OAUTH_AUTHENTICATE_URL = "http://api.twitter.com/oauth/authenticate"
     _OAUTH_NO_CALLBACKS = True
 
     def authenticate_redirect(self):
