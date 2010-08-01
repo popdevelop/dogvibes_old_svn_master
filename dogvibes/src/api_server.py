@@ -4,6 +4,7 @@ import errno
 import functools
 import socket
 from tornado import ioloop, iostream, httpserver, websocket
+import tornado.auth
 import albumart_api
 import logging
 import cgi
@@ -56,10 +57,10 @@ class Dog():
         if not self.stream.reading():
             self.stream.read_until(EOS, self.command_callback)
 
-    def send_command(self, command, handler):
+    def send_command(self, command, handler, login):
         try:
             # FIXME: UnicodeEncodeError: 'ascii' codec can't encode character u'\xf6' in position 46: ordinal not in range(128)
-            self.stream.write(handler.nbr + SEP + command + EOS)
+            self.stream.write(handler.nbr + SEP + command + SEP + login + EOS)
         except:
             logging.debug("Failed writing %s to Dog %s" % (command, self.username))
             self.destroy()
@@ -84,12 +85,12 @@ class Dog():
         except:
             return None
 
-def process_command(handler, username, command):
+def process_command(handler, username, command, login):
     dog = Dog.find(username)
     if dog == None:
         logging.warning("Can't find %s for executing %s" % (username, command))
         return "ERROR!" # FIXME
-    dog.send_command(command, handler)
+    dog.send_command(command, handler, login)
 
 def connection_ready(sock, fd, events):
     while True:
@@ -105,6 +106,27 @@ def connection_ready(sock, fd, events):
         dog = Dog(stream)
         # The first thing a Dog will send is its username. Catch it!
         stream.read_until(EOS, dog.set_username)
+
+#
+# Authorize agains Twitter.com
+#
+class TwitterHandler(tornado.web.RequestHandler,
+                     tornado.auth.TwitterMixin):
+    @tornado.web.asynchronous
+    def get(self, username):
+        if username != "twitter": # don't assign if it's Twitter on the door
+            self.set_cookie("username", username)
+        if self.get_argument("oauth_token", None):
+            self.get_authenticated_user(self.async_callback(self._on_auth))
+            return
+        self.authorize_redirect()
+
+    def _on_auth(self, user):
+        if not user:
+            raise tornado.web.HTTPError(500, "Twitter auth failed")
+        self.set_secure_cookie("twitter_name", user["username"])
+        self.set_secure_cookie("twitter_avatar", user["profile_image_url"])
+        self.redirect("http://dogvibes.com/" + self.get_cookie("username"))
 
 nbr = 0
 def assign_nbr():
@@ -125,6 +147,8 @@ class HTTPHandler(tornado.web.RequestHandler):
             dog.active_handlers.append(self)
             self.nbr = assign_nbr()
 
+        self.login = self.get_secure_cookie("twitter_name")
+
         if 'AlbumArt' in self.request.uri:
             uri = urllib.unquote(self.request.uri.decode('utf-8'))
             components = urlparse.urlsplit(uri)
@@ -135,7 +159,7 @@ class HTTPHandler(tornado.web.RequestHandler):
             albumart.fetch(artist, album, 0)
         else:
             command = self.request.uri[len(username)+1:]
-            process_command(self, username, command)
+            process_command(self, username, command, self.login)
 
     def albumart_callback(self, data):
         self.send_result(RAW_YES, data)
@@ -170,11 +194,12 @@ class WSHandler(websocket.WebSocketHandler):
             logging.debug("Someone tried to access %s, but it's not connected" % username)
             self.disconnect()
             return
+        self.login = self.get_secure_cookie("twitter_name")
         dog.active_handlers.append(self)
         self.receive_message(self.on_message)
 
     def on_message(self, command):
-        process_command(self, self.username, command)
+        process_command(self, self.username, command, self.login)
         try:
             self.receive_message(self.on_message)
         except IOError:
@@ -201,11 +226,27 @@ def setup_dog_socket(io_loop):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setblocking(0)
-    sock.bind(("", 80))
+    sock.bind(("", 8080))
     sock.listen(5000)
 
     callback = functools.partial(connection_ready, sock)
     io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
+
+
+class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [
+            (r"/authTwitter/([a-zA-Z0-9]+).*", TwitterHandler), # TODO: split only on '/', avoids favicon
+            (r"/stream/([a-zA-Z0-9]+).*", WSHandler),
+            (r"/([a-zA-Z0-9]+).*", HTTPHandler), # TODO: split only on '/', avoids favicon
+        ]
+        settings = dict(
+            cookie_secret="61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
+            twitter_consumer_key = "zLeTJ3Mvf0FkN3UzV3TrQ",
+            twitter_consumer_secret = "QELveQpo4FaNhKi8A3cv5O0hW1i7Uiaas8hvYieY",
+            debug=True,
+        )
+        tornado.web.Application.__init__(self, handlers, **settings)
 
 if __name__ == '__main__':
 #    logging.basicConfig(level=log_level, filename=options.log_file,
@@ -213,16 +254,11 @@ if __name__ == '__main__':
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    application = tornado.web.Application([
-            (r"/stream/([a-zA-Z0-9]+).*", WSHandler),
-            (r"/([a-zA-Z0-9]+).*", HTTPHandler), # TODO: split only on '/', avoids favicon
-            ])
-
     io_loop = ioloop.IOLoop.instance()
     setup_dog_socket(io_loop)
 
-    http_server = httpserver.HTTPServer(application)
-    http_server.listen(8080)
+    http_server = httpserver.HTTPServer(Application())
+    http_server.listen(80)
 
     print "Dogvibes API server started"
 

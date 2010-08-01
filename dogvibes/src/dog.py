@@ -64,13 +64,13 @@ def push_status():
 def on_data(command):
     commands = command.split(EOS)[0:-1]
     for c in commands:
-        nbr, c = c.split(SEP) # remove nbr
-        run_command(nbr, c)
+        nbr, c, login = c.split(SEP) # remove nbr
+        run_command(nbr, c, login)
         push_status()
 
     stream.read_until(EOS, on_data)
 
-def run_command(nbr, command):
+def run_command(nbr, command, login):
     u = urlparse(command)
     c = u.path.split('/')
 
@@ -110,7 +110,7 @@ def run_command(nbr, command):
     if '_' in params:
         params.pop('_')
 
-    request = DogRequest(nbr, user, msg_id, js_callback)
+    request = DogRequest(nbr, user, login, msg_id, js_callback)
 
     try:
         if (len(c) < 3):
@@ -170,9 +170,10 @@ def run_command(nbr, command):
     # The request is not ended here, but instead in the DogRequest.callback
 
 class DogRequest:
-    def __init__(self, nbr, user, msg_id, js_callback):
+    def __init__(self, nbr, user, login, msg_id, js_callback):
         self.nbr = nbr
         self.user = user
+        self.login = login
         self.msg_id = msg_id
         self.js_callback = js_callback
         self.pushes = []
@@ -257,7 +258,7 @@ if __name__ == "__main__":
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     try:
-        s.connect((cfg["MASTER_SERVER"], 80))
+        s.connect((cfg["MASTER_SERVER"], 8080))
     except socket.error:
         print "Oops! Could not connect to API server at '%s'" % cfg['MASTER_SERVER']
         exit()
