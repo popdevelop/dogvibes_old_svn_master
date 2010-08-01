@@ -70,6 +70,8 @@ setup_spot (void)
   g_object_set (G_OBJECT (spot), "uri", SPOTIFY_URI, NULL);
   g_object_set (G_OBJECT (spot), "user", SPOTIFY_USER, NULL);
   g_object_set (G_OBJECT (spot), "pass", SPOTIFY_PASS, NULL);
+  g_object_set (G_OBJECT (spot), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (spot), "logged-in", TRUE, NULL);
   mysinkpad = gst_check_setup_sink_pad (spot, &sinktemplate, NULL);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -202,6 +204,8 @@ GST_START_TEST (test_eos_events_push)
   g_object_set (G_OBJECT (src), "user", SPOTIFY_USER, NULL);
   g_object_set (G_OBJECT (src), "pass", SPOTIFY_PASS, NULL);
   g_object_set (G_OBJECT (src), "uri", SPOTIFY_URI, NULL);
+  g_object_set (G_OBJECT (src), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (src), "logged-in", TRUE, NULL);
 
   g_assert (pipe != NULL);
   g_assert (sink != NULL);
@@ -299,8 +303,6 @@ GST_START_TEST (test_pause_and_duration)
 {
   GstElement *spot;
 
-  spot = setup_spot ();
-
   g_print ("*** STARTING - TEST PAUSE AND DURATION\n");
   g_print ("***\n");
   g_print ("*** each buffer is seen as '.'\n\n");
@@ -387,6 +389,8 @@ GST_START_TEST (test_login_and_play_bad_uri)
   g_object_set (G_OBJECT (spot), "uri", SPOTIFY_URI_JUST_BAD, NULL);
   g_object_set (G_OBJECT (spot), "user", SPOTIFY_USER, NULL);
   g_object_set (G_OBJECT (spot), "pass", SPOTIFY_PASS, NULL);
+  g_object_set (G_OBJECT (spot), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (spot), "logged-in", TRUE, NULL);
   mysinkpad = gst_check_setup_sink_pad (spot, &sinktemplate, NULL);
   gst_pad_set_active (mysinkpad, TRUE);
   probe_id = gst_pad_add_buffer_probe (mysinkpad,
@@ -406,6 +410,8 @@ GST_START_TEST (test_login_and_play_bad_uri)
   g_object_set (G_OBJECT (spot), "uri", SPOTIFY_URI_TALIB_KWELI, NULL);
   g_object_set (G_OBJECT (spot), "user", SPOTIFY_USER, NULL);
   g_object_set (G_OBJECT (spot), "pass", SPOTIFY_PASS, NULL);
+  g_object_set (G_OBJECT (spot), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (spot), "logged-in", TRUE, NULL);
   mysinkpad = gst_check_setup_sink_pad (spot, &sinktemplate, NULL);
   gst_pad_set_active (mysinkpad, TRUE);
   probe_id = gst_pad_add_buffer_probe (mysinkpad,

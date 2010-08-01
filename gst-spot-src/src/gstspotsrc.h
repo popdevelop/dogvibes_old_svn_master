@@ -49,6 +49,7 @@ typedef struct _GstSpotSrcClass GstSpotSrcClass;
 
 enum spot_cmd
 {
+  SPOT_CMD_LOGIN,
   SPOT_CMD_START,
   SPOT_CMD_STOP,
   SPOT_CMD_PLAY,
@@ -70,6 +71,8 @@ struct spot_work
 #define GST_SPOT_SRC_USER(src) ((src)->user)
 #define GST_SPOT_SRC_PASS(src) ((src)->pass)
 #define GST_SPOT_SRC_URI(src) ((src)->uri)
+#define GST_SPOT_SRC_LOGGED_IN(o) ((o)->logged_in)
+#define GST_SPOT_SRC_SPOTIFY_KEY_FILE(src) ((src)->spotify_key_file)
 #define GST_SPOT_SRC_URI_LOCATION(src) (gst_uri_get_location ((src)->uri))
 #define GST_SPOT_SRC_BUFFER_TIME(src) ((src)->buffer_time)
 #define GST_SPOT_SRC_ADAPTER(src) ((src)->adapter)
@@ -77,7 +80,6 @@ struct spot_work
 #define GST_SPOT_SRC_ADAPTER_COND(src) ((src)->adapter_cond)
 #define GST_SPOT_SRC_FORMAT(src) ((src)->format)
 #define GST_SPOT_SRC_CURRENT_TRACK(o) ((o)->current_track)
-#define GST_SPOT_SRC_LOGGED_IN(o) ((o)->logged_in)
 #define GST_SPOT_SRC_SPOTIFY_SESSION(o) ((o)->spotify_session)
 
 
@@ -94,6 +96,8 @@ struct _GstSpotSrc {
   gchar *user;
   gchar *pass;
   gchar *uri;
+  gboolean logged_in;
+  gchar *spotify_key_file;
   guint64 read_position;
   guint64 buffer_time;
   GstAdapter *adapter;
@@ -112,7 +116,6 @@ struct _GstSpotSrc {
   gboolean unlock_state;
   sp_track *current_track;
   sp_session *spotify_session;
-  gboolean logged_in;
 };
 
 struct _GstSpotSrcClass {
