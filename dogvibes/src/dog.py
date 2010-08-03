@@ -37,7 +37,7 @@ PUSH_YES = r'1'
 PUSH_NO = r'0'
 
 def register_dog():
-    int_ip = 'localhost'  #cfg['MASTER_SERVER']
+    int_ip = cfg['MASTER_SERVER']
     if int_ip == 'localhost':
         int_ip = socket.gethostbyname(socket.gethostname())
 
