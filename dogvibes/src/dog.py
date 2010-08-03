@@ -1,3 +1,7 @@
+import os
+# Set environmenst variables for making dogvibes run as an OSX app
+os.environ['GST_PLUGIN_PATH'] = '../Frameworks'
+os.environ['GST_REGISTRY_FORK'] = 'no'
 import socket
 import logging
 import re
