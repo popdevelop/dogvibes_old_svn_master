@@ -93,186 +93,6 @@ class Amp():
         #self.needs_push_update = True
         # FIXME: activate when client connection has been fixed!
 
-    # API
-    def API_connectSpeaker(self, nbr, request):
-        self.connect_speaker(nbr)
-        request.finish()
-
-    def API_disconnectSpeaker(self, nbr, request):
-        nbr = int(nbr)
-        if nbr > len(self.dogvibes.speakers) - 1:
-            logging.warning ("disconnect speaker - speaker does not exist")
-
-        speaker = self.dogvibes.speakers[nbr]
-
-        if self.pipeline.get_by_name(speaker.name) != None:
-            (pending, state, timeout) = self.pipeline.get_state()
-            self.set_state(gst.STATE_NULL)
-            rm = self.pipeline.get_by_name(speaker.name)
-            self.pipeline.remove(rm)
-            self.tee.unlink(rm)
-            self.set_state(state)
-        else:
-            logging.warning ("disconnect speaker - speaker not found")
-        request.finish()
-
-    def API_getAllTracksInQueue(self, request):
-        request.finish(self.dogvibes.get_all_tracks_in_playlist(self.tmpqueue_id))
-
-    def API_getPlayedMilliSeconds(self, request):
-        request.finish(self.get_played_milliseconds())
-
-    def API_getStatus(self, request):
-        request.finish(self.get_status())
-
-    def API_nextTrack(self, request):
-        self.next_track()
-        request.push({'playlist_id': self.get_active_playlist_id()})
-        request.push({'state': self.get_state()})
-        request.push(self.track_to_client())
-        request.finish()
-
-    def API_playTrack(self, playlist_id, nbr, request):
-        self.play_track(playlist_id, nbr)
-        request.push({'playlist_id': self.get_active_playlist_id()})
-        request.push({'state': self.get_state()})
-        request.push(self.track_to_client())
-        request.finish()
-
-    def API_previousTrack(self, request):
-        self.change_track(-1, True)
-        request.push({'playlist_id': self.get_active_playlist_id()})
-        request.push({'state': self.get_state()})
-        request.push(self.track_to_client())
-        request.finish()
-
-    def API_play(self, request):
-        playlist = self.fetch_active_playlist()
-        track = self.fetch_active_track()
-        if track != None:
-            self.set_state(gst.STATE_PLAYING)
-
-        request.push({'state': self.get_state()})
-        request.finish()
-
-    def API_pause(self, request):
-        self.set_state(gst.STATE_PAUSED)
-        # FIXME we need to push the state paused to all clients
-        # when play token lost, request == None
-        if request != None:
-            request.push({'state': self.get_state()})
-            request.finish()
-
-    #def API_queue(self, uri, position, request): update when clients are ready...
-    def API_addVote(self, uri, request):
-        track = self.dogvibes.create_track_from_uri(uri)
-        playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_vote(track, request.user)
-        self.needs_push_update = True
-        request.finish()
-
-
-    def API_queue(self, uri, request):
-        position = -1 #put tracks last in queue as temporary default...
-        tracks = self.dogvibes.create_tracks_from_uri(uri)
-        playlist = Playlist.get(self.tmpqueue_id)
-
-        if position == "1":
-            #act as queue and play
-            rmtrack = None
-
-            # If in tmpqueue and state is playing and there are tracks in tmpqueue.
-            # Then remove the currently playing track. Since we do not want to queue tracks
-            # from just "clicking around".
-            if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
-                rmtrack = playlist.get_track_nbr(0).ptid
-
-            id = playlist.add_tracks(tracks, request.user, position)
-
-            self.play_track(playlist.id, id)
-
-            if rmtrack != None:
-                playlist.remove_track_id(rmtrack)
-        else:
-            playlist.add_tracks(tracks, request.user, position)
-
-        self.needs_push_update = True
-        request.finish()
-
-    def API_queueAndPlay(self, uri, request):
-        tracks = self.dogvibes.create_tracks_from_uri(uri)
-        playlist = Playlist.get(self.tmpqueue_id)
-
-        rmtrack = None
-
-        # If in tmpqueue and state is playing and there are tracks in tmpqueue.
-        # Then remove the currently playing track. Since we do not want to queue tracks
-        # from just "clicking around".
-        if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
-            rmtrack = playlist.get_track_nbr(0).ptid
-
-        id = playlist.add_tracks(tracks, request.user, 1)
-        self.play_track(playlist.id, id)
-
-        if rmtrack != None:
-            playlist.remove_track_id(rmtrack)
-
-        self.needs_push_update = True
-        request.finish()
-
-    def API_removeTrack(self, track_id, request):
-        track_id = int(track_id)
-
-        # For now if we are trying to remove the existing playing track. Do nothing.
-        if (track_id == self.active_playlist_id):
-            logging.warning("Not allowed to remove playing track")
-            request.finish(error = 3)
-
-        playlist = Playlist.get(self.tmpqueue_id)
-        playlist.remove_track_id(track_id)
-        self.needs_push_update = True
-        request.finish()
-
-    def API_removeTracks(self, track_ids, request):
-        for track_id in track_ids.split(','):
-            # don't crash on trailing comma
-            if track_id != '':
-                track_id = int(track_id)
-
-                # For now if we are trying to remove the existing playing track. Do nothing.
-                if (track_id == self.active_playlist_id):
-                    logging.warning("Not allowed to remove playing track")
-                    continue
-
-                playlist = Playlist.get(self.tmpqueue_id)
-                playlist.remove_track_id(track_id)
-                self.needs_push_update = True
-        request.finish()
-
-    def API_seek(self, mseconds, request):
-        if self.src == None:
-            request.finish(0)
-        ns = int(mseconds) * 1000000
-        logging.debug("Seek with time to ns=%d" %ns)
-        self.pipeline.seek_simple (gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, ns)
-        request.push({'duration': self.fetch_active_track().duration})
-        request.finish()
-
-    def API_setVolume(self, level, request):
-        level = float(level)
-        if (level > 1.0 or level < 0.0):
-            raise DogError, 'Volume must be between 0.0 and 1.0'
-        self.dogvibes.speakers[0].set_volume(level)
-        request.push({'volume': self.dogvibes.speakers[0].get_volume()})
-        request.finish()
-
-    def API_stop(self, request):
-        self.set_state(gst.STATE_NULL)
-        request.push({'state': 'stopped'})
-        request.finish()
-
-    # Internal functions
-
     def pad_added(self, element, pad, last):
         logging.debug("Lets add a speaker we found suitable elements to decode")
         pad.link(self.tee.get_pad("sink"))
@@ -544,4 +364,181 @@ class Amp():
 
         self.change_track(nbr, False)
 
+    # API
 
+    def API_connectSpeaker(self, nbr, request):
+        self.connect_speaker(nbr)
+        request.finish()
+
+    def API_disconnectSpeaker(self, nbr, request):
+        nbr = int(nbr)
+        if nbr > len(self.dogvibes.speakers) - 1:
+            logging.warning ("disconnect speaker - speaker does not exist")
+
+        speaker = self.dogvibes.speakers[nbr]
+
+        if self.pipeline.get_by_name(speaker.name) != None:
+            (pending, state, timeout) = self.pipeline.get_state()
+            self.set_state(gst.STATE_NULL)
+            rm = self.pipeline.get_by_name(speaker.name)
+            self.pipeline.remove(rm)
+            self.tee.unlink(rm)
+            self.set_state(state)
+        else:
+            logging.warning ("disconnect speaker - speaker not found")
+        request.finish()
+
+    def API_getAllTracksInQueue(self, request):
+        request.finish(self.dogvibes.get_all_tracks_in_playlist(self.tmpqueue_id))
+
+    def API_getPlayedMilliSeconds(self, request):
+        request.finish(self.get_played_milliseconds())
+
+    def API_getStatus(self, request):
+        request.finish(self.get_status())
+
+    def API_nextTrack(self, request):
+        self.next_track()
+        request.push({'playlist_id': self.get_active_playlist_id()})
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
+        request.finish()
+
+    def API_playTrack(self, playlist_id, nbr, request):
+        self.play_track(playlist_id, nbr)
+        request.push({'playlist_id': self.get_active_playlist_id()})
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
+        request.finish()
+
+    def API_previousTrack(self, request):
+        self.change_track(-1, True)
+        request.push({'playlist_id': self.get_active_playlist_id()})
+        request.push({'state': self.get_state()})
+        request.push(self.track_to_client())
+        request.finish()
+
+    def API_play(self, request):
+        playlist = self.fetch_active_playlist()
+        track = self.fetch_active_track()
+        if track != None:
+            self.set_state(gst.STATE_PLAYING)
+
+        request.push({'state': self.get_state()})
+        request.finish()
+
+    def API_pause(self, request):
+        self.set_state(gst.STATE_PAUSED)
+        # FIXME we need to push the state paused to all clients
+        # when play token lost, request == None
+        if request != None:
+            request.push({'state': self.get_state()})
+            request.finish()
+
+    #def API_queue(self, uri, position, request): update when clients are ready...
+    def API_addVote(self, uri, request):
+        track = self.dogvibes.create_track_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+        playlist.add_vote(track, request.user)
+        self.needs_push_update = True
+        request.finish()
+
+
+    def API_queue(self, uri, request):
+        position = -1 #put tracks last in queue as temporary default...
+        tracks = self.dogvibes.create_tracks_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+
+        if position == "1":
+            #act as queue and play
+            rmtrack = None
+
+            # If in tmpqueue and state is playing and there are tracks in tmpqueue.
+            # Then remove the currently playing track. Since we do not want to queue tracks
+            # from just "clicking around".
+            if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
+                rmtrack = playlist.get_track_nbr(0).ptid
+
+            id = playlist.add_tracks(tracks, request.user, position)
+
+            self.play_track(playlist.id, id)
+
+            if rmtrack != None:
+                playlist.remove_track_id(rmtrack)
+        else:
+            playlist.add_tracks(tracks, request.user, position)
+
+        self.needs_push_update = True
+        request.finish()
+
+    def API_queueAndPlay(self, uri, request):
+        tracks = self.dogvibes.create_tracks_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+
+        rmtrack = None
+
+        # If in tmpqueue and state is playing and there are tracks in tmpqueue.
+        # Then remove the currently playing track. Since we do not want to queue tracks
+        # from just "clicking around".
+        if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
+            rmtrack = playlist.get_track_nbr(0).ptid
+
+        id = playlist.add_tracks(tracks, request.user, 1)
+        self.play_track(playlist.id, id)
+
+        if rmtrack != None:
+            playlist.remove_track_id(rmtrack)
+
+        self.needs_push_update = True
+        request.finish()
+
+    def API_removeTrack(self, track_id, request):
+        track_id = int(track_id)
+
+        # For now if we are trying to remove the existing playing track. Do nothing.
+        if (track_id == self.active_playlist_id):
+            logging.warning("Not allowed to remove playing track")
+            request.finish(error = 3)
+
+        playlist = Playlist.get(self.tmpqueue_id)
+        playlist.remove_track_id(track_id)
+        self.needs_push_update = True
+        request.finish()
+
+    def API_removeTracks(self, track_ids, request):
+        for track_id in track_ids.split(','):
+            # don't crash on trailing comma
+            if track_id != '':
+                track_id = int(track_id)
+
+                # For now if we are trying to remove the existing playing track. Do nothing.
+                if (track_id == self.active_playlist_id):
+                    logging.warning("Not allowed to remove playing track")
+                    continue
+
+                playlist = Playlist.get(self.tmpqueue_id)
+                playlist.remove_track_id(track_id)
+                self.needs_push_update = True
+        request.finish()
+
+    def API_seek(self, mseconds, request):
+        if self.src == None:
+            request.finish(0)
+        ns = int(mseconds) * 1000000
+        logging.debug("Seek with time to ns=%d" %ns)
+        self.pipeline.seek_simple (gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, ns)
+        request.push({'duration': self.fetch_active_track().duration})
+        request.finish()
+
+    def API_setVolume(self, level, request):
+        level = float(level)
+        if (level > 1.0 or level < 0.0):
+            raise DogError, 'Volume must be between 0.0 and 1.0'
+        self.dogvibes.speakers[0].set_volume(level)
+        request.push({'volume': self.dogvibes.speakers[0].get_volume()})
+        request.finish()
+
+    def API_stop(self, request):
+        self.set_state(gst.STATE_NULL)
+        request.push({'state': 'stopped'})
+        request.finish()

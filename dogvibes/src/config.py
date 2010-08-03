@@ -5,7 +5,7 @@ import os
 def load(filename):
 
     defaults = {
-        'MASTER_SERVER': 'dogvib.es',
+        'MASTER_SERVER': 'localhost',
         'ENABLE_SPOTIFY_SOURCE': '1',
         'ENABLE_LASTFM_SOURCE': '1',
         'ENABLE_FILE_SOURCE': '1',
