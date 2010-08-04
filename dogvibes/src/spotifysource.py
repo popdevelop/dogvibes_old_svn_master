@@ -12,8 +12,19 @@ class SpotifySource:
         self.created = False
         self.amp = None
         self.search_prefix = "spotify"
+        self.spotify = None
+        self.bin = None
 
-        #spotifydogvibes.login(user, passw);
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['spotify']
+        del odict['bin']
+        return odict
+
+    def __setstate__(self, dict):
+        self.__dict__.update(dict)   # update attributes
+        self.created = False
+        self.get_src()
 
     @classmethod
     def strip_protocol(self, uri):

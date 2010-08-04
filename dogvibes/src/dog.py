@@ -44,7 +44,7 @@ def register_dog():
     try:
         response = urllib.urlopen('http://dogvibes.com/registerDog?username=%s&password=%s&host=%s' % (cfg['DOGVIBES_USER'], cfg['DOGVIBES_PASS'], int_ip))
     except:
-        print 'Could access dogvibes.com'
+        print 'Could not access dogvibes.com'
         return
 
     reply = response.read()

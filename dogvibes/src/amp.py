@@ -3,6 +3,7 @@ import hashlib
 import random
 import time
 import logging
+import shelve
 
 from track import Track
 from playlist import Playlist
@@ -39,7 +40,11 @@ class Amp():
         self.fallback_playlists_track_id = -1
 
         # sources connected to the amp
-        self.sources = []
+        self.sources = shelve.open("amp" + id + ".shelve", writeback=True)
+
+        # aquire all sources
+        for key in self.sources.keys():
+            self.dogvibes.sources[key].amp = self
 
         # the gstreamer source that is currently used for playback
         self.src = None
@@ -60,7 +65,8 @@ class Amp():
 
         # Add amp as owner of source
         self.dogvibes.sources[name].amp = self
-        self.sources.append(self.dogvibes.sources[name])
+        self.sources[name] = name
+        self.sources.sync()
 
     def disconnect_source(self, name):
         if not self.dogvibes.sources.has_key(name):
@@ -76,6 +82,7 @@ class Amp():
             return
 
         del self.sources[name]
+        self.sources.sync()
 
     def connect_speaker(self, nbr, request = None):
         nbr = int(nbr)
@@ -200,10 +207,10 @@ class Amp():
 
         self.src = None
 
-        for source in self.sources:
-            if source.uri_matches(track.uri):
-                self.src = source.get_src()
-                source.set_track(track)
+        for key in self.sources.keys():
+            if self.dogvibes.sources[key].uri_matches(track.uri):
+                self.src = self.dogvibes.sources[key].get_src()
+                self.dogvibes.sources[key].set_track(track)
                 self.pipeline.add(self.src)
                 self.src.link(self.tee)
 
@@ -211,6 +218,8 @@ class Amp():
         if self.src == None:
             logging.debug ("Decodebin is taking care of this uri")
             self.src = gst.element_make_from_uri(gst.URI_SRC, track.uri, "source")
+            if self.src == None:
+                logging.error("No suitable gstreamer element found for givn uri")
             self.decodebin = gst.element_factory_make("decodebin2", "decodebin2")
             self.decodebin.connect('new-decoded-pad', self.pad_added)
             self.pipeline.add(self.src)

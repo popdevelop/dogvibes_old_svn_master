@@ -3,6 +3,7 @@ import gst
 import os
 import config
 import sys
+import shelve
 
 import threading
 
@@ -22,60 +23,49 @@ from fakespeaker import FakeSpeaker
 
 from track import Track
 from playlist import Playlist
-from source import Source
 
 class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
 
     def __init__(self):
 
-
+        # load configuration
         try: cfg = config.load("dogvibes.conf")
         except Exception, e:
             print "ERROR: Cannot load configuration file\n"
             sys.exit(1)
 
-        self.sources = {}
+        # initiate
+        self.needs_push_update = False
+        self.search_history = []
 
-
-        # Hackidooda and laziness to always create correct source, remove in real release
-        if Source.length() > 1:
-            allsources = Source.get_all()
-            # FIXME this should be dynamic
-            for source in allsources:
-                if source.type == "spotify":
-                    spotifysource = SpotifySource("Spotify", source.user, source.passw)
-                    self.sources[spotifysource.name] = spotifysource
-        else:
-            # This is just here because of laziness
-            if(cfg['ENABLE_SPOTIFY_SOURCE'] == '1'):
-                spot_user = cfg["SPOTIFY_USER"]
-                spot_pass = cfg["SPOTIFY_PASS"]
-                self.create_spotifysource(spot_user, spot_pass)
-            if(cfg['ENABLE_FILE_SOURCE'] == '1'):
-                self.create_filesource(cfg["FILE_SOURCE_ROOT"])
-
-        srradiosource = SRRadioSource("SR")
-        self.sources[srradiosource.name] = srradiosource
-        #youtubesource = YoutubeSource("Youtube")
-        #self.sources[youtubesource.name] = youtubesource
+        # create sources struct
+        self.sources = shelve.open('dogvibes.shelve', writeback=True)
 
         # add all speakers, should also be stored in database as sources
         self.speakers = [DeviceSpeaker("devicesink"), FakeSpeaker("fakespeaker")]
 
-        self.needs_push_update = False
+        # hack
+        first_boot = False
 
-        self.search_history = []
+        # remove thos when config file is no more
+        if len(self.sources) == 0:
+            first_boot = True
+            spot_user = cfg["SPOTIFY_USER"]
+            spot_pass = cfg["SPOTIFY_PASS"]
+            self.create_spotifysource("Spotify", spot_user, spot_pass)
+            self.create_srradiosource("SRRadio");
 
-        # add all amps
+        # add all amps, currently only one
         amp0 = Amp(self, "0")
         amp0.connect_speaker(0)
         self.amps = [amp0]
 
-        # add sources to amp, assume spotify source on first position, laziness
-        amp0.connect_source('SR')
-        amp0.connect_source('Spotify')
-        #amp0.connect_source('Youtube')
+        # remove this when config file is no more
+        if first_boot == True:
+            # currently connect all sources to the first amp
+            for key in self.sources.keys():
+                amp0.connect_source(key)
 
     def create_track_from_uri(self, uri):
         track = None
@@ -104,15 +94,16 @@ class Dogvibes():
                     return tracks
         raise ValueError('Could not create track from Album')
 
-    def create_spotifysource(self, user, passw):
-        spotifysource = SpotifySource("Spotify", user, passw)
+    def create_spotifysource(self, name, user, passw):
+        spotifysource = SpotifySource(name, user, passw)
         # FIXME: this logs in to the spotify source for the moment
-        spotifysource.get_src()
-        self.sources[spotifysource.name] = spotifysource
-        Source.add(user, passw, "spotify")
+        self.sources[name] = spotifysource
+        self.sources.sync()
 
-    def create_filesource(self, dir):
-        pass
+    def create_srradiosource(self, name):
+        srradiosource = SRRadioSource(name)
+        self.sources[name] = srradiosource
+        self.sources.sync()
 
     def get_all_tracks_in_playlist(self, playlist_id):
         try:
@@ -132,8 +123,12 @@ class Dogvibes():
                 request.finish(ret)
                 return
 
-        #if no prefix, just use spotify
-        ret = self.sources['Spotify'].search(query)
+        #if no prefix, just use spotify, if there exists such a source
+        for name,source in self.sources.iteritems():
+            if source.search_prefix == "spotify":
+                ret = source.search(query)
+                request.finish(ret)
+                return
         request.finish(ret)
 
     def fetch_albumart(self, artist, album, size, request):
@@ -155,12 +150,12 @@ class Dogvibes():
 
     # API
 
-    def API_createSpotifySource(self, user, passw, request):
-        self.create_spotifysource(user, passw)
+    def API_createSpotifySource(self, name, user, passw, request):
+        self.create_spotifysource(name, user, passw)
         request.finish()
 
-    def API_createFileSource(self, dir, request):
-        self.create_filesource(dir)
+    def API_createSRRadioSource(self, name, request):
+        self.create_srradiosource(name)
         request.finish()
 
     def API_getAllSources(self, request):
