@@ -23,6 +23,7 @@ from fakespeaker import FakeSpeaker
 
 from track import Track
 from playlist import Playlist
+from user import User
 
 class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
@@ -260,3 +261,6 @@ class Dogvibes():
 
     def API_getSearchHistory(self, nbr, request):
         request.finish(self.search_history[-int(nbr):])
+
+    def API_getAllVotes(self, request):
+        request.finish({"track":"julles jularbo", "artist":"calle jularbo", "users":["gyllen","joel","jimtegel"]})
