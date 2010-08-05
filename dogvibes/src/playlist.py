@@ -100,7 +100,6 @@ class Playlist():
         row = db.fetchone()
         return row != None
 
-
     def add_vote(self, track, username):
         self.tick_version() #FIXME why?
         user = User(username)
@@ -118,13 +117,12 @@ class Playlist():
         if self.has_track(self.id, track_id):
             #UPVOTE TRACK
             logging.debug("Upvote track_id = %s" % track_id)
-            playlist_id=self.id
+            playlist_id = self.id
             db = Database()
             db.commit_statement('''select * from playlist_tracks where playlist_id = ? AND track_id = ? LIMIT 1''', [playlist_id, track_id])
             row = db.fetchone()
             pos = row['position']
             votes = row['votes']
-
 
             # we dont want to move pass the playing track
             if pos <= 2:
@@ -150,8 +148,6 @@ class Playlist():
 
             #update the votes on the track
             db.commit_statement('''update playlist_tracks set votes = votes + 1 where playlist_id = ? and track_id = ?''', [self.id, track_id])
-
-
         else:
             #ADD TRACK
             logging.debug("add track with track_id = %s" % track_id)
@@ -181,6 +177,7 @@ class Playlist():
 
      # returns: the id so client don't have to look it up right after add
     def add_tracks(self, tracks, username, position):
+        self.tick_version()
         first = True
         tid = 0
         self.db.commit_statement('''select max(position) from playlist_tracks where playlist_id = ?''', [self.id])
