@@ -569,3 +569,15 @@ class Amp():
         self.set_state(gst.STATE_NULL)
         request.push({'state': 'stopped'})
         request.finish()
+
+    def API_getAllVotes(self, request):
+        request.finish([{"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"gyllen", "time":1281047765, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo 2", "artist":"calle jularbo", "album": "kalles jul", "user":"brissmyr", "time":1281047795, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo 3", "artist":"calle jularbo", "album": "kalles jul", "user":"penis", "time":1281047865, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo 4", "artist":"calle jularbo", "album": "kalles jul", "user":"joel", "time":1281047965, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"med picknick", "artist":"rockande rokare", "album": "rackar rokare", "user":"nystroem", "time":1281048765, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"kallekanin", "time":1281048865, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"gyllen", "time":1281048965, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"greta", "time":1281049265, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"lifelis", "time":1281049365, "votes":1, "duration":0, "votes":3},
+                        {"id":4,"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"kallekula", "time":1281049765, "votes":1, "duration":0, "votes":3}])
