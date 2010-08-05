@@ -50,6 +50,7 @@ typedef struct _GstSpotSrcClass GstSpotSrcClass;
 enum spot_cmd
 {
   SPOT_CMD_LOGIN,
+  SPOT_CMD_LOGOUT,
   SPOT_CMD_START,
   SPOT_CMD_STOP,
   SPOT_CMD_PLAY,
@@ -97,6 +98,7 @@ struct _GstSpotSrc {
   gchar *pass;
   gchar *uri;
   gboolean logged_in;
+  gboolean login_failed;
   gchar *spotify_key_file;
   guint64 read_position;
   guint64 buffer_time;

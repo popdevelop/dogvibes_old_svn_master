@@ -177,6 +177,7 @@ spotify_cb_logged_in (sp_session *spotify_session, sp_error error)
 {
   if (SP_ERROR_OK != error) {
     GST_CAT_ERROR_OBJECT (gst_spot_src_debug_cb, ugly_spot, "Failed to log in to Spotify: %s", sp_error_message (error));
+    ugly_spot->login_failed = TRUE;
     return;
   }
 
@@ -194,6 +195,7 @@ static void
 spotify_cb_logged_out (sp_session *spotify_session)
 {
   GST_CAT_DEBUG_OBJECT (gst_spot_src_debug_cb, ugly_spot, "Logged_out callback");
+  GST_SPOT_SRC_LOGGED_IN (ugly_spot) = FALSE;
 }
 
 static void
@@ -371,10 +373,12 @@ static gboolean spotify_login (GstSpotSrc *spot)
     return TRUE;
   }
 
-  /* create the spotify session, be carefull to only do this once. */
-  if (!spotify_create_session (spot)) {
-    GST_ERROR_OBJECT (spot, "Create_session error");
-    return FALSE;
+  /* only create session if it has not already been created */
+  if (!GST_SPOT_SRC_SPOTIFY_SESSION (spot)) {
+    if (!spotify_create_session (spot)) {
+      GST_ERROR_OBJECT (spot, "Create_session error");
+      return FALSE;
+    }
   }
 
   GST_DEBUG_OBJECT (spot, "Trying to login");
@@ -390,12 +394,18 @@ static gboolean spotify_login (GstSpotSrc *spot)
   int timeout = -1;
 
   sp_session_process_events (GST_SPOT_SRC_SPOTIFY_SESSION (spot), &timeout);
-  while (!GST_SPOT_SRC_LOGGED_IN (spot)) {
+  while (!GST_SPOT_SRC_LOGGED_IN (spot) && !spot->login_failed) {
     usleep (10000);
     sp_session_process_events (GST_SPOT_SRC_SPOTIFY_SESSION (spot), &timeout);
   }
 
-  GST_DEBUG_OBJECT (spot, "Login ok!");
+  spot->login_failed = FALSE;
+
+  if (GST_SPOT_SRC_LOGGED_IN (spot)) {
+    GST_DEBUG_OBJECT (spot, "Login ok!");
+  } else {
+    GST_DEBUG_OBJECT (spot, "Login failed!");
+  }
 
  return TRUE;
 }
@@ -431,6 +441,9 @@ spotify_thread_func (void *data)
           }
           error = SP_ERROR_OK;
           break;
+        case SPOT_CMD_LOGOUT:
+	  error = sp_session_logout(GST_SPOT_SRC_SPOTIFY_SESSION (spot));
+	  break;
         case SPOT_CMD_START:
           GST_DEBUG_OBJECT (spot, "Uri = %s", GST_SPOT_SRC_URI_LOCATION (spot));
           if (!spotify_login (spot)) {
@@ -694,6 +707,7 @@ gst_spot_src_init (GstSpotSrc * spot, GstSpotSrcClass * g_class)
   spot->uri = g_strdup (DEFAULT_URI);
   spot->spotify_key_file = g_strdup (DEFAULT_SPOTIFY_KEY_FILE);
   spot->logged_in = DEFAULT_LOGGED_IN;
+  spot->login_failed = FALSE;
 
   /* intiate worker thread and its state variables */
   spot->keep_spotify_thread = TRUE;
@@ -778,7 +792,9 @@ gst_spot_src_set_property (GObject * object, guint prop_id,
 	guint64 retval;
         run_spot_cmd (spot, SPOT_CMD_LOGIN, &retval, 0);
       } else {
-	GST_ERROR_OBJECT (spot, "currently logging out is not possible");
+        //FIXME error handling
+	guint64 retval;
+        run_spot_cmd (spot, SPOT_CMD_LOGOUT, &retval, 0);
       }
       break;
     case ARG_URI:
