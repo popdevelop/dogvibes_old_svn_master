@@ -219,7 +219,8 @@ class Amp():
             logging.debug ("Decodebin is taking care of this uri")
             self.src = gst.element_make_from_uri(gst.URI_SRC, track.uri, "source")
             if self.src == None:
-                logging.error("No suitable gstreamer element found for givn uri")
+                logging.error("No suitable gstreamer element found for given uri")
+                return False
             self.decodebin = gst.element_factory_make("decodebin2", "decodebin2")
             self.decodebin.connect('new-decoded-pad', self.pad_added)
             self.pipeline.add(self.src)
@@ -227,6 +228,8 @@ class Amp():
             self.src.link(self.decodebin)
 
         self.set_state(gst.STATE_PLAYING)
+
+        return True
 
     def get_state(self):
         (pending, state, timeout) = self.pipeline.get_state()
@@ -282,7 +285,11 @@ class Amp():
             # Try the first active_play_list id
             track = playlist.get_track_nbr(0)
             self.active_playlists_track_id = track.ptid
-            self.start_track(track)
+
+            if self.start_track(track) == False:
+                self.active_playlists_track_id = -1
+                return None
+
             self.set_state(gst.STATE_PAUSED)
             return track
 
@@ -373,7 +380,18 @@ class Amp():
 
         self.change_track(nbr, False)
 
+    def stop(self):
+        self.set_state(gst.STATE_NULL)
+
     # API
+
+    def API_connectSource(self, name, request):
+        self.connect_source(name)
+        request.finish(name)
+
+    def API_disconnectSource(self, name, request):
+        self.disconnect_source(name)
+        request.finish(name)
 
     def API_connectSpeaker(self, nbr, request):
         self.connect_speaker(nbr)

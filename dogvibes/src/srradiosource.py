@@ -11,6 +11,15 @@ class SRRadioSource:
         self.amp = None
         self.search_prefix = "sr"
 
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['amp']
+        return odict
+
+    def __setstate__(self, dict):
+        self.__dict__.update(dict)   # update attributes
+        self.amp = None
+
     def create_track_from_uri(self, uri):
         if 'asx' not in uri:
             return None

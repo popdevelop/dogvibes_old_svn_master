@@ -19,11 +19,13 @@ class SpotifySource:
         odict = self.__dict__.copy()
         del odict['spotify']
         del odict['bin']
+        del odict['amp']
         return odict
 
     def __setstate__(self, dict):
         self.__dict__.update(dict)   # update attributes
         self.created = False
+        self.amp = None
         self.get_src()
 
     @classmethod
@@ -137,6 +139,16 @@ class SpotifySource:
             #print s
         #spotifydogvibes.logout()
 
+    def relogin(self, user, passw):
+        self.user = user
+        self.passw = passw
+        if self.created == False:
+            self.get_src()
+        else:
+            self.spotify.set_property ("logged-in", False);
+            self.spotify.set_property ("user", self.user);
+            self.spotify.set_property ("pass", self.passw);
+            self.spotify.set_property ("logged-in", True);
 
     def get_src(self):
         if self.created == False:

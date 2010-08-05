@@ -45,23 +45,19 @@ class Dogvibes():
         # add all speakers, should also be stored in database as sources
         self.speakers = [DeviceSpeaker("devicesink"), FakeSpeaker("fakespeaker")]
 
-        # hack
         first_boot = False
-
-        # remove thos when config file is no more
         if len(self.sources) == 0:
             first_boot = True
             spot_user = cfg["SPOTIFY_USER"]
             spot_pass = cfg["SPOTIFY_PASS"]
-            self.create_spotifysource("Spotify", spot_user, spot_pass)
-            self.create_srradiosource("SRRadio");
+            self.modify_spotifysource(spot_user, spot_pass)
+            self.modify_srradiosource();
 
         # add all amps, currently only one
         amp0 = Amp(self, "0")
         amp0.connect_speaker(0)
         self.amps = [amp0]
 
-        # remove this when config file is no more
         if first_boot == True:
             # currently connect all sources to the first amp
             for key in self.sources.keys():
@@ -94,16 +90,23 @@ class Dogvibes():
                     return tracks
         raise ValueError('Could not create track from Album')
 
-    def create_spotifysource(self, name, user, passw):
-        spotifysource = SpotifySource(name, user, passw)
-        # FIXME: this logs in to the spotify source for the moment
-        self.sources[name] = spotifysource
-        self.sources.sync()
+    def modify_spotifysource(self, username, password):
+        if self.sources.has_key("spotify"):
+            self.sources["spotify"].amp.stop()
+            self.sources["spotify"].relogin(username, password)
+            self.sources.sync()
+        else:
+            spotifysource = SpotifySource("spotify", username, password)
+            self.sources["spotify"] = spotifysource
+            self.sources.sync()
 
-    def create_srradiosource(self, name):
-        srradiosource = SRRadioSource(name)
-        self.sources[name] = srradiosource
-        self.sources.sync()
+    def modify_srradiosource(self):
+        if self.sources.has_key("srradiosource"):
+            pass
+        else:
+            srradiosource = SRRadioSource("srradio")
+            self.sources["srradio"] = srradiosource
+            self.sources.sync()
 
     def get_all_tracks_in_playlist(self, playlist_id):
         try:
@@ -150,12 +153,8 @@ class Dogvibes():
 
     # API
 
-    def API_createSpotifySource(self, name, user, passw, request):
-        self.create_spotifysource(name, user, passw)
-        request.finish()
-
-    def API_createSRRadioSource(self, name, request):
-        self.create_srradiosource(name)
+    def API_modifySpotifySource(self, username, password, request):
+        self.modify_spotifysource(username, password)
         request.finish()
 
     def API_getAllSources(self, request):
