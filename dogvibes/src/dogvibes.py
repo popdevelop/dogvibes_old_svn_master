@@ -263,4 +263,4 @@ class Dogvibes():
         request.finish(self.search_history[-int(nbr):])
 
     def API_getAllVotes(self, request):
-        request.finish({"track":"julles jularbo", "artist":"calle jularbo", "users":["gyllen","joel","jimtegel"]})
+        request.finish({"title":"julles jularbo", "artist":"calle jularbo", "album": "kalles jul", "user":"gyllen", "time":100, "votes":1, "duration":0, "votes":3})
