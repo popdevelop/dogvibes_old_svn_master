@@ -230,6 +230,7 @@ class Playlist():
             t = Track(**row)
             t.id = track[0]
             t.votes = str(track[2])
+            t.voters = t.get_all_voting_users()
             ret_tracks.append(t)
 
         return ret_tracks
@@ -258,7 +259,6 @@ class Playlist():
         return t
 
     def move_track(self, id, position):
-        self.tick_version()
         self.db.commit_statement('''select position from playlist_tracks where playlist_id = ? and id = ?''', [self.id, id])
         row = self.db.fetchone()
         if row == None:

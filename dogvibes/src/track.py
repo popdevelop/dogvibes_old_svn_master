@@ -12,6 +12,7 @@ class Track:
         self.duration = duration
         self.id = -1
         self.votes = votes
+        self.voters = []
     def __str__(self):
         return self.artist + ' - ' + self.title
 
@@ -53,6 +54,25 @@ class Track:
         db.commit_statement('''select * from votes where track_id = ? AND user_id = ?''', [self.id, user_id])
         row = db.fetchone()
         return row != None
+
+    def get_all_voting_users(self):
+        db = Database()
+
+        ret = []
+
+        db.commit_statement('''select * from votes join users on votes.user_id = users.id where track_id = ?''', [self.id])
+        
+        row = db.fetchone()
+        while row != None:
+            ret.append({"username":row['username'], "avatar_url":row['avatar_url']})
+            row = db.fetchone()
+
+        db.commit_statement('''select * from playlist_tracks join users on playlist_tracks.user_id = users.id where playlist_tracks.id = ?''', [self.id])
+        row = db.fetchone()
+        if row != None:
+            ret.append({"username":row['username'], "avatar_url":row['avatar_url']})
+
+        return ret
 
 if __name__ == '__main__':
     print Track.find(13)

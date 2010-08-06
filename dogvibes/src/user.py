@@ -49,9 +49,3 @@ class User:
         u = db.fetchall()
         logging.debug("Get votes for user %s" % u)
         return u
-
-            
-
-
-
-
