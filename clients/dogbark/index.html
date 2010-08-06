@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Dogvibes</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="icon" type="image/png" href="img/favicon.png" />
+<link rel="stylesheet" type="text/css" media="all" href="res/css/style.css" />
+<script type="text/javascript" src='res/js/jquery-1.4.2.min.js'></script>
+<script type="text/javascript" src='res/js/jquery.scrollTo.js'></script>
+<script type="text/javascript" src='res/js/jquery.jsonp.min.js'></script>
+<script type="text/javascript" src='res/js/jquery.growl.js'></script>
+
+<script type="text/javascript" src='res/js/dogvibes-core.js'></script>	
+<script type="text/javascript" src='res/js/dogbone-core.js'></script>	
+<script type="text/javascript" src='res/js/dogbone-modules.js'></script>
+
+<script type="text/javascript" src="js/swfobject.js"></script>
+<script type="text/javascript" src="js/FABridge.js"></script>
+<script type="text/javascript" src="js/web_socket.js"></script>
+<script type="text/javascript">
+  WebSocket.__swfLocation = "WebSocketMain.swf";
+</script>
+</head>
+
+<body>
+<div id="top">
+  <h1 id="Dogvibes-info"></h1>
+  <input type="button" value="switch" id="Button-switch">
+</div>
+<div id="viewport">
+<div id="content">
+<div id="leftcol" class="column">
+  <h2>Activity</h2>
+  <ul id="Activity-list">
+
+  </ul>
+</div>
+<div id="midcol" class="column">
+  <ul id="tabs">
+    <li class="selected">Queue</li>
+    <li>My votes</li>
+    <li>History</li>
+  </ul>
+  <div class="clear"></div>
+  <div id="Playqueue-info"></div>
+  <ul id="tracks">
+    
+  </ul>
+</div>
+<div id="rightcol" class="column">
+  <h2>Search</h2>
+  <form id="Search-form" action="">
+  <div><input type="text" id="Search-input" /></div>
+  </form>
+  <div id="pages">
+    <div id="artist">
+    </div>
+    
+    <div id="album">
+    </div> 
+    <div id="search"> 
+      <!-- Template for search content //-->
+      <table id="Search-content">
+        <thead>
+          <tr class="template">
+          <th id="Search-title">Track</th>
+          <th id="Search-artist">Artist</th>
+          <th id="Search-album">Album</th>
+          </tr>
+        </thead>
+        <tbody id="Search-items">
+        </tbody>
+      </table> 
+      <div id="Search-info"></div>
+  </div>
+  </div>
+</div>
+</div>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,385 @@
+/******************************************************************************
+ * Basic styles
+ *****************************************************************************/
+ 
+body {
+  background-color: #DDD;
+  width: 960px;
+  margin: auto;
+  padding: 0;
+  font-family: "Gill Sans", Calibri, "Trebuchet MS", sans-serif;
+  text-shadow: rgba(255,255,255, 0.8) 0 1px 0;  
+}
+
+.column {
+  display: inline-block;
+  float: left;
+  background-color: #EEE;
+  padding: 10px;  
+}
+
+/* http://sonspring.com/journal/clearing-floats */
+
+.clear {
+	clear: both;
+	display: block;
+	overflow: hidden;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+
+a, a:visited, a:link {
+  color: #999;
+  text-decoration: none;
+}
+a:hover {
+  color: #firebrick;  
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style-type:none;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: normal;
+}
+
+h2 {
+  font-size: 20px;
+  margin: 0 0 4px 0;
+}
+
+li {
+  border-bottom: 1px solid #AAA;
+  border-top: 1px solid #FFF;
+}
+
+li.last {
+  border-bottom: 0;
+}
+
+li.first {
+  border-top: 0;
+}
+
+
+div.loading {
+  background-image: url('../img/loading.gif');
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  min-height: 100px;
+}
+
+/******************************************************************************
+ * Top
+ *****************************************************************************/
+
+#top {
+  width: 100%;
+  height: 60px;
+}
+
+#top h1 {
+  display: inline;
+}
+
+#top input {
+  float: right;
+}
+
+#viewport {
+  width: 960px;
+  overflow: hidden;
+}
+
+#content {
+  width: 1510px;
+}
+
+/******************************************************************************
+ * Left, notification column
+ *****************************************************************************/
+ 
+#leftcol {
+  font-size: 12px;
+  width: 520px;
+}
+
+#leftcol img {
+  margin: 0 10px 0 0;
+  border: 0;
+  background-color: #FFF;
+  width: 35px;
+  height: 35px;
+  float: left;
+  position: relative;
+  top: -6px;
+  border: 1px solid #BBB;
+  padding: 1px;  
+} 
+
+#leftcol ul {
+  margin-top: 10px;
+}
+ 
+#leftcol ul li {
+  color: #999;
+  min-height: 37px;
+  padding-top: 8px;
+  position: relative;
+}
+
+#leftcol ul li em,
+#leftcol ul li span {
+  color: #000;
+  font-style: normal;
+}
+
+#leftcol ul li span.time {
+  color: #999;
+  display: block;
+}
+
+#leftcol ul li input {
+  position: absolute;
+  right: 10px;
+  bottom: 5px;
+  visibility: hidden;
+}
+
+#leftcol ul li:hover input {
+  visibility: visible;
+}
+
+/******************************************************************************
+ * Middle, status column
+ *****************************************************************************/
+ 
+#midcol {
+  width: 390px;
+  margin: 0 10px;  
+}
+
+#midcol ul#tabs {
+  border-bottom: 2px solid #BBB;
+  height: 23px;
+}
+
+#midcol ul#tabs li{
+  color: #AAA;
+  display: inline-block;
+  float: left;
+  padding: 4px 4px 4px 4px ;
+  margin: 0 3px 0 0;
+  border: 0;
+}
+
+#midcol ul#tabs li.selected{
+  color: #FFF;
+  background-color: #AAA;
+  padding: 4px 4px 0 4px;
+}
+
+/*--- Track list ---*/
+#midcol ul#tracks {
+  clear: both;
+}
+
+#midcol ul#tracks li { 
+  margin: 0;
+  padding: 10px;
+  min-height: 48px;
+  position: relative;
+}
+
+#midcol ul#tracks li.noTracks { 
+  text-align: middle;
+}
+
+#midcol ul#tracks li em {
+  display: block;
+  height: 20px;
+  overflow: hidden;
+}
+
+#midcol ul#tracks li.playing {
+  min-height: 154px;
+  border-top: 0;
+}
+
+#midcol ul#tracks li.playing em {
+  height: auto;
+  display: block;
+  color: #000;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 18px;
+}
+#midcol ul#tracks li.playing span {
+  display: block;
+  color: #777;
+  margin: 3px 0;
+  font-weight: normal;
+  font-size: 14px;
+}
+
+#midcol ul#tracks li.playing span.album {
+  display: block;
+  color: #333;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+#midcol ul#tracks li.playing ul.votes {
+  position: absolute;
+  bottom: 10px;
+  left: 170px;
+}
+
+/*--- Album art ---*/
+#midcol ul#tracks li img {
+  width: 48px;
+  height: 48px;
+  float: left;
+  margin-right: 10px;
+  border: 1px solid #BBB;
+  padding: 1px;
+}
+
+#midcol ul#tracks li.playing img {
+  width: 150px;
+  height: 150px;
+}
+
+/*---  ---*/
+
+#midcol ul#tracks li input {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+/*--- Votes ---*/
+#midcol ul#tracks ul.votes {
+  margin-top: 3px;
+}
+
+#midcol ul#tracks ul.votes li {
+  margin: 0 3px;
+  border: 0;
+  padding: 0;
+  min-height: 29px;
+  height: 29px;
+  width: 29px;
+  display: inline-block;
+  float: left;
+  overflow: hidden;
+}
+
+#midcol ul#tracks ul.votes li.sum {
+  border: 0;
+  padding: 3px;
+  width: auto;
+  color: #BBB;
+}
+
+#midcol ul#tracks ul.votes li img { 
+  width: 25px;
+  height: 25px;
+}
+
+
+/******************************************************************************
+ * Middle, status column
+ *****************************************************************************/
+
+#rightcol {
+  width: 520px;
+  position: relative;
+}
+
+#rightcol input#Search-input {
+  font-size: 16px;
+  width: 216px;
+  border: 2px solid #CCC;
+  position: absolute;
+  top: 5px;
+  right: 10px;
+}
+
+#rightcol table {
+  width: 100%;
+  border-collapse: collapse;
+}
+ 
+#rightcol table thead th {
+  font-weight: normal;
+  text-align: left;
+}
+
+#rightcol table tbody td {
+  font-weight: normal;
+  font-size: 11px;
+  padding: 2px 0;
+  cursor: default;
+}
+
+#rightcol table tbody td input {
+  font-weight: normal;
+  font-size: 10px;
+  margin: 0;
+  visibility: hidden;
+}
+
+#rightcol table tbody tr:hover {
+  background-color: #CCC;
+}
+
+#rightcol table tbody tr:hover input {
+  visibility: visible;
+}
+
+
+/******************************************************************************
+ * Artist
+ *****************************************************************************/
+
+#artist img, #album img {
+  width: 150px;
+  float: left;
+  display: inline;
+  margin-right: 10px;
+}
+
+#artist h4, #album h4 {
+  margin: 10px 0 0 0;
+}
+#artist h5, #album h5 {
+  margin-left: 160px;
+}
+#artist table, #album table {
+  width: 340px;
+  margin-left: 160px;
+  min-height: 150px;
+}
+table tbody td {
+  padding-right: 4px;
+}
+
+table thead {
+  background-color: #AAA;
+  color: #FFF;
+  font-weight: normal;
+  font-size: 11px;
+}
+
+.AlbumEntry {
+  position: relative;
+  display: block;
+  clear: both;
+  min-height: 180px;
+  height: auto;
+}
