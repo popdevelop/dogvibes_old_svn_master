@@ -67,11 +67,6 @@ class Track:
             ret.append({"username":row['username'], "avatar_url":row['avatar_url']})
             row = db.fetchone()
 
-        db.commit_statement('''select * from playlist_tracks join users on playlist_tracks.user_id = users.id where playlist_tracks.id = ?''', [self.id])
-        row = db.fetchone()
-        if row != None:
-            ret.append({"username":row['username'], "avatar_url":row['avatar_url']})
-
         return ret
 
 if __name__ == '__main__':

@@ -466,10 +466,16 @@ class Amp():
     def API_addVote(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.add_vote(track, request.user)
+        playlist.add_vote(track, request.user, request.avatar_url)
         self.needs_push_update = True
         request.finish()
 
+    def API_removeVote(self, uri, request):
+        track = self.dogvibes.create_track_from_uri(uri)
+        playlist = Playlist.get(self.tmpqueue_id)
+        playlist.remove_vote(track, request.user, request.avatar_url)
+        self.needs_push_update = True
+        request.finish()
 
     def API_queue(self, uri, request):
         position = -1 #put tracks last in queue as temporary default...
@@ -486,14 +492,14 @@ class Amp():
             if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
                 rmtrack = playlist.get_track_nbr(0).ptid
 
-            id = playlist.add_tracks(tracks, request.user, position)
+            id = playlist.add_tracks(tracks, position)
 
             self.play_track(playlist.id, id)
 
             if rmtrack != None:
                 playlist.remove_track_id(rmtrack)
         else:
-            playlist.add_tracks(tracks, request.user, position)
+            playlist.add_tracks(tracks, position)
 
         self.needs_push_update = True
         request.finish()
@@ -510,7 +516,7 @@ class Amp():
         if self.is_in_tmpqueue() and self.get_state() == 'playing' and playlist.length() >= 1:
             rmtrack = playlist.get_track_nbr(0).ptid
 
-        id = playlist.add_tracks(tracks, request.user, 1)
+        id = playlist.add_tracks(tracks, 1)
         self.play_track(playlist.id, id)
 
         if rmtrack != None:

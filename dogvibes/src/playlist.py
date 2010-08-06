@@ -100,9 +100,61 @@ class Playlist():
         row = db.fetchone()
         return row != None
 
-    def add_vote(self, track, username):
-        self.tick_version() #FIXME why?
-        user = User(username)
+    def remove_vote(self, track, username, avatar_url):
+        self.tick_version()
+        user = User(username, avatar_url)
+        user_id = user.store()
+        track_id = track.store()
+
+        if not track.has_vote_from(user_id):
+            logging.debug("%s has no vote for track, ignoring" % user.username)
+            return
+
+        if self.has_track(self.id, track_id):
+            #DOWNVOTE TRACK
+            logging.debug("Downvote track_id = %s" % track_id)
+            playlist_id = self.id
+            db = Database()
+            db.commit_statement('''select * from playlist_tracks where playlist_id = ? AND track_id = ? LIMIT 1''', [playlist_id, track_id])
+            row = db.fetchone()
+            pos = row['position']
+            votes = row['votes']
+            votes = votes - 1
+
+            if votes == 0:
+                logging.debug("Track has no more votes remove track from playlist")
+                db.commit_statement('''select * from playlist_tracks where track_id = ? and playlist_id = ?''', [track_id, self.id])
+                row = db.fetchone()
+                self.remove_track_id(row['id'])
+                return
+
+            # find all with same amount of votes, and move pass them
+            db.commit_statement('''select min(position) as new_pos,* from playlist_tracks where playlist_id = ? AND votes = ? AND position > 1''', [playlist_id, votes])
+            # update votes
+            row = db.fetchone()
+            if row == None:
+                logging.debug("no need to move, no one to pass with %s votes" % votes)
+            else:
+                #we have some tracks to jump over
+                new_pos = row['new_pos']
+                if new_pos <= 1:
+                    logging.debug("cap movement to pos=2 (let playing song be first)")
+                    new_pos=2
+                logging.debug("update pos, move from %s to %s" % (str(pos), str(new_pos)))
+                #move them up 1 position
+                db.commit_statement('''update playlist_tracks set position = position - 1 where playlist_id = ? and position >= ?''', [self.id, new_pos])
+                #put me below them
+                db.commit_statement('''update playlist_tracks set position = ? where playlist_id = ? and track_id = ?''', [new_pos, self.id, track_id])
+
+            #update the votes on the track
+            db.commit_statement('''update playlist_tracks set votes = votes - 1 where playlist_id = ? and track_id = ?''', [self.id, track_id])
+            user.votedown(track_id)
+        else:
+            logging.debug("Down voting track does not exists in database")
+
+    def add_vote(self, track, username, avatar_url):
+        self.tick_version()
+        user = User(username, avatar_url)
         user_id = user.store()
         track_id = track.store()
 
@@ -151,12 +203,12 @@ class Playlist():
         else:
             #ADD TRACK
             logging.debug("add track with track_id = %s" % track_id)
-            self.add_track(track, username)
+            self.add_track(track, 1)
 
         #update user votes
-        user.vote(track_id)
+        user.voteup(track_id)
 
-    def add_track(self, track, username):
+    def add_track(self, track, votes):
         self.tick_version()
         track_id = track.store()
 
@@ -168,16 +220,11 @@ class Playlist():
         else:
             position = row['max(position)'] + 1
 
-        # Do not assume that user is set always
-        u = User(username)
-        user_id = u.store()
-
-        self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, user_id, votes) values (?, ?, ?, ?, ?)''', [self.id, track_id, position, user_id, 1])
+        self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, votes) values (?, ?, ?, ?)''', [self.id, track_id, position, votes])
         return self.db.inserted_id()
 
      # returns: the id so client don't have to look it up right after add
-    def add_tracks(self, tracks, username, position):
-        self.tick_version()
+    def add_tracks(self, tracks, position):
         first = True
         tid = 0
         self.db.commit_statement('''select max(position) from playlist_tracks where playlist_id = ?''', [self.id])
@@ -197,10 +244,7 @@ class Playlist():
         for track in tracks:
             track_id = track.store()
 
-            # Do not assume that user is set always
-            u = User(username)
-            u.store()
-            self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, user_id, votes) values (?, ?, ?, ?,?)''', [self.id, track_id, position, u.id, 1])
+            self.db.commit_statement('''insert into playlist_tracks (playlist_id, track_id, position, votes) values (?, ?, ?,?)''', [self.id, track_id, position, 0])
             position = int(position) + 1
 
             if first:
@@ -287,6 +331,9 @@ class Playlist():
         row = self.db.fetchone()
         if row == None:
             raise ValueError('Could not find track with id=%s' % (int(id)))
+
+        # give vote back to all users that voted
+        User.remove_all_voting_users(row['track_id'])
 
         id = row['id']
         self.db.commit_statement('''delete from playlist_tracks where id = ?''', [row['id']])

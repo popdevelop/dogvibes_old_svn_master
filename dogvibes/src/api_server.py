@@ -56,10 +56,10 @@ class Dog():
         if not self.stream.reading():
             self.stream.read_until(EOS, self.command_callback)
 
-    def send_command(self, command, handler, login):
+    def send_command(self, command, handler, login, avatar_url):
         try:
             # FIXME: UnicodeEncodeError: 'ascii' codec can't encode character u'\xf6' in position 46: ordinal not in range(128)
-            self.stream.write(handler.nbr + SEP + command + SEP + login + EOS)
+            self.stream.write(handler.nbr + SEP + command + SEP + login + SEP + avatar_url + EOS)
         except:
             logging.debug("Failed writing %s to Dog %s" % (command, self.username))
             self.destroy()
@@ -84,12 +84,12 @@ class Dog():
         except:
             return None
 
-def process_command(handler, username, command, login):
+def process_command(handler, username, command, login, avatar_url):
     dog = Dog.find(username)
     if dog == None:
         logging.warning("Can't find %s for executing %s" % (username, command))
         return "ERROR!" # FIXME
-    dog.send_command(command, handler, login)
+    dog.send_command(command, handler, login, avatar_url)
 
 def connection_ready(sock, fd, events):
     while True:
@@ -159,6 +159,9 @@ class HTTPHandler(tornado.web.RequestHandler):
             self.login = "anonymous"
 #            print "Not authorized"
 #            return
+        self.avatar_url = self.get_secure_cookie("twitter_avatar")
+        if not self.avatar_url:
+            self.avatar_url = "http://forums.azbilliards.com/images/cavatars/avatar5699_6.gif"
 
         dog = Dog.find(username)
         if dog == None:
@@ -180,7 +183,7 @@ class HTTPHandler(tornado.web.RequestHandler):
             albumart.fetch(artist, album, 0)
         else:
             command = self.request.uri[len(username)+1:]
-            process_command(self, username, command, self.login)
+            process_command(self, username, command, self.login, self.avatar_url)
 
     def albumart_callback(self, data):
         self.send_result(RAW_YES, data)
@@ -214,6 +217,9 @@ class WSHandler(websocket.WebSocketHandler):
 #            print "Not authorized"
 #            self.disconnect()
 #            return
+        self.avatar_url = self.get_secure_cookie("twitter_avatar")
+        if not self.avatar_url:
+            self.avatar_url = "http://forums.azbilliards.com/images/cavatars/avatar5699_6.gif"
 
         self.username = username
         self.nbr = assign_nbr()
@@ -226,7 +232,7 @@ class WSHandler(websocket.WebSocketHandler):
         self.receive_message(self.on_message)
 
     def on_message(self, command):
-        process_command(self, self.username, command, self.login)
+        process_command(self, self.username, command, self.login, self.avatar_url)
         try:
             self.receive_message(self.on_message)
         except IOError:

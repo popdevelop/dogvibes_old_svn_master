@@ -32,16 +32,23 @@ class User:
         u = db.fetchone()
         return u['votes']
 
-    def vote(self, track_id):
+    def voteup(self, track_id):
         if self.votes_left() < 1:
             logging.warning("No votes left for %s" % self.username)
             return
 
         db = Database()
         db.commit_statement('''insert into votes (track_id, user_id) values (?, ?)''', [track_id, self.id])
+        # take vote from user
         db.commit_statement('''update users set votes = votes - 1 where id = ?''', [self.id])
         logging.debug("Update number of votes and track votes for user = %s" % self.username)
 
+    def votedown(self, track_id):
+        db = Database()
+        db.commit_statement('''delete from votes where track_id = ? and user_id = ?''', [track_id, self.id])
+        # give vote back to user
+        db.commit_statement('''update users set votes = votes + 1 where id = ?''', [self.id])
+        logging.debug("Update number of votes and track votes for user = %s" % self.username)
 
     def current_votes(self):
         db = Database()
@@ -49,3 +56,20 @@ class User:
         u = db.fetchall()
         logging.debug("Get votes for user %s" % u)
         return u
+
+    @classmethod
+    def remove_all_voting_users(self, track_id):
+        db = Database()
+        db.commit_statement('''select * from votes where track_id = ?''', [track_id])
+        
+        logging.debug("Give votes back to all users who voted for removed track")
+
+        row = db.fetchone()
+        while row != None:
+            # give vote back to user
+            db.commit_statement('''update users set votes = votes + 1 where id = ?''', [row['user_id']])
+            row = db.fetchone()
+
+        db.commit_statement('''delete from votes where track_id = ?''', [track_id])
+            
+

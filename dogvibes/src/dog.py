@@ -68,13 +68,13 @@ def push_status():
 def on_data(command):
     commands = command.split(EOS)[0:-1]
     for c in commands:
-        nbr, c, user = c.split(SEP) # remove nbr
-        run_command(nbr, c, user)
+        nbr, c, user, avatar_url = c.split(SEP) # remove nbr
+        run_command(nbr, c, user, avatar_url)
         push_status()
 
     stream.read_until(EOS, on_data)
 
-def run_command(nbr, command, user):
+def run_command(nbr, command, user, avatar_url):
     u = urlparse(command)
     c = u.path.split('/')
 
@@ -108,10 +108,12 @@ def run_command(nbr, command, user):
         msg_id = params.pop('msg_id')
     if 'user' in params: # DEBUG: add this to the req to override cookies
         user = params.pop('user')
+    if 'avatar_url' in params:
+        avatar_url = params.pop('avatar_url')
     if '_' in params:
         params.pop('_')
 
-    request = DogRequest(nbr, user, msg_id, js_callback)
+    request = DogRequest(nbr, user, avatar_url, msg_id, js_callback)
 
     try:
         if (len(c) < 3):
@@ -171,9 +173,10 @@ def run_command(nbr, command, user):
     # The request is not ended here, but instead in the DogRequest.callback
 
 class DogRequest:
-    def __init__(self, nbr, user, msg_id, js_callback):
+    def __init__(self, nbr, user, avatar_url, msg_id, js_callback):
         self.nbr = nbr
         self.user = user
+        self.avatar_url = avatar_url
         self.msg_id = msg_id
         self.js_callback = js_callback
         self.pushes = []
