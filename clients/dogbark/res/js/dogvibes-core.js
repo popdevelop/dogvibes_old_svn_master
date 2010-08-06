@@ -227,6 +227,7 @@ window.Dogvibes =  {
   init: function(protocol, server, user) {
     // XXX: Remove when user handling is in place
     Dogvibes.dogtag = prompt("Enter you dogtag");
+    Dogvibes.dogtag = (Dogvibes.dogtag == null) ? "anonymous" : Dogvibes.dogtag;
     $(document).bind("Server.status", Dogvibes.handleStatus);
 //    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
     Dogvibes.albumartURL = "http://" + server + "/" + user;

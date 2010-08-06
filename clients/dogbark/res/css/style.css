@@ -1,21 +1,49 @@
 /******************************************************************************
  * Basic styles
  *****************************************************************************/
- 
-body {
+
+*:focus {outline: none;}
+
+html {
   background-color: #DDD;
-  width: 960px;
+  background-image: url("../img/background2.png");
+}
+
+body {
+  background-image: url("../img/top-shadow.png");
+  background-position: 0 49px; 
+  background-repeat: repeat-x; 
   margin: auto;
   padding: 0;
-  font-family: "Gill Sans", Calibri, "Trebuchet MS", sans-serif;
+  font-family: helvetica, arial, sans-serif;
   text-shadow: rgba(255,255,255, 0.8) 0 1px 0;  
 }
 
 .column {
   display: inline-block;
   float: left;
-  background-color: #EEE;
-  padding: 10px;  
+  padding: 0;
+  margin: 0;
+}
+
+div.box {
+  background-color: #FFF;
+  border-radius: 5px;
+  margin: 10px 10px 14px 10px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px; 
+  box-shadow: #C8C8C8 0px 4px 18px;
+  -webkit-box-shadow: #C8C8C8 0px 4px 18px;
+  -moz-box-shadow: #C8C8C8 0px 4px 18px; 
+}
+
+.inner-col {
+  padding: 10px;
+}
+
+div.inner {
+  width: 960px;
+  margin: auto;
 }
 
 /* http://sonspring.com/journal/clearing-floats */
@@ -27,6 +55,11 @@ body {
 	visibility: hidden;
 	width: 0;
 	height: 0;
+  
+}
+
+em {
+  font-style: normal;
 }
 
 a, a:visited, a:link {
@@ -34,7 +67,7 @@ a, a:visited, a:link {
   text-decoration: none;
 }
 a:hover {
-  color: #firebrick;  
+  color: firebrick;  
 }
 
 ul {
@@ -44,17 +77,23 @@ ul {
 }
 
 h1, h2, h3, h4, h5 {
-  font-weight: normal;
+  font-weight: bold;
+  font-family: helvetica, arial, sans-serif;
+  margin: 0;
 }
 
 h2 {
-  font-size: 20px;
-  margin: 0 0 4px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-shadow: rgba(255,255,255, 0.8) 0 1px 0;
+  color: #707171;
+  height: 20px;  
 }
 
 li {
-  border-bottom: 1px solid #AAA;
-  border-top: 1px solid #FFF;
+  background-image: url('../img/hr.png');
+  background-position: left bottom;
+  background-repeat: repeat-x;
 }
 
 li.last {
@@ -73,30 +112,107 @@ div.loading {
   min-height: 100px;
 }
 
+#popup {
+  width: 320px;
+  height: 140px;
+  position: absolute;
+  margin-left: -160px;
+  left: 50%;
+  top: 100px;
+  padding: 30px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 18px;
+  background-color: #FFF;
+}
+
 /******************************************************************************
  * Top
  *****************************************************************************/
 
 #top {
   width: 100%;
-  height: 60px;
+  height: 49px;
+  background-image: url("../img/top.png");
+  background-repeat: repeat-x;
 }
 
 #top h1 {
-  display: inline;
+  display: inline-block;
+  height: 28px;
+  width: 117px;
+  margin: 10px 0 0 10px;
+  font-size: 30px;
+  font-weight: normal;
+  color: #999;
+  text-indent: -999px;
+  background-image: url("../img/dogvibes.png");
+  background-position: top left;  
 }
 
-#top input {
+
+#toolbar {
+  width: 960px;
+  margin: 20px auto 10px auto;  
+  display: block; 
+}
+
+#toolbar h2 {
+  display: inline;
+  font-size: 60px;
+  font-weight: bold;
+  font-family: helvetica, arial, sans-serif;
+  letter-spacing: -3px;
+  color: #fff;
+  text-shadow: rgba(0,0,0, 0.2) 1px 1px 0;
+  text-transform: none;
+}
+
+#toolbar #input-frame {
   float: right;
+  background-image: url("../img/toggle.png");
+  background-position: top right;
+  border: 0;
+  width: 199px;
+  height: 47px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  right: -7px;
+  top: 20px;
+}
+
+#toolbar #input-frame:hover {
+  background-image: url('../img/toggle-hover.png');
+}
+
+#toolbar #input-frame input{
+  background-color: transparent;
+  border: 0;
+  width: 199px;
+  height: 47px;
+  margin: 0;
+  padding: 0;
+  text-indent: -999px;
+  background-image: url('../img/toggle-add.png');
+  background-position: 50% 50%;
+  cursor: pointer;
+}
+
+#toolbar #input-frame input.social {
+  background-image: url('../img/toggle-social.png');
+  background-position: 50% 50%;  
 }
 
 #viewport {
-  width: 960px;
+  margin: auto;
+  width: 980px;
   overflow: hidden;
+  display: none;
 }
 
 #content {
-  width: 1510px;
+  width: 1530px;
 }
 
 /******************************************************************************
@@ -104,8 +220,20 @@ div.loading {
  *****************************************************************************/
  
 #leftcol {
+  font-size: 14px;
+  width: 550px;
+}
+
+#leftcol h2 {
+  background-image: url('../img/hr.png');
+  background-position: left bottom;
+  background-repeat: repeat-x;   
+  height: 20px;
+  margin: 0 10px;
+  color: #707171;
   font-size: 12px;
-  width: 520px;
+  text-transform: uppercase;
+  font-weight: bold;
 }
 
 #leftcol img {
@@ -116,30 +244,36 @@ div.loading {
   height: 35px;
   float: left;
   position: relative;
-  top: -6px;
+  top: 0px;
   border: 1px solid #BBB;
   padding: 1px;  
 } 
 
 #leftcol ul {
-  margin-top: 10px;
+  margin-top: 0px;
 }
  
 #leftcol ul li {
   color: #999;
-  min-height: 37px;
+  min-height: 50px;
   padding-top: 8px;
   position: relative;
+  background-image: none;
+  border-bottom: 1px solid #d9d9d9;
 }
 
-#leftcol ul li em,
 #leftcol ul li span {
-  color: #000;
-  font-style: normal;
+  color: #7e7e7e;
+}
+#leftcol ul li span.user {
+  color: #4A89AD;
+  font-weight: bold;
 }
 
 #leftcol ul li span.time {
-  color: #999;
+  font-size: 11px;
+  color: #AAA;
+  margin: 5px 0 0 0;
   display: block;
 }
 
@@ -159,28 +293,35 @@ div.loading {
  *****************************************************************************/
  
 #midcol {
-  width: 390px;
-  margin: 0 10px;  
+  width: 430px;
 }
 
 #midcol ul#tabs {
-  border-bottom: 2px solid #BBB;
-  height: 23px;
+  background-image: url('../img/hr.png');
+  background-position: left bottom;
+  background-repeat: repeat-x;   
+  height: 20px;
+  padding: 0;
+  margin: 0 10px;
 }
 
 #midcol ul#tabs li{
-  color: #AAA;
+  color: #5992B3;
   display: inline-block;
   float: left;
-  padding: 4px 4px 4px 4px ;
-  margin: 0 3px 0 0;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: helvetica, arial, sans-serif;
+  text-transform: uppercase;
+  margin: 0 25px 0 0;
+  padding: 0;
   border: 0;
+  background-image: none;
 }
 
 #midcol ul#tabs li.selected{
-  color: #FFF;
-  background-color: #AAA;
-  padding: 4px 4px 0 4px;
+  color: #707171;
+  padding: 0;
 }
 
 /*--- Track list ---*/
@@ -188,7 +329,7 @@ div.loading {
   clear: both;
 }
 
-#midcol ul#tracks li { 
+#midcol ul#tracks li {
   margin: 0;
   padding: 10px;
   min-height: 48px;
@@ -196,13 +337,15 @@ div.loading {
 }
 
 #midcol ul#tracks li.noTracks { 
-  text-align: middle;
+  text-align: center;
 }
 
 #midcol ul#tracks li em {
   display: block;
   height: 20px;
   overflow: hidden;
+  color: #4a4a4a;
+  font-size: 14px;
 }
 
 #midcol ul#tracks li.playing {
@@ -210,17 +353,28 @@ div.loading {
   border-top: 0;
 }
 
+#midcol ul#tracks li.playing h3 {
+  text-indent: -999px;
+  position: absolute;
+  top: 0px;
+  left: -23px;
+  height: 34px;
+  width: 135px;
+  background-image: url("../img/nowplaying.png");
+  background-position: top left;  
+}
+
 #midcol ul#tracks li.playing em {
   height: auto;
   display: block;
-  color: #000;
+  color: #4a4a4a;
   font-style: normal;
   font-weight: bold;
   font-size: 18px;
 }
 #midcol ul#tracks li.playing span {
   display: block;
-  color: #777;
+  color: #929191;
   margin: 3px 0;
   font-weight: normal;
   font-size: 14px;
@@ -228,7 +382,7 @@ div.loading {
 
 #midcol ul#tracks li.playing span.album {
   display: block;
-  color: #333;
+  color: #9291919;
   font-weight: normal;
   font-size: 12px;
 }
@@ -237,6 +391,17 @@ div.loading {
   position: absolute;
   bottom: 10px;
   left: 170px;
+}
+
+#midcol ul#tracks li.playing div#playIndicator {
+  float: right;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+
+#midcol ul#tracks li.playing div#playIndicator.playing {
+  background-image: url("../img/icon_eq.gif")
 }
 
 /*--- Album art ---*/
@@ -250,6 +415,7 @@ div.loading {
 }
 
 #midcol ul#tracks li.playing img {
+  margin-right: 20px;
   width: 150px;
   height: 150px;
 }
@@ -267,6 +433,10 @@ div.loading {
   margin-top: 3px;
 }
 
+#midcol ul#tracks li.playing ul.votes {
+  margin-left: 10px;
+}
+
 #midcol ul#tracks ul.votes li {
   margin: 0 3px;
   border: 0;
@@ -277,6 +447,7 @@ div.loading {
   display: inline-block;
   float: left;
   overflow: hidden;
+  background-image: none;
 }
 
 #midcol ul#tracks ul.votes li.sum {
@@ -284,6 +455,7 @@ div.loading {
   padding: 3px;
   width: auto;
   color: #BBB;
+  font-size: 14px;  
 }
 
 #midcol ul#tracks ul.votes li img { 
@@ -297,19 +469,30 @@ div.loading {
  *****************************************************************************/
 
 #rightcol {
-  width: 520px;
+  width: 550px;
   position: relative;
 }
 
 #rightcol input#Search-input {
   font-size: 16px;
+  color: #555;
   width: 216px;
-  border: 2px solid #CCC;
-  position: absolute;
-  top: 5px;
-  right: 10px;
+  margin: 10px 10px 0 10px;
+  height: 36px;
+  width: 462px;
+  border: 0;
+  padding: 0 10px;
+  background-color: transparent;
+  background-image: url('../img/searchbox.png');
+  background-position: left top;
+  background-repeat: no-repeat;   
 }
-
+#rightcol h2 {
+  background-image: url('../img/hr.png');
+  background-position: left bottom;
+  background-repeat: repeat-x; 
+  margin: 0 10px 5px 0;
+}
 #rightcol table {
   width: 100%;
   border-collapse: collapse;
@@ -323,6 +506,7 @@ div.loading {
 #rightcol table tbody td {
   font-weight: normal;
   font-size: 11px;
+  line-height: 1.5;
   padding: 2px 0;
   cursor: default;
 }
@@ -335,7 +519,7 @@ div.loading {
 }
 
 #rightcol table tbody tr:hover {
-  background-color: #CCC;
+  background-color: #DDD;
 }
 
 #rightcol table tbody tr:hover input {
@@ -355,7 +539,7 @@ div.loading {
 }
 
 #artist h4, #album h4 {
-  margin: 10px 0 0 0;
+  margin: 10px 0 10px 0;
 }
 #artist h5, #album h5 {
   margin-left: 160px;

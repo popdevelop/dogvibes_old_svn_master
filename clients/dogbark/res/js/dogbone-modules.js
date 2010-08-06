@@ -239,7 +239,10 @@ var Playqueue = {
     $(document).bind("Server.error", function() {
       $(Playqueue.ui.tracklist).empty();
       $(Playqueue.ui.info).show();     
-    });    
+    });
+    $(document).bind("Status.state", function(){
+      Playqueue.set();
+    }); 
   },  
   fetch: function() {
     if(Dogvibes.server.connected) { 
@@ -266,9 +269,16 @@ var Playqueue = {
       $(Playqueue.ui.tracklist).append(item);
     }
     item.addClass("last");
+    Playqueue.set();
   },
   // Update play state etc.
   set: function() {
+    if(Dogvibes.status.state == 'playing'){
+      $('#playIndicator').addClass('playing');
+    }
+    else {
+      $('#playIndicator').removeClass('playing');      
+    }
   },
   // Generate a list item
   _newItem: function(json, active) {
@@ -284,8 +294,10 @@ var Playqueue = {
     $("<img>").attr("src", Dogvibes.albumArt(json.artist, json.album, artSize)).appendTo(item);
     $("<em></em>").text(mainText).appendTo(item);
     if(active) {
+      $("<h3></h3>").text("now playing").appendTo(item);    
       $("<span></span>").text(json.artist).appendTo(item);
       $("<span></span>").attr("class", "album").text(json.album).appendTo(item);
+      $("<div></div>").attr("id", "playIndicator").appendTo(item);
     }
     else {
       $("<input>").attr("type", "button").attr("value", "vote").appendTo(item)
@@ -295,8 +307,9 @@ var Playqueue = {
     }
     
     // Votes
-    var votes = json.votes ? json.votes : 0;
-    var sum = votes == 0 ? "No" : votes;    
+    var votes = json.voters.length > 4 ? 4 : json.voters.length;
+    var sum = votes == 0 ? "No" : votes;
+    if(json.voters.length > votes) { sum = sum + "+"; }    
     sum = sum + " vote" + (votes == 1 ? "" : "s");
     var voteList = $("<ul></ul>").attr("class", "votes").appendTo(item);
     for(var i = 0; i < votes; i++) {
@@ -356,8 +369,9 @@ var Activity = {
       .click(function() {
         Dogvibes.vote(json.uri);
       });
-    $("<span></span>").text(json.user).appendTo(item);
-    $("<em></em>").text(json.artist + " - " + json.title).appendTo(item);
+    $("<span></span>").attr("class", "user").text(json.user).appendTo(item);
+    $("<span></span>").text(" voted for ").appendTo(item);
+    $("<span></span>").text(json.title + " by " + json.artist).appendTo(item);
     $("<span></span>").attr("class", "time").text(json.time.relativeTime()).appendTo(item);
     return item;
   }
@@ -366,23 +380,28 @@ var Activity = {
 
 var ConnectionIndicator = {
   ui: {
-    icon: "#ConnectionIndicator-icon"
+    message: "#popup"
   },
-  icon: false,
+  message: false,
   init: function() {
-    ConnectionIndicator.icon = $(ConnectionIndicator.ui.icon);
-    if(ConnectionIndicator.icon) {
+    ConnectionIndicator.message = $(ConnectionIndicator.ui.message);
+    if(ConnectionIndicator.message) {
       $(document).bind("Server.connecting", function() {
-        ConnectionIndicator.icon.removeClass();
-        //ConnectionIndicator.icon.addClass("connecting");
+        ConnectionIndicator.message.show();
+        ConnectionIndicator.message.text("Please wait while we connect you to dogvibes");
+        $('#viewport').hide();
+        $('#toolbar').hide();
       });
       $(document).bind("Server.error", function() {
-        ConnectionIndicator.icon.removeClass();
-        ConnectionIndicator.icon.addClass("error");
+        ConnectionIndicator.message.show();
+        ConnectionIndicator.message.text("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page");
+        $('#viewport').hide();
+        $('#toolbar').hide();        
       });
       $(document).bind("Server.connected", function() {
-        ConnectionIndicator.icon.removeClass();
-        ConnectionIndicator.icon.addClass("connected");
+        ConnectionIndicator.message.hide();
+        $('#viewport').show();
+        $('#toolbar').show();
       });       
     }
   }
@@ -866,6 +885,12 @@ var PageSwitch = {
   scroll: function(page) {
     PageSwitch.currentPage = page;
     what = page == "search" ? 'max' :0;
+    if(page == "search") {
+      $('#Button-switch').addClass('social');      
+    }
+    else {
+      $('#Button-switch').removeClass('social');    
+    }
     $("#viewport").scrollTo(what, { axis: 'x', duration: 200, easing: 'swing' });  
   },
   toggle: function() {
@@ -914,11 +939,12 @@ $(document).ready(function() {
   PageSwitch.init();
   //EventManager.init();
   ScrollHandler.init();  
+  ConnectionIndicator.init();
   /* Start server connection */
   Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
 
   //XXX: Move when user handling is in place
-  $("#Dogvibes-info").text("Dogvibes ["+Config.defaultUser+"]");
+  $("#Dogvibes-info").text(Config.defaultUser);
 
   $("#Button-switch").click(function() {
     PageSwitch.toggle();
@@ -932,4 +958,3 @@ $(document).ready(function() {
    
   
 }); 
-
