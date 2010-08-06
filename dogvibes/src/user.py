@@ -1,8 +1,11 @@
 from database import Database
 import logging
+import time
 
 
 class User:
+    all_votes = []
+
     def __init__(self, username, avatar_url="http://dogvibes.com"):
         if username == None:
             self.username = "dogvibes"
@@ -38,6 +41,13 @@ class User:
             return
 
         db = Database()
+        db.commit_statement('''select * from tracks where id=?''', [track_id])
+        row = db.fetchone()
+
+        now = time.time()
+
+        self.all_votes.append({"id":track_id,"title":row['title'], "artist":row['artist'], "album": row['album'], "user":self.username, "time":now, "votes":1, "duration":row['duration'], "votes":3})
+
         db.commit_statement('''insert into votes (track_id, user_id) values (?, ?)''', [track_id, self.id])
         # take vote from user
         db.commit_statement('''update users set votes = votes - 1 where id = ?''', [self.id])
@@ -49,13 +59,6 @@ class User:
         # give vote back to user
         db.commit_statement('''update users set votes = votes + 1 where id = ?''', [self.id])
         logging.debug("Update number of votes and track votes for user = %s" % self.username)
-
-    def current_votes(self):
-        db = Database()
-        db.commit_statement('''select * from votes where user_id = ?''', [self.id])
-        u = db.fetchall()
-        logging.debug("Get votes for user %s" % u)
-        return u
 
     @classmethod
     def remove_all_voting_users(self, track_id):
@@ -72,4 +75,6 @@ class User:
 
         db.commit_statement('''delete from votes where track_id = ?''', [track_id])
             
-
+    @classmethod
+    def get_all_votes(self):
+        return self.all_votes
