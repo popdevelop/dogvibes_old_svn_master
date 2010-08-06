@@ -55,12 +55,12 @@ class Track:
         row = db.fetchone()
         return row != None
 
-    def get_all_voting_users(self):
+    def get_all_voting_users(self, track_id):
         db = Database()
 
         ret = []
 
-        db.commit_statement('''select * from votes join users on votes.user_id = users.id where track_id = ?''', [self.id])
+        db.commit_statement('''select * from votes join users on votes.user_id = users.id where track_id = ?''', [track_id])
         
         row = db.fetchone()
         while row != None:
