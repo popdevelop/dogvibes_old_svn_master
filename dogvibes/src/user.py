@@ -38,6 +38,14 @@ class User:
         user.votes = u['votes']
         return user
 
+    @classmethod
+    def find_by_or_create_from_username(self, username, avatar_url):
+        user = User.find_by_username(username)
+        if user == None:
+            user = User(username, avatar_url)
+            user.store(self)
+        return user
+
     def get_voted_tracks(self):
         db = Database()
 

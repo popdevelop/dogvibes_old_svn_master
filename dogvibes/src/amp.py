@@ -594,7 +594,5 @@ class Amp():
         request.finish(User.get_activity())
 
     def API_getUserInfo(self, request):
-        user = User.find_by_username(request.user)
-        if user == None:
-            raise ValueError('Could not find user %s', request.user)
+        user = User.find_by_or_create_from_username(request.user, request.avatar_url)
         request.finish(user.serialize())
