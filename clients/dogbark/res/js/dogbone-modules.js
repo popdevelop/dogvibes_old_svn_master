@@ -1008,7 +1008,20 @@ var PageSwitch = {
  * Startup 
  ***************************/
 $(document).ready(function() {
-  
+  Dogvibes.getLoginInfo(Config.defaultServer,"checkLogin");
+});
+
+function checkLogin(json) {
+  if(json.error == 5) {
+    console.log("redirecting: " + "http://dogvib.es/authTwitter/" + Config.defaultUser);
+    window.location = "http://dogvib.es/authTwitter/" + Config.defaultUser;
+  }
+  else {
+    startUp();  
+  }
+}
+
+function startUp() {
   /* Zebra stripes for all tables */
   //$.tablesorter.defaults.widgets = ['zebra'];
   TrackInfo.init();
@@ -1039,6 +1052,4 @@ $(document).ready(function() {
    
   /* Display username */
   $('#userinfo').text(Config.defaultUser);
-   
-  
-}); 
+} 

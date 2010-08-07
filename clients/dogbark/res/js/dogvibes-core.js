@@ -60,8 +60,7 @@ var AJAX = {
     /* Changing state? */
     if(!AJAX.connected) {
       $(document).trigger("Server.connecting");
-    }
-    
+    }    
     var opts = {
       url: AJAX.server + URL,
       error: AJAX.error,
@@ -219,18 +218,17 @@ window.Dogvibes =  {
     getAlbums: "/dogvibes/getAlbums?query=",
     getAlbum: "/dogvibes/getAlbum?album_uri=",
     getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds",
-    vote: "/addVote?user=",
-    unVote: "/removeVote?user=",
+    vote: "/addVote",
+    unVote: "/removeVote",
     getActivity: "/getActivity",
-    getUserInfo: "/getUserInfo"
+    getUserInfo: "/getUserInfo",
+    getLoginInfo: "/getLoginInfo"
   },
   /*****************
    * Initialization
    *****************/
   init: function(protocol, server, user) {
     // XXX: Remove when user handling is in place
-    Dogvibes.dogtag = prompt("Enter you dogtag");
-    Dogvibes.dogtag = (Dogvibes.dogtag == null) ? "anonymous" : Dogvibes.dogtag;
     $(document).bind("Server.status", Dogvibes.handleStatus);
 //    Dogvibes.server = protocol == 'ws' ? WSocket : AJAX;
     Dogvibes.albumartURL = "http://" + server + "/" + user;
@@ -415,11 +413,11 @@ window.Dogvibes =  {
     return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + escape(album) + "&artist=" + escape(artist) + "&size=" + size;
   },
   vote: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + Dogvibes.dogtag + "&uri=" + escape(uri);
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + "&uri=" + escape(uri);
     Dogvibes.server.send(URL, Success);
   },
   unVote: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.unVote + Dogvibes.dogtag + "&uri=" + escape(uri);
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.unVote + "&uri=" + escape(uri);
     Dogvibes.server.send(URL, Success);  
   },
   getActivity: function(Success) {
@@ -429,6 +427,17 @@ window.Dogvibes =  {
   getUserInfo: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.getUserInfo;
     Dogvibes.server.send(URL, Success);  
+  },
+  getLoginInfo: function(server, Success) {
+    // Do a HTTP since this function can be called before init
+    var URL = "http://"+server+Dogvibes.cmd.getLoginInfo;
+    var opts = {
+      url: URL,
+      success: eval(Success),
+      callbackParameter: "callback",
+      timeout: 5000
+    };
+    $.jsonp(opts);    
   }
 };
 
