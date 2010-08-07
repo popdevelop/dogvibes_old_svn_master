@@ -5,7 +5,7 @@
 var Config = {
   defaultUser: "",
   defaultServer: "dogvib.es",
-  defaultProtocol: ["ws", "http"], //Order to try protocols  
+  defaultProtocol: ["http", "http"], //Order to try protocols  
 };
 
 
@@ -227,6 +227,7 @@ var Playqueue = {
     info: '#Playqueue-info',
     tracklist: '#tracks'
   },
+  items: { error: 0 },
   init: function() {
     $(Playqueue.ui.info).text('Play queue not available when offline').hide();
 
@@ -239,9 +240,12 @@ var Playqueue = {
       $(Playqueue.ui.tracklist).empty();
       $(Playqueue.ui.info).show();     
     });
-    $(document).bind("Status.state", function(){
+    $(document).bind("User.info", function(){
       Playqueue.set();
     }); 
+    $(document).bind("Status.state", function(){
+      Playqueue.set();
+    });     
   },  
   fetch: function() {
     if(Dogvibes.server.connected) { 
@@ -256,6 +260,7 @@ var Playqueue = {
     $(Playqueue.ui.tracklist).empty();
     var num = 0;
     var item;
+    Playqueue.items = json;
     $(json.result).each(function(i, el) {
       active = i == 0 ? true : false; //XXX: improve!
       num++;
@@ -267,16 +272,19 @@ var Playqueue = {
       $(Playqueue.ui.tracklist).append(item);
     }
     item.addClass("last");
-    Playqueue.set();
+    Playqueue.setState();
   },
   // Update play state etc.
   set: function() {
+    Playqueue.draw(Playqueue.items);
+  },
+  setState: function(){
     if(Dogvibes.status.state == 'playing'){
       $('#playIndicator').addClass('playing');
     }
     else {
       $('#playIndicator').removeClass('playing');      
-    }
+    }  
   },
   // Generate a list item
   _newItem: function(json, active) {
@@ -384,16 +392,21 @@ var Activity = {
   ui: {
     list: "#Activity-list"
   },
+  items: {error: 0},
   init: function() {
     $(document).bind("Server.connected", function() {
       Activity.fetch();      
     });
     $(document).bind("Status.activity", function() {
       Activity.fetch();      
-    });    
+    });
+    //Re-draw list on vote change
+    $(document).bind("User.info", function() {
+      Activity.set();      
+    });
   },
   fetch: function() {
-    if(Dogvibes.server.connected) { 
+    if(Dogvibes.server.connected) {
       Dogvibes.getActivity("Activity.draw");
     }
   },
@@ -403,7 +416,7 @@ var Activity = {
       $("<li></li>").addClass("first last").text("Oops, something went wrong").appendTo($(Activity.ui.list));
       return;
     }
-    
+    Activity.items = json;
     var num = 0;
     var item;
     $(json.result).each(function(i, el) {
@@ -420,9 +433,11 @@ var Activity = {
     item.addClass("last");
       
   },
+  set: function() {
+    Activity.draw(Activity.items);
+  },
   _newItem: function(json) {
     var item = $("<li></li>").addClass("gradient");
-    //XXX: Use real avatar later 
     $("<img></img>").attr("src", json.avatar_url).appendTo(item);
     item.append(voteButton(json));
     $("<span></span>").addClass("user").text(json.user).appendTo(item);
@@ -507,7 +522,7 @@ var Search = {
   },
   searches: [],
   param: "",
-  items: false, // Save search results
+  items: {error: 0}, // Save search results
   init: function() {
     /* Init search navigation section */
     $(document).bind("Page.search", Search.setPage);
