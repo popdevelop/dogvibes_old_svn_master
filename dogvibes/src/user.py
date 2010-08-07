@@ -43,7 +43,7 @@ class User:
         user = User.find_by_username(username)
         if user == None:
             user = User(username, avatar_url)
-            user.store(self)
+            user.store()
         return user
 
     def get_voted_tracks(self):
