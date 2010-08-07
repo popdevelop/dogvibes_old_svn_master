@@ -218,8 +218,8 @@ window.Dogvibes =  {
     getAlbums: "/dogvibes/getAlbums?query=",
     getAlbum: "/dogvibes/getAlbum?album_uri=",
     getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds",
-    vote: "/addVote",
-    unVote: "/removeVote",
+    vote: "/addVote?uri=",
+    unVote: "/removeVote?uri=",
     getActivity: "/getActivity",
     getUserInfo: "/getUserInfo",
     getLoginInfo: "/getLoginInfo"
@@ -413,11 +413,11 @@ window.Dogvibes =  {
     return Dogvibes.albumartURL + Dogvibes.cmd.albumArt + escape(album) + "&artist=" + escape(artist) + "&size=" + size;
   },
   vote: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + "&uri=" + escape(uri);
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + escape(uri);
     Dogvibes.server.send(URL, Success);
   },
   unVote: function(uri, Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.unVote + "&uri=" + escape(uri);
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.unVote + escape(uri);
     Dogvibes.server.send(URL, Success);  
   },
   getActivity: function(Success) {
