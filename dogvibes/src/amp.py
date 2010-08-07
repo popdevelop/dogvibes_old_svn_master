@@ -40,6 +40,8 @@ class Amp():
         self.fallback_playlist_id = -1
         self.fallback_playlists_track_id = -1
 
+        self.vote_version = 0
+
         # sources connected to the amp
         self.sources = shelve.open("amp" + id + ".shelve", writeback=True)
 
@@ -327,6 +329,7 @@ class Amp():
 
         # -1 is in tmpqueue
         status['playlist_id'] = self.get_active_playlist_id()
+        status['vote_version'] = self.vote_version
 
         track = self.fetch_active_track()
         if track != None:
@@ -468,14 +471,20 @@ class Amp():
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
         playlist.add_vote(track, request.user, request.avatar_url)
+
         self.needs_push_update = True
+        self.vote_version += 1
+        request.push({'vote_version': self.vote_version})
         request.finish()
 
     def API_removeVote(self, uri, request):
         track = self.dogvibes.create_track_from_uri(uri)
         playlist = Playlist.get(self.tmpqueue_id)
         playlist.remove_vote(track, request.user, request.avatar_url)
+
         self.needs_push_update = True
+        self.vote_version += 1
+        request.push({'vote_version': self.vote_version})
         request.finish()
 
     def API_queue(self, uri, request):
@@ -537,6 +546,8 @@ class Amp():
         playlist = Playlist.get(self.tmpqueue_id)
         playlist.remove_track_id(track_id)
         self.needs_push_update = True
+        self.vote_version += 1
+        request.push({'vote_version': self.vote_version})
         request.finish()
 
     def API_removeTracks(self, track_ids, request):
@@ -553,6 +564,8 @@ class Amp():
                 playlist = Playlist.get(self.tmpqueue_id)
                 playlist.remove_track_id(track_id)
                 self.needs_push_update = True
+        self.vote_version += 1
+        request.push({'vote_version': self.vote_version})
         request.finish()
 
     def API_seek(self, mseconds, request):
