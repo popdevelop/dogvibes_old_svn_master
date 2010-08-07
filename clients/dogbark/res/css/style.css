@@ -164,6 +164,13 @@ li input.voteButton:hover {
   background-image: url('../img/vote-hover.png');
 }
 
+li input.voteButton.undo {
+  background-image: url('../img/vote-undo.png');
+}
+
+li input.voteButton.undo:hover {
+  background-image: url('../img/vote-undo.png');
+}
 
 div.loading {
   background-image: url('../img/loading.gif');
@@ -287,7 +294,7 @@ div.loading {
  *****************************************************************************/
  
 #leftcol {
-  font-size: 14px;
+  font-size: 12px;
   width: 530px;
 }
 
@@ -307,8 +314,8 @@ div.loading {
   margin: 0 10px 0 0;
   border: 0;
   background-color: #FFF;
-  width: 35px;
-  height: 35px;
+  width: 30px;
+  height: 30px;
   float: left;
   position: relative;
   top: 0px;
@@ -322,8 +329,8 @@ div.loading {
  
 #leftcol ul li {
   color: #999;
-  min-height: 50px;
-  padding-top: 8px;
+  min-height: 40px;
+  padding-top: 4px;
   position: relative;
   background-image: none;
 }
@@ -339,6 +346,7 @@ div.loading {
 }
 
 #leftcol ul li span.user {
+  font-size: 14px;
   color: #4A89AD;
   font-weight: bold;
 }
@@ -346,7 +354,7 @@ div.loading {
 #leftcol ul li span.time {
   font-size: 11px;
   color: #AAA;
-  margin: 5px 0 0 0;
+  margin: 3px 0 0 0;
   display: block;
 }
 
@@ -354,11 +362,6 @@ div.loading {
   position: absolute;
   right: 10px;
   bottom: 5px;
-  visibility: hidden;
-}
-
-#leftcol ul li:hover input {
-  visibility: visible;
 }
 
 /******************************************************************************
@@ -452,6 +455,7 @@ div.loading {
   margin: 3px 0;
   font-weight: normal;
   font-size: 14px;
+  cursor: pointer;  
 }
 
 #midcol ul#tracks li.playing span.album {
@@ -459,6 +463,7 @@ div.loading {
   color: #9291919;
   font-weight: normal;
   font-size: 12px;
+  cursor: pointer;  
 }
 
 #midcol ul#tracks li.playing ul.votes {
@@ -468,7 +473,9 @@ div.loading {
 }
 
 #midcol ul#tracks li.playing div#playIndicator {
-  float: right;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
   display: inline-block;
   width: 12px;
   height: 12px;

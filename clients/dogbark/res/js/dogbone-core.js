@@ -33,10 +33,10 @@ window.Dogbone = {
     var pageObj = $("#"+pageID);
     if(pageObj && ($.inArray(pageID, Dogbone.pages) !== -1)) {
       Dogbone.hidePage(Dogbone.page.id);
-      Dogbone.page.id    = pageID;
-      Dogbone.page.param = param;
       pageObj.show();      
     }
+    Dogbone.page.id    = pageID;
+    Dogbone.page.param = param;    
     $(document).trigger("Page."+pageID);
   },
   hidePage: function(pageID) {

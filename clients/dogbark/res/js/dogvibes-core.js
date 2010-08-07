@@ -220,7 +220,9 @@ window.Dogvibes =  {
     getAlbum: "/dogvibes/getAlbum?album_uri=",
     getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds",
     vote: "/addVote?user=",
-    getActivity: "/getActivity"
+    unVote: "/removeVote?user=",
+    getActivity: "/getActivity",
+    getUserInfo: "/getUserInfo"
   },
   /*****************
    * Initialization
@@ -287,6 +289,10 @@ window.Dogvibes =  {
 
     if(Dogvibes.status.playlist_id != oldStatus.playlist_id) {
       $(document).trigger("Status.playlist");
+    }
+
+    if(Dogvibes.status.vote_version != oldStatus.vote_version) {
+      $(document).trigger("Status.activity");
     }
 
     if(Dogvibes.status.playlistversion != oldStatus.playlistversion) {
@@ -410,11 +416,19 @@ window.Dogvibes =  {
   },
   vote: function(uri, Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + Dogvibes.dogtag + "&uri=" + escape(uri);
-    Dogvibes.server.send(URL, Success);    
+    Dogvibes.server.send(URL, Success);
+  },
+  unVote: function(uri, Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.unVote + Dogvibes.dogtag + "&uri=" + escape(uri);
+    Dogvibes.server.send(URL, Success);  
   },
   getActivity: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.getActivity;
     Dogvibes.server.send(URL, Success);     
+  },
+  getUserInfo: function(Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.getUserInfo;
+    Dogvibes.server.send(URL, Success);  
   }
 };
 

@@ -4,7 +4,7 @@
 
 var Config = {
   defaultUser: "",
-  defaultServer: "digvib.es",
+  defaultServer: "dogvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols  
 };
 
@@ -227,8 +227,6 @@ var Playqueue = {
     info: '#Playqueue-info',
     tracklist: '#tracks'
   },
-  table: false,
-  hash: false,
   init: function() {
     $(Playqueue.ui.info).text('Play queue not available when offline').hide();
 
@@ -247,7 +245,6 @@ var Playqueue = {
   },  
   fetch: function() {
     if(Dogvibes.server.connected) { 
-      Playqueue.hash = Dogvibes.status.playlistversion;
       Dogvibes.getAllTracksInQueue("Playqueue.draw");
     }
   },
@@ -292,23 +289,25 @@ var Playqueue = {
       mainText = json.title;
     }
     var item = $("<li></li>").attr("class", "gradient " + cls);
-    $("<img>").attr("src", Dogvibes.albumArt(json.artist, json.album, artSize)).appendTo(item);
+    $("<img>")
+      .attr("src", Dogvibes.albumArt(json.artist, json.album, artSize))
+      .click(function() { 
+        window.location.hash = "#album/" + json.album; 
+      })      
+      .appendTo(item);
     $("<em></em>").text(mainText).appendTo(item);
     if(active) {
       $("<h3></h3>").text("now playing").appendTo(item);    
-      $("<span></span>").text(json.artist).appendTo(item);
+      $("<span></span>")
+        .click(function() { 
+          window.location.hash = "#artist/" + json.artist; 
+        })
+        .text(json.artist).appendTo(item);
       $("<span></span>").attr("class", "album").text(json.album).appendTo(item);
       $("<div></div>").attr("id", "playIndicator").appendTo(item);
     }
     else {
-      $("<input>").attr("type", "submit").attr("value", "vote").appendTo(item)
-        .click(function() {
-          if(User.getVotes() > 0) {
-            Dogvibes.vote(json.uri);
-          }
-          return false;
-        })
-        .addClass("voteButton");
+      item.append(voteButton(json));
     }
     
     // Votes
@@ -330,13 +329,54 @@ var Playqueue = {
   }
 };
 
+//XXX: move somewhere
+function voteButton(json) {
+  //Check if user has voten on this track
+  var voted = User.votes[json.uri] == true;
+  var item;
+  item = $("<input>").attr("type", "submit").attr("value", "vote").addClass('voteButton');
+  
+  if(voted) {
+    item.click(function() {
+      if(User.info.votes > 0) {
+        Dogvibes.unVote(json.uri);
+      }
+      return false;
+    }).addClass("undo");  
+  } else {
+    item.click(function() {
+      if(User.info.votes > 0) {
+        Dogvibes.vote(json.uri);
+      }
+      return false;
+    }); 
+  }
+  // Attach uri data
+  //item.data('uri', json.uri);
+  return item;
+}
+
 var User =  {
+  info: {},
+  votes: {}, //Quick uri hashlist for compare
   init: function() {
+    $(document).bind("Status.activity", function() {
+      User.update();
+    });
   },
   update: function() {
+    Dogvibes.getUserInfo("User.set");
   },
-  getVotes: function() {
-    return 5;
+  set: function(json) { 
+    if(json.error !== 0) {
+      return false;
+    }
+    User.votes = {};
+    $(json.result.voted_tracks).each(function(i, el) {
+      User.votes[el.uri] = true;
+    });
+    User.info = json.result;
+    $(document).trigger("User.info");
   }
 };
 
@@ -348,7 +388,7 @@ var Activity = {
     $(document).bind("Server.connected", function() {
       Activity.fetch();      
     });
-    $(document).bind("Server.activity", function() {
+    $(document).bind("Status.activity", function() {
       Activity.fetch();      
     });    
   },
@@ -383,14 +423,8 @@ var Activity = {
   _newItem: function(json) {
     var item = $("<li></li>").addClass("gradient");
     //XXX: Use real avatar later 
-    $("<img></img>").attr("src", "avatar.jpg").appendTo(item);
-    $("<input>").attr("type", "submit").attr("value", "vote").appendTo(item)
-      .click(function() {
-        if(User.getVotes() > 0) {
-          Dogvibes.vote(json.uri);
-        }
-        return false;
-      });
+    $("<img></img>").attr("src", json.avatar_url).appendTo(item);
+    item.append(voteButton(json));
     $("<span></span>").addClass("user").text(json.user).appendTo(item);
     $("<span></span>").addClass("weak").text(" voted for ").appendTo(item);
     $("<span></span>").text(json.title).appendTo(item);
@@ -473,18 +507,17 @@ var Search = {
   },
   searches: [],
   param: "",
-  table: false,
+  items: false, // Save search results
   init: function() {
     /* Init search navigation section */
     $(document).bind("Page.search", Search.setPage);
     
     $(document).bind("Status.songinfo", Search.set);
-    $(document).bind("Status.state", function() { Search.set(); });
+    $(document).bind("User.info", function() { Search.set(); });
     
     /* Handle offline/online */
     $(document).bind("Server.error", function() {
       $(Search.ui.page).removeClass();
-      $(Search.table.ui.content).hide();
       $(Search.ui.info).text('Search not available when offline').show();
     });
     $(document).bind("Server.connected", function() {
@@ -500,17 +533,6 @@ var Search = {
       e.preventDefault();
       return false;
     });
-    
-    /* Create result table */
-    /*Search.table = new ResultTable(
-    {
-      idTag: "uri",
-      name: "Search",
-      dblclick: function() {
-        var uri = $(this).data('uri');
-        Dogvibes.vote(uri);    
-      }
-    });*/
   },
   setPage: function() {
     /* See if search parameter has changed. If so, reload */
@@ -536,6 +558,7 @@ var Search = {
       alert("Search error!");
       return;
     }
+    Search.items = json; // Save for later
     /* Any results? */
     if(json.result.length === 0) {
       $(Search.ui.info).text('Sorry, no matches for "'+Dogbone.page.param+'"').show();
@@ -555,16 +578,12 @@ var Search = {
     }
     
     item.addClass("last");
-    Search.set();   
   },
   set: function() {
-    /* Set playing if any song matches */
-    var cls = false;
-    switch(Dogvibes.status.state) {
-      case "playing":
-      case "paused":
-        cls = Dogvibes.status.state;
-        break;
+    // Re-draw list (uggly/easy way...)
+    if(Dogbone.page.id == 'search') {
+      $(Search.ui.result).empty();
+      Search.handleResponse(Search.items);
     }
   },
   _newItem: function(json) {
@@ -575,16 +594,7 @@ var Search = {
       .attr("href", "#artist/"+json.artist)
       .text(json.artist)
       .appendTo(item);
-    $("<input>")
-      .attr("type", "submit")
-      .attr("value", "vote")
-      .addClass("voteButton")
-      .click(function() {
-        Dogvibes.vote(json.uri);
-        //XXX: do with callback instead
-        $(this).addClass('undo')
-      })
-      .appendTo(item);
+    item.append(voteButton(json));
 
     return item;
   }
@@ -926,33 +936,50 @@ var EventManager = {
 };
 
 var PageSwitch = {
-  currentPage: false,
+  currentView: 'left',
+  params: {
+    left: {page: 'home', param: ''},
+    right:{page: 'search', param: ''}
+  },
   init: function() {
     $(document).bind("Page.search", function() {
-      PageSwitch.scroll('search');
+      PageSwitch.scroll('right');
     });
+    $(document).bind("Page.artist", function() {
+      PageSwitch.scroll('right');
+    });
+    $(document).bind("Page.album", function() {
+      PageSwitch.scroll('right');
+    });        
     $(document).bind("Page.home", function() {   
-      PageSwitch.scroll('home');
+      PageSwitch.scroll('left');
     });    
   },
-  scroll: function(page) {
-    PageSwitch.currentPage = page;
-    what = page == "home" ? 0 :'max';
-    if(page == "search") {
+  scroll: function(view) {
+    if(PageSwitch.currentView == view) {
+      return;
+    }
+    PageSwitch.currentView = view;
+    where = view == "left" ? 0 :'max';
+    if(view == "right") {
       $('#Button-switch').addClass('social');      
     }
     else {
       $('#Button-switch').removeClass('social');    
     }
-    $("#viewport").scrollTo(what, { axis: 'x', duration: 200, easing: 'swing' });  
+    $("#viewport").scrollTo(where, { axis: 'x', duration: 200, easing: 'swing' });  
   },
   toggle: function() {
     // XXX: Piggy code!!
-    if(PageSwitch.currentPage == "search") {
-      window.location.hash = '#home';
+    if(PageSwitch.currentView == "right") {
+      PageSwitch.params.right.page = Dogbone.page.id;
+      PageSwitch.params.right.param = Dogbone.page.param;
+      window.location.hash = "#"+PageSwitch.params.left.page;
     }
     else {
-      window.location.hash = '#search/' + Search.param;
+      PageSwitch.params.left.page = Dogbone.page.id;
+      PageSwitch.params.left.param = Dogbone.page.param;    
+      window.location.hash = '#'+PageSwitch.params.right.page + '/' + PageSwitch.params.right.param;
     }
   }
 }
@@ -961,19 +988,7 @@ var PageSwitch = {
  * Keybindings 
  ***************************/
 
-$(document).dblclick(function() {
-  var sel;
-  if(document.selection && document.selection.empty){
-    document.selection.empty() ;
-  } else if(window.getSelection) {
-    sel=window.getSelection();
-  }
-  if(sel && sel.removeAllRanges) {
-    sel.removeAllRanges();
-  }
-});
 
-  var left = true;
 /***************************
  * Startup 
  ***************************/
@@ -981,8 +996,6 @@ $(document).ready(function() {
   
   /* Zebra stripes for all tables */
   //$.tablesorter.defaults.widgets = ['zebra'];
-
-  Dogbone.init("pages");
   TrackInfo.init();
   /* Init in correct order */
   Playqueue.init();
@@ -993,6 +1006,9 @@ $(document).ready(function() {
   //EventManager.init();
   ScrollHandler.init();  
   ConnectionIndicator.init();
+  User.init();
+  Dogbone.init("pages"); 
+  window.location.hash = "#home"; 
   /* Start server connection */
   Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
 
