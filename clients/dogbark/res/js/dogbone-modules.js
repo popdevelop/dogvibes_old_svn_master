@@ -205,11 +205,12 @@ Number.prototype.msec2time = function() {
 /* XXX: Fix! */
 Number.prototype.relativeTime = function() {
   var now = new Date().getTime();
+  now /= 1000; //msec
   var names = ['seconds', 'minutes', 'hours']
-  var diff = now - this;
+  var diff = Math.floor(now - this);
   for(var i = 0; i < 3; i++) {
     if(diff < 60) {
-      return diff + + names[i] + " ago";
+      return diff + " " + names[i] + " ago";
     } 
     diff = Math.floor(diff / 60);
   }
@@ -286,11 +287,11 @@ var Playqueue = {
     var artSize = 48;
     var mainText = json.artist + " - " + json.title;
     if(active) { 
-      cls = "playing"; 
+      cls = "first playing"; 
       artSize = 150;
       mainText = json.title;
     }
-    var item = $("<li></li>").attr("class", "first " + cls);
+    var item = $("<li></li>").attr("class", "gradient " + cls);
     $("<img>").attr("src", Dogvibes.albumArt(json.artist, json.album, artSize)).appendTo(item);
     $("<em></em>").text(mainText).appendTo(item);
     if(active) {
@@ -355,24 +356,24 @@ var Activity = {
     });
     
     if(num == 0) {
-      item = $("<li></li>").text("No updates");
+      item = $("<li></li>").addClass("first").text("No updates");
       $(Activity.ui.list).append(item);
     }
-    item.attr("class", "last");
+    item.addClass("last");
       
   },
   _newItem: function(json) {
-    var item = $("<li></li>");
+    var item = $("<li></li>").addClass("gradient");
     //XXX: Use real avatar later 
     $("<img></img>").attr("src", "avatar.jpg").appendTo(item);
     $("<input>").attr("type", "button").attr("value", "vote").appendTo(item)
       .click(function() {
         Dogvibes.vote(json.uri);
       });
-    $("<span></span>").attr("class", "user").text(json.user).appendTo(item);
-    $("<span></span>").text(" voted for ").appendTo(item);
+    $("<span></span>").addClass("user").text(json.user).appendTo(item);
+    $("<span></span>").addClass("weak").text(" voted for ").appendTo(item);
     $("<span></span>").text(json.title + " by " + json.artist).appendTo(item);
-    $("<span></span>").attr("class", "time").text(json.time.relativeTime()).appendTo(item);
+    $("<span></span>").addClass("time").text(json.time.relativeTime()).appendTo(item);
     return item;
   }
 };
@@ -388,7 +389,6 @@ var ConnectionIndicator = {
     if(ConnectionIndicator.message) {
       $(document).bind("Server.connecting", function() {
         ConnectionIndicator.message.show();
-        ConnectionIndicator.message.text("Please wait while we connect you to dogvibes");
         $('#viewport').hide();
         $('#toolbar').hide();
       });
@@ -884,7 +884,7 @@ var PageSwitch = {
   },
   scroll: function(page) {
     PageSwitch.currentPage = page;
-    what = page == "search" ? 'max' :0;
+    what = page == "home" ? 0 :'max';
     if(page == "search") {
       $('#Button-switch').addClass('social');      
     }

@@ -53,7 +53,7 @@
     <li>History</li>
   </ul>
   <div class="clear"></div>
-  <div class="box inner-col">
+  <div class="box">
   <div id="Playqueue-info"></div>
   <ul id="tracks">
     
@@ -63,9 +63,12 @@
 <div id="rightcol" class="column">
   <h2>Search</h2>
   <form id="Search-form" action="">
-  <div><input type="text" id="Search-input" /></div>
+  <div>
+    <input type="text" id="Search-input" class="field"/>
+    <input type="submit" class="button" />
+  </div>
   </form>
-  <div id="pages" class="box inner-col">
+  <div id="pages" class="inner-col">
     <div id="artist">
     </div>
     
@@ -74,7 +77,7 @@
     <div id="search"> 
       <!-- Template for search content //-->
       <table id="Search-content">
-        <thead>
+        <thead class="hidden">
           <tr class="template">
           <th id="Search-title">Track</th>
           <th id="Search-artist">Artist</th>

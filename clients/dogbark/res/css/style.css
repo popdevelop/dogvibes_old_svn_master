@@ -41,8 +41,34 @@ div.box {
   padding: 10px;
 }
 
+.hidden {
+  display: none;
+}
+
+
+.gradient {
+	/* Legacy browsers */
+	background: #e4e4e4;
+	-o-background-size: 100% 100%;
+	-moz-background-size: 100% 100%;
+	-webkit-background-size: 100% 100%;
+	background-size: 100% 100%;
+	/* Recent browsers */
+	background: -moz-linear-gradient(
+		top,
+		#f5f5f5,
+		#e4e4e4
+	);
+	background: -webkit-gradient(
+		linear,
+		left top, left bottom,
+		from(#f5f5f5),
+		to(#e4e4e4)
+	);
+}
+
 div.inner {
-  width: 960px;
+  width: 950px;
   margin: auto;
 }
 
@@ -63,7 +89,7 @@ em {
 }
 
 a, a:visited, a:link {
-  color: #999;
+  color: #4A89AD;
   text-decoration: none;
 }
 a:hover {
@@ -91,17 +117,31 @@ h2 {
 }
 
 li {
-  background-image: url('../img/hr.png');
-  background-position: left bottom;
-  background-repeat: repeat-x;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #d9d9d9;
 }
 
 li.last {
   border-bottom: 0;
+  border-bottom-right-radius: 5px;
+  -moz-border-bottom-right-radius: 5px;
+  -webkit-border-bottom-right-radius: 5px;  
+  
+  border-bottom-left-radius: 5px;
+  -moz-border-bottom-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;  
 }
 
 li.first {
   border-top: 0;
+  
+  border-top-right-radius: 5px;
+  -moz-border-top-right-radius: 5px;
+  -webkit-border-top-right-radius: 5px;  
+  
+  border-top-left-radius: 5px;
+  -moz-border-top-left-radius: 5px;
+  -webkit-border-top-left-radius: 5px;  
 }
 
 
@@ -116,7 +156,7 @@ div.loading {
   width: 320px;
   height: 140px;
   position: absolute;
-  margin-left: -160px;
+  margin-left: -190px;
   left: 50%;
   top: 100px;
   padding: 30px;
@@ -141,7 +181,7 @@ div.loading {
   display: inline-block;
   height: 28px;
   width: 117px;
-  margin: 10px 0 0 10px;
+  margin: 11px 0 0 4px;
   font-size: 30px;
   font-weight: normal;
   color: #999;
@@ -152,9 +192,9 @@ div.loading {
 
 
 #toolbar {
-  width: 960px;
+  width: 950px;
   margin: 20px auto 10px auto;  
-  display: block; 
+  display: none; 
 }
 
 #toolbar h2 {
@@ -206,13 +246,14 @@ div.loading {
 
 #viewport {
   margin: auto;
-  width: 980px;
+  width: 950px;
+  padding: 0 10px;
   overflow: hidden;
   display: none;
 }
 
 #content {
-  width: 1530px;
+  width: 1490px;
 }
 
 /******************************************************************************
@@ -221,7 +262,7 @@ div.loading {
  
 #leftcol {
   font-size: 14px;
-  width: 550px;
+  width: 530px;
 }
 
 #leftcol h2 {
@@ -259,12 +300,18 @@ div.loading {
   padding-top: 8px;
   position: relative;
   background-image: none;
-  border-bottom: 1px solid #d9d9d9;
 }
 
 #leftcol ul li span {
   color: #7e7e7e;
 }
+
+#leftcol ul li span.weak {
+  font-size: 12px;
+  color: #AAA;
+  margin: 0 2px;
+}
+
 #leftcol ul li span.user {
   color: #4A89AD;
   font-weight: bold;
@@ -332,7 +379,7 @@ div.loading {
 #midcol ul#tracks li {
   margin: 0;
   padding: 10px;
-  min-height: 48px;
+  min-height: 50px;
   position: relative;
 }
 
@@ -342,7 +389,7 @@ div.loading {
 
 #midcol ul#tracks li em {
   display: block;
-  height: 20px;
+  height: 17px;
   overflow: hidden;
   color: #4a4a4a;
   font-size: 14px;
@@ -356,8 +403,8 @@ div.loading {
 #midcol ul#tracks li.playing h3 {
   text-indent: -999px;
   position: absolute;
-  top: 0px;
-  left: -23px;
+  top: 5px;
+  left: -13px;
   height: 34px;
   width: 135px;
   background-image: url("../img/nowplaying.png");
@@ -469,17 +516,17 @@ div.loading {
  *****************************************************************************/
 
 #rightcol {
-  width: 550px;
+  width: 530px;
   position: relative;
 }
 
 #rightcol input#Search-input {
+  float: left;
   font-size: 16px;
   color: #555;
-  width: 216px;
-  margin: 10px 10px 0 10px;
+  margin: 0 0 0 10px;
   height: 36px;
-  width: 462px;
+  width: 415px;
   border: 0;
   padding: 0 10px;
   background-color: transparent;
@@ -487,11 +534,27 @@ div.loading {
   background-position: left top;
   background-repeat: no-repeat;   
 }
+
+#rightcol input.button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: inline-block;
+  background-color: transparent;
+  background-image: url('../img/searchbox.png');
+  background-position: right top;
+  background-repeat: no-repeat;
+  text-indent: -999px;
+  height: 36px;
+  width: 75px;
+  cursor:pointer;
+}
+
 #rightcol h2 {
   background-image: url('../img/hr.png');
   background-position: left bottom;
   background-repeat: repeat-x; 
-  margin: 0 10px 5px 0;
+  margin: 0 10px 5px 10px;
 }
 #rightcol table {
   width: 100%;

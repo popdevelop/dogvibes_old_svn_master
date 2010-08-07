@@ -29,7 +29,7 @@ var AJAX = {
 
   /* reconnection params */
   delay: 2000,
-  attemps: 4,
+  attempts: 300,
 
   start: function(server, user) {
     AJAX.server = server + "/" + user;
@@ -47,7 +47,7 @@ var AJAX = {
     /* Try to reconnect before giving up */
     AJAX.connected = false;
     clearTimeout(AJAX.timer);
-    if(AJAX.attemps-- > 0) {
+    if(AJAX.attempts-- > 0) {
       /* Wait longer and longer */
       AJAX.timer = setTimeout(AJAX.getStatus, AJAX.delay *= 2);
       return;
@@ -58,9 +58,10 @@ var AJAX = {
   },
   send: function(URL, Success, Context) {
     /* Changing state? */
-    if(!AJAX.status.connected) {
+    if(!AJAX.connected) {
       $(document).trigger("Server.connecting");
     }
+    
     var opts = {
       url: AJAX.server + URL,
       error: AJAX.error,
@@ -102,13 +103,14 @@ var WSocket = {
   status: {},
   ws: false,
   connected: false,
-  attemps: 300,
+  attempts: 300,
   delay: 2000,
   timer: false,
   server: false,
   user: false,
   start: function(server, user) {
     if("WebSocket" in window) {
+      $(document).trigger("Server.connecting");
       /* Start reconnection procedure after timeout */
       WSocket.timer = setTimeout(WSocket.error, WSocket.delay*3);
       WSocket.ws = new WebSocket(server + "/stream/" + user);
@@ -138,7 +140,6 @@ var WSocket = {
   error: function() {
     WSocket.status = Dogvibes.defaultStatus;
     $(document).trigger("Server.status");
-    $(document).trigger("Server.connecting");
     clearTimeout(WSocket.timer)
     if(WSocket.attempts-- > 0) {
       WSocket.timer = setTimeout(function() {
@@ -295,7 +296,6 @@ window.Dogvibes =  {
     if(Dogvibes.status.elapsedmseconds != oldStatus.elapsedmseconds) {
       $(document).trigger("Status.elapsed");
     }
-
     /* TODO: add more */
   },
   /****************
@@ -414,7 +414,7 @@ window.Dogvibes =  {
   },
   getAllVotes: function(Success) {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.getAllVotes;
-    Dogvibes.server.send(URL, Success);  
+    Dogvibes.server.send(URL, Success);     
   }
 };
 
