@@ -76,5 +76,5 @@ class User:
         db.commit_statement('''delete from votes where track_id = ?''', [track_id])
             
     @classmethod
-    def get_all_votes(self):
+    def get_activity(self):
         return self.all_votes

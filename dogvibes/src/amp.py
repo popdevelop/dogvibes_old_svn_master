@@ -577,5 +577,5 @@ class Amp():
         request.push({'state': 'stopped'})
         request.finish()
 
-    def API_getAllVotes(self, request):
-        request.finish(User.get_all_votes())
+    def API_getActivity(self, request):
+        request.finish(User.get_activity())
