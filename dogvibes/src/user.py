@@ -87,7 +87,7 @@ class User:
 
         now = time.time()
 
-        self.all_votes.append({"id":track_id,"title":row['title'], "artist":row['artist'], "album": row['album'], "user":self.username, "avatar_url": self.avatar_url, "time":now, "votes":1, "duration":row['duration'], "votes":3})
+        self.all_votes.append({"id":track_id,"title":row['title'], "artist":row['artist'], "album": row['album'], "user":self.username, "avatar_url": self.avatar_url, "time":now, "votes":1, "duration":row['duration'], "votes":3, "uri": row["uri"]})
 
         db.commit_statement('''insert into votes (track_id, user_id) values (?, ?)''', [track_id, self.id])
         # take vote from user
@@ -118,7 +118,8 @@ class User:
             
     @classmethod
     def get_activity(self):
-        return self.all_votes
+        tmp = self.all_votes[:]
+        return tmp.reverse()
 
 if __name__ == '__main__':
     user = User.find_by_username("brissmyr")
