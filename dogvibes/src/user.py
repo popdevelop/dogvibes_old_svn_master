@@ -119,7 +119,8 @@ class User:
     @classmethod
     def get_activity(self):
         tmp = self.all_votes[:]
-        return tmp.reverse()
+        tmp.reverse()
+        return tmp
 
 if __name__ == '__main__':
     user = User.find_by_username("brissmyr")
