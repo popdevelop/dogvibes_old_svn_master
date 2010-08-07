@@ -23,12 +23,12 @@ var AJAX = {
   server: "",
   status: Array(),
   connected: false,
-  interval: 500,
+  interval: 1000,
   request: false,
   timer: false,
 
   /* reconnection params */
-  delay: 2000,
+  delay: 4000,
   attempts: 300,
 
   start: function(server, user) {
@@ -220,7 +220,7 @@ window.Dogvibes =  {
     getAlbum: "/dogvibes/getAlbum?album_uri=",
     getPlayedMilliSecs: "/dogvibes/getPlayedMilliSeconds",
     vote: "/addVote?user=",
-    getAllVotes: "/getAllVotes"
+    getActivity: "/getActivity"
   },
   /*****************
    * Initialization
@@ -412,8 +412,8 @@ window.Dogvibes =  {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.vote + Dogvibes.dogtag + "&uri=" + escape(uri);
     Dogvibes.server.send(URL, Success);    
   },
-  getAllVotes: function(Success) {
-    var URL = Dogvibes.defAmp + Dogvibes.cmd.getAllVotes;
+  getActivity: function(Success) {
+    var URL = Dogvibes.defAmp + Dogvibes.cmd.getActivity;
     Dogvibes.server.send(URL, Success);     
   }
 };

@@ -117,7 +117,7 @@ h2 {
 }
 
 li {
-  border-top: 1px solid #fff;
+  border-top: 1px solid #eee;
   border-bottom: 1px solid #d9d9d9;
 }
 
@@ -144,6 +144,26 @@ li.first {
   -webkit-border-top-left-radius: 5px;  
 }
 
+/*--- Vote button ---*/
+
+li input.voteButton {
+  background-color: transparent;
+  background-image: url('../img/vote-normal.png');
+  background-position: right top;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  height: 22px;
+  width: 54px;
+  text-indent: -999px; 
+  margin: 0;
+  padding: 0;
+  border: 0;   
+}
+
+li input.voteButton:hover {
+  background-image: url('../img/vote-hover.png');
+}
+
 
 div.loading {
   background-image: url('../img/loading.gif');
@@ -166,6 +186,10 @@ div.loading {
   background-color: #FFF;
 }
 
+#popup .loading {
+  padding-bottom: 30px;
+}
+
 /******************************************************************************
  * Top
  *****************************************************************************/
@@ -175,13 +199,14 @@ div.loading {
   height: 49px;
   background-image: url("../img/top.png");
   background-repeat: repeat-x;
+  border-bottom: 1px solid #eee;
 }
 
 #top h1 {
   display: inline-block;
   height: 28px;
   width: 117px;
-  margin: 11px 0 0 4px;
+  margin: 11px 0 0 14px;
   font-size: 30px;
   font-weight: normal;
   color: #999;
@@ -206,6 +231,7 @@ div.loading {
   color: #fff;
   text-shadow: rgba(0,0,0, 0.2) 1px 1px 0;
   text-transform: none;
+  margin-left: 10px;
 }
 
 #toolbar #input-frame {
@@ -381,6 +407,7 @@ div.loading {
   padding: 10px;
   min-height: 50px;
   position: relative;
+  border-top: 1px solid #fff;  
 }
 
 #midcol ul#tracks li.noTracks { 
@@ -437,7 +464,7 @@ div.loading {
 #midcol ul#tracks li.playing ul.votes {
   position: absolute;
   bottom: 10px;
-  left: 170px;
+  left: 160px;
 }
 
 #midcol ul#tracks li.playing div#playIndicator {
@@ -462,9 +489,11 @@ div.loading {
 }
 
 #midcol ul#tracks li.playing img {
-  margin-right: 20px;
-  width: 150px;
-  height: 150px;
+  margin-right: 10px;
+  width: 140px;
+  height: 140px;
+  padding: 5px;
+  background-color: #fff;
 }
 
 /*---  ---*/
@@ -508,6 +537,7 @@ div.loading {
 #midcol ul#tracks ul.votes li img { 
   width: 25px;
   height: 25px;
+  padding: 1px;
 }
 
 
@@ -550,11 +580,43 @@ div.loading {
   cursor:pointer;
 }
 
+#rightcol ul#Search-content li {
+  font-size: 12px;
+  min-height: 16px;
+  padding: 5px 10px;
+  position: relative;
+}
+
+#rightcol ul#Search-content li span {
+  color: #909191;
+  display: inline-block;
+  margin: 0 5px 2px 0;
+  font-size: 11px;
+  cursor: default; 
+}
+
+#rightcol ul#Search-content li span.title {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#rightcol ul#Search-content li input {
+  display: inline-block;
+  position: absolute;
+  right: 0;
+  top: 1px;
+}
+
+#rightcol ul#Search-content li input.undo,
+#rightcol ul#Search-content li input.undo:hover {
+  background-image: url('../img/vote-undo.png');
+}
+
 #rightcol h2 {
   background-image: url('../img/hr.png');
   background-position: left bottom;
   background-repeat: repeat-x; 
-  margin: 0 10px 5px 10px;
+  margin: 0 10px 7px 10px;
 }
 #rightcol table {
   width: 100%;
@@ -595,7 +657,7 @@ div.loading {
  *****************************************************************************/
 
 #artist img, #album img {
-  width: 150px;
+  width: 100px;
   float: left;
   display: inline;
   margin-right: 10px;
@@ -605,12 +667,12 @@ div.loading {
   margin: 10px 0 10px 0;
 }
 #artist h5, #album h5 {
-  margin-left: 160px;
+  margin-left: 120px;
 }
 #artist table, #album table {
-  width: 340px;
-  margin-left: 160px;
-  min-height: 150px;
+  width: 390px;
+  margin-left: 120px;
+  min-height: 100px;
 }
 table tbody td {
   padding-right: 4px;
@@ -627,6 +689,7 @@ table thead {
   position: relative;
   display: block;
   clear: both;
-  min-height: 180px;
+  min-height: 130px;
   height: auto;
+  margin-left: 10px;
 }

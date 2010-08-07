@@ -4,7 +4,7 @@
 
 var Config = {
   defaultUser: "",
-  defaultServer: "dogvib.es",
+  defaultServer: "digvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols  
 };
 
@@ -301,10 +301,14 @@ var Playqueue = {
       $("<div></div>").attr("id", "playIndicator").appendTo(item);
     }
     else {
-      $("<input>").attr("type", "button").attr("value", "vote").appendTo(item)
+      $("<input>").attr("type", "submit").attr("value", "vote").appendTo(item)
         .click(function() {
-          Dogvibes.vote(json.uri);
-        });
+          if(User.getVotes() > 0) {
+            Dogvibes.vote(json.uri);
+          }
+          return false;
+        })
+        .addClass("voteButton");
     }
     
     // Votes
@@ -326,6 +330,16 @@ var Playqueue = {
   }
 };
 
+var User =  {
+  init: function() {
+  },
+  update: function() {
+  },
+  getVotes: function() {
+    return 5;
+  }
+};
+
 var Activity = {
   ui: {
     list: "#Activity-list"
@@ -334,17 +348,21 @@ var Activity = {
     $(document).bind("Server.connected", function() {
       Activity.fetch();      
     });
+    $(document).bind("Server.activity", function() {
+      Activity.fetch();      
+    });    
   },
   fetch: function() {
     if(Dogvibes.server.connected) { 
-      Dogvibes.getAllVotes("Activity.draw");
+      Dogvibes.getActivity("Activity.draw");
     }
   },
   draw: function(json) {
+    $(Activity.ui.list).empty();
     if(json.error !== 0) {
+      $("<li></li>").addClass("first last").text("Oops, something went wrong").appendTo($(Activity.ui.list));
       return;
     }
-    $(Activity.ui.list).empty();
     
     var num = 0;
     var item;
@@ -366,13 +384,18 @@ var Activity = {
     var item = $("<li></li>").addClass("gradient");
     //XXX: Use real avatar later 
     $("<img></img>").attr("src", "avatar.jpg").appendTo(item);
-    $("<input>").attr("type", "button").attr("value", "vote").appendTo(item)
+    $("<input>").attr("type", "submit").attr("value", "vote").appendTo(item)
       .click(function() {
-        Dogvibes.vote(json.uri);
+        if(User.getVotes() > 0) {
+          Dogvibes.vote(json.uri);
+        }
+        return false;
       });
     $("<span></span>").addClass("user").text(json.user).appendTo(item);
     $("<span></span>").addClass("weak").text(" voted for ").appendTo(item);
-    $("<span></span>").text(json.title + " by " + json.artist).appendTo(item);
+    $("<span></span>").text(json.title).appendTo(item);
+    $("<span></span>").addClass("weak").text(" by ").appendTo(item);
+    $("<span></span>").text(json.artist).appendTo(item);        
     $("<span></span>").addClass("time").text(json.time.relativeTime()).appendTo(item);
     return item;
   }
@@ -445,7 +468,8 @@ var Search = {
     form:    "#Search-form",
     input:   "#Search-input",
     page   : "#search",
-    info   : "#Search-info"
+    info   : "#Search-info",
+    result : "#Search-content"
   },
   searches: [],
   param: "",
@@ -464,8 +488,7 @@ var Search = {
       $(Search.ui.info).text('Search not available when offline').show();
     });
     $(document).bind("Server.connected", function() {
-      $(Search.ui.info).hide();
-      $(Search.table.ui.content).show();    
+      $(Search.ui.info).hide(); 
       Search.setPage();
     });
 
@@ -479,7 +502,7 @@ var Search = {
     });
     
     /* Create result table */
-    Search.table = new ResultTable(
+    /*Search.table = new ResultTable(
     {
       idTag: "uri",
       name: "Search",
@@ -487,7 +510,7 @@ var Search = {
         var uri = $(this).data('uri');
         Dogvibes.vote(uri);    
       }
-    });
+    });*/
   },
   setPage: function() {
     /* See if search parameter has changed. If so, reload */
@@ -495,8 +518,8 @@ var Search = {
        Dogbone.page.param != Search.param) {
       Search.param = Dogbone.page.param;
       var keyword = unescape(Search.param);
-      Search.table.empty();
       $(Search.ui.page).addClass("loading");
+      $(Search.ui.result).empty();
       $(Search.ui.info).hide();
       if(Search.param != "") {
         Dogvibes.search(Search.param, "Search.handleResponse");
@@ -517,8 +540,21 @@ var Search = {
     if(json.result.length === 0) {
       $(Search.ui.info).text('Sorry, no matches for "'+Dogbone.page.param+'"').show();
     }
-    Search.table.items = json.result;
-    Search.table.display();
+    // Build list
+    var num = 0;
+    var item;
+    $(json.result).each(function(i, el){
+      item = Search._newItem(el);
+      if(i === 0) { item.addClass("first"); }
+      $(Search.ui.result).append(item);
+      num++;
+    });
+    
+    if(num === 0) {
+      item = $("<li></li>").text("Sorry, could not find anything");
+    }
+    
+    item.addClass("last");
     Search.set();   
   },
   set: function() {
@@ -530,10 +566,27 @@ var Search = {
         cls = Dogvibes.status.state;
         break;
     }
-    $("tr", Search.table.ui.items).removeClass('playing paused');
-    if(!cls) { return; }
-    
-    Search.table.highlightItem(Dogvibes.status.uri, cls);
+  },
+  _newItem: function(json) {
+    var item = $("<li></li>");
+    $("<span></span>").addClass("title").text(json.title).appendTo(item);
+    $("<span></span>").text(" by ").appendTo(item);
+    $("<a></a>")
+      .attr("href", "#artist/"+json.artist)
+      .text(json.artist)
+      .appendTo(item);
+    $("<input>")
+      .attr("type", "submit")
+      .attr("value", "vote")
+      .addClass("voteButton")
+      .click(function() {
+        Dogvibes.vote(json.uri);
+        //XXX: do with callback instead
+        $(this).addClass('undo')
+      })
+      .appendTo(item);
+
+    return item;
   }
 };
 
@@ -592,7 +645,7 @@ var Artist = {
       /* Reset and fetch new data */
       Artist.albums.items = [];
       Artist.albums.data = {};
-      $('#artist').empty().append('<h2>'+Dogbone.page.param+'</h2>');
+      $('#artist').empty().append('<h2>'+unescape(Dogbone.page.param)+'</h2>');
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
   },
