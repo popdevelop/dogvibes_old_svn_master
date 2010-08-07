@@ -14,7 +14,48 @@ class User:
         self.avatar_url = avatar_url
         self.id = -1
     def __str__(self):
-        return "username: " + self.username + " id:" + str(self.id) + " avatar: " + self.avatar_url
+        return "username: " + self.username + " id:" + str(self.id) + " avatar: " + self.avatar_url + " votes: " + str(self.votes)
+
+    # TODO: maybe possible to make this method so that it is called automatically in
+    # certain situations
+    def serialize(self):
+        return { "id": self.id,
+                 "username": self.username,
+                 "avatar_url": self.avatar_url,
+                 "votes": self.votes,
+                 "voted_tracks": self.get_voted_tracks()
+                 }
+
+    @classmethod
+    def find_by_username(self, username):
+        db = Database()
+        db.commit_statement('''select * from users where username = ?''', [username])
+        u = db.fetchone()
+        if u == None:
+            return None
+        user = User(username, u['avatar_url'])
+        user.id = u['id']
+        user.votes = u['votes']
+        return user
+
+    def get_voted_tracks(self):
+        db = Database()
+
+        db.commit_statement('''select votes.track_id from votes join users on votes.user_id = users.id where users.id = ?''', [str(self.id)])
+        row = db.fetchone()
+        track_ids = []
+        while row != None:
+            track_ids.append(row['track_id'])
+            row = db.fetchone()
+
+        tracks = []
+        for track_id in track_ids:
+            db.commit_statement('''select * from tracks where tracks.id = ?''', [track_id])
+            row = db.fetchone()
+            del row['id']
+            tracks.append(row)
+
+        return tracks
 
     # Store user, if not already added
     def store(self):
@@ -78,3 +119,6 @@ class User:
     @classmethod
     def get_activity(self):
         return self.all_votes
+
+if __name__ == '__main__':
+    user = User.find_by_username("brissmyr")

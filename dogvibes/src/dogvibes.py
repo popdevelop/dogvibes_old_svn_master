@@ -261,3 +261,9 @@ class Dogvibes():
 
     def API_getSearchHistory(self, nbr, request):
         request.finish(self.search_history[-int(nbr):])
+
+    def API_getUserInfo(self, request):
+        user = User.find_by_username(request.user)
+        if user == None:
+            raise ValueError('Could not find user %s', request.user)
+        request.finish(user.serialize())
