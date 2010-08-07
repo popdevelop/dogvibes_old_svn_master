@@ -9,6 +9,7 @@ from tornado import httpclient
 from time import time
 
 art_dir = 'albumart'
+available_sizes = [320, 150, 48]
 
 class AlbumArt():
 
@@ -23,6 +24,11 @@ class AlbumArt():
         self.artist = artist.encode('utf-8')
         self.album = album.encode('utf-8')
         self.size = size
+
+#        for s in available_sizes:
+#            if size >= s:
+#                self.size = s:
+#                break
 
         size = int(size)
         if not os.path.exists(art_dir):
@@ -44,25 +50,6 @@ class AlbumArt():
             return
         else:
             self.get_image_data(self.artist, self.album)
-
-        # Resize upon request. Nothing special about 640. Just need a limit...
-#        if size > 0 and size < 640:
-#            buf = StringIO.StringIO(img_data)
-#            try:
-#                img = Image.open(buf)
-#            except:
-#                logging.warning("Could not read image: %s" % img_path)
-#                return None
-#
-#            # Won't grow the image since I couldn't get .resize() to work
-#            img.thumbnail((size, size), Image.ANTIALIAS)
-#
-#            # Need to create new buffer, otherwise changes won't take effect
-#            out_buf = StringIO.StringIO()
-#            img.save(out_buf, 'PNG')
-#            out_buf.seek(0)
-#            img_data = out_buf.getvalue()
-#            buf.close()
 
     def get_standard_image(self, size = 0):
         f = open(art_dir + '/default.png', 'rb')
@@ -110,7 +97,30 @@ class AlbumArt():
         if (response.body == None):
             self.callback(self.get_standard_image(self.size))
         else:
+        # Resize upon request. Nothing special about 640. Just need a limit...
+            img_data = response.body
+            buf = StringIO.StringIO(img_data)
+            try:
+                img = Image.open(buf)
+            except:
+                logging.warning("Could not read image: %s" % img_path)
+                return None
+
+            # Won't grow the image since I couldn't get .resize() to work
+            size = 150
+            img.resize((size, size), Image.ANTIALIAS)
+            print self.img_path
+
+            # Need to create new buffer, otherwise changes won't take effect
+            out_buf = StringIO.StringIO()
+            img.save(out_buf, 'PNG')
+            out_buf.seek(0)
+            img_data = out_buf.getvalue()
+            buf.close()
+
+
             f = open(self.img_path, 'wb')
-            f.write(response.body)
+#            f.write(response.body)
+            f.write(img_data)
             f.close()
             self.callback(response.body)
