@@ -109,7 +109,6 @@ class AlbumArt():
             # Won't grow the image since I couldn't get .resize() to work
             size = 150
             img.resize((size, size), Image.ANTIALIAS)
-            print self.img_path
 
             # Need to create new buffer, otherwise changes won't take effect
             out_buf = StringIO.StringIO()
@@ -117,7 +116,6 @@ class AlbumArt():
             out_buf.seek(0)
             img_data = out_buf.getvalue()
             buf.close()
-
 
             f = open(self.img_path, 'wb')
 #            f.write(response.body)
