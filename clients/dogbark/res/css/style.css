@@ -446,12 +446,17 @@ div.loading {
   color: #909191;
 }
 
-#midcol ul#tracks li em {
-  display: block;
+#midcol ul#tracks li span {
   height: 17px;
   overflow: hidden;
   color: #4a4a4a;
-  font-size: 14px;
+  font-size: 12px;
+}
+
+#midcol ul#tracks li span.weak {
+  color: #909191;
+  font-size: 10px;
+  margin: 0 2px;
 }
 
 #midcol ul#tracks li.playing {

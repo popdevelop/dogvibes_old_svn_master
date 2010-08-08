@@ -294,11 +294,10 @@ var Playqueue = {
   _newItem: function(json, active) {
     var cls = "";
     var artSize = 48;
-    var mainText = json.artist + " - " + json.title;
+    
     if(active) { 
       cls = "first playing"; 
       artSize = 150;
-      mainText = json.title;
     }
     var item = $("<li></li>").attr("class", "gradient " + cls);
     $("<img>")
@@ -307,9 +306,10 @@ var Playqueue = {
         window.location.hash = "#album/" + json.album; 
       })      
       .appendTo(item);
-    $("<em></em>").text(mainText).appendTo(item);
+    
     if(active) {
-      $("<h3></h3>").text("now playing").appendTo(item);    
+      $("<h3></h3>").text("now playing").appendTo(item);
+      $("<em></em>").text(json.title).appendTo(item);
       $("<span></span>")
         .click(function() { 
           window.location.hash = "#artist/" + json.artist; 
@@ -319,6 +319,9 @@ var Playqueue = {
       $("<div></div>").attr("id", "playIndicator").appendTo(item);
     }
     else {
+      $("<span></span>").text(json.title).appendTo(item);
+      $("<span></span>").text(" by ").addClass("weak").appendTo(item);
+      $("<span></span>").text(json.artist).appendTo(item);
       item.append(voteButton(json));
     }
     
