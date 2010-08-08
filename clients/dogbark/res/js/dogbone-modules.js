@@ -9,7 +9,7 @@ var Config = {
   maxActivity: 10
 };
 
-
+// XXX: Get rid of this in the future
 var ResultTable = function(config) {
   var self = this;
   /* Default configuration */
@@ -203,11 +203,10 @@ Number.prototype.msec2time = function() {
 };
 
 /* Create a string with relative time (eg. '15 minutes ago' etc) */
-/* XXX: Fix! */
 Number.prototype.relativeTime = function() {
   var now = new Date().getTime();
-  now /= 1000; //msec
-  var names = ['seconds', 'minutes', 'hours']
+  now /= 1000; //msec --> sec
+  var names = ['seconds', 'minutes', 'hours'];
   var diff = Math.floor(now - this);
   if(diff < 10) {
     return "just now";
@@ -266,12 +265,12 @@ var Playqueue = {
     var item;
     Playqueue.items = json;
     $(json.result).each(function(i, el) {
-      active = i == 0 ? true : false; //XXX: improve!
+      var active = i === 0 ? true : false; //XXX: improve!
       num++;
       item = Playqueue._newItem(el, active);
       $(Playqueue.ui.tracklist).append(item);
     });
-    if(num == 0) {
+    if(num === 0) {
       item = $("<li></li>").attr("class", "noTracks").text("No tracks to be played. Please add.");
       $(Playqueue.ui.tracklist).append(item);
     }
@@ -292,6 +291,7 @@ var Playqueue = {
   },
   // Generate a list item
   _newItem: function(json, active) {
+    //XXX: Piggy style
     var cls = "";
     var artSize = 48;
     
@@ -303,7 +303,7 @@ var Playqueue = {
     $("<img>")
       .attr("src", Dogvibes.albumArt(json.artist, json.album, artSize))
       .click(function() { 
-        window.location.hash = "#album/" + json.album; 
+        window.location.hash = "#album/" + json.album_uri; 
       })      
       .appendTo(item);
     
@@ -315,19 +315,27 @@ var Playqueue = {
           window.location.hash = "#artist/" + json.artist; 
         })
         .text(json.artist).appendTo(item);
-      $("<span></span>").attr("class", "album").text(json.album).appendTo(item);
-      $("<div></div>").attr("id", "playIndicator").appendTo(item);
+      $("<span></span>").attr("class", "album")
+        .text(json.album)
+        .click(function() { 
+          window.location.hash = "#album/" + json.album_uri; 
+        })        
+        .appendTo(item);
+      $("<div></div>")
+        .attr("id", "playIndicator")
+        .appendTo(item);
     }
     else {
-      $("<span></span>").text(json.title).appendTo(item);
-      $("<span></span>").text(" by ").addClass("weak").appendTo(item);
-      $("<span></span>").text(json.artist).appendTo(item);
+      var text = $("<div></div>").addClass("trackText").appendTo(item);
+      $("<span></span>").text(json.title).appendTo(text);
+      $("<span></span>").text(" by ").addClass("weak").appendTo(text);
+      $("<span></span>").text(json.artist).appendTo(text);
       item.append(voteButton(json));
     }
     
     // Votes
     var votes = json.voters.length > 4 ? 4 : json.voters.length;
-    var sum = votes == 0 ? "No" : votes;
+    var sum = votes === 0 ? "No" : votes;
     if(json.voters.length > votes) { sum = sum + "+"; }    
     sum = sum + " vote" + (votes == 1 ? "" : "s");
     var voteList = $("<ul></ul>").attr("class", "votes").appendTo(item);
@@ -347,10 +355,18 @@ var Playqueue = {
 //XXX: move somewhere
 function voteButton(json) {
   //Check if user has voten on this track
-  var voted = User.votes[json.uri] == true;
-  var item;
-  item = $("<input>").attr("type", "submit").attr("value", "vote").addClass('voteButton');
   
+  //XXX: Check against currently playing track.
+  //     Should not display button at all if same
+  
+  var voted = User.votes[json.uri] === true;
+  var item;
+  item = $("<input>")
+    .attr("type", "submit")
+    .attr("value", "vote")
+    .addClass('voteButton');
+  
+  // Generate correct button
   if(voted) {
     item.click(function() {
       Dogvibes.unVote(json.uri);
@@ -366,20 +382,19 @@ function voteButton(json) {
       return false;
     }); 
   }
-  // Attach uri data
-  //item.data('uri', json.uri);
   return item;
 }
 
 var User =  {
   info: {},
-  votes: {}, //Quick uri hashlist for compare
+  votes: {}, //uri hashlist for quick compare
   init: function() {
     $(document).bind("Status.activity", function() {
       User.update();
     });
   },
   update: function() {
+    // Request user info
     Dogvibes.getUserInfo("User.set");
   },
   set: function(json) { 
@@ -387,12 +402,16 @@ var User =  {
       $("#User-votes").text("Failed to get user info :(");
       return false;
     }
+    // Create the hash list
     User.votes = {};
     $(json.result.voted_tracks).each(function(i, el) {
       User.votes[el.uri] = true;
     });
+    // Set info and dispatch event
     User.info = json.result;
     $(document).trigger("User.info");
+    
+    // Update UI objects
     var vts = User.info.votes == 1 ? " vote" : " votes";
     var info = $("<span></span>").addClass("user").text(User.info.username);
     $("#User-votes").text(User.info.votes + vts + " left for ").append(info);
@@ -423,7 +442,7 @@ var Activity = {
   },
   draw: function(json) {
     $(Activity.ui.list).empty();
-    if(json.error != 0) {
+    if(json.error !== 0) {
       $("<li></li>").addClass("first last").text("Oops, something went wrong").appendTo($(Activity.ui.list));
       return;
     }
@@ -433,11 +452,11 @@ var Activity = {
     $(json.result).each(function(i, el) {
       num++;
       item = Activity._newItem(el);
-      if(i == 0) { item.attr("class", "first"); }
+      if(i === 0) { item.attr("class", "first"); }
       $(Activity.ui.list).append(item);
     });
     
-    if(num == 0) {
+    if(num === 0) {
       item = $("<li></li>").addClass("first").text("No updates");
       $(Activity.ui.list).append(item);
     }
@@ -461,23 +480,23 @@ var Activity = {
   }
 };
 
-
+// Display appropriate popup depending on server state
 var ConnectionIndicator = {
   message: false,
   init: function() {
-      $(document).bind("Server.connecting", function() {
-        Popup.message("Trying to connect you...", true);
-      });
-      $(document).bind("Server.error", function() {
-        Popup.message("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page", false);
-      });
-      $(document).bind("Server.connected", function() {
-        Popup.hide();
-      });
+    $(document).bind("Server.connecting", function() {
+      Popup.message("Trying to connect you...", true);
+    });
+    $(document).bind("Server.error", function() {
+    Popup.message("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page", false);
+    });
+    $(document).bind("Server.connected", function() {
+      Popup.hide();
+    });
   }
 };
 
-// XXX: Use this for playing track instead of Playqueue 
+// XXX: Use this for playing track instead of Playqueue or remove
 var TrackInfo = {
   ui: {
     artist  : "#TrackInfo-artist",
@@ -552,7 +571,6 @@ var Search = {
     if(Dogvibes.server.connected &&
        Dogbone.page.param != Search.param) {
       Search.param = Dogbone.page.param;
-      var keyword = unescape(Search.param);
       $(Search.ui.page).addClass("loading");
       $(Search.ui.result).empty();
       $(Search.ui.info).hide();
@@ -596,7 +614,6 @@ var Search = {
         .text("Sorry, could not find anything")
         .addClass("first");
     }
-    
     item.addClass("last");
   },
   set: function() {
@@ -732,34 +749,15 @@ var Artist = {
     }
   },
   set: function() {
-    return;
-    /* FIXME: this could perhaps be more efficient */
-      /* Which class should apply? */
-    var cls = false;
-    switch(Dogvibes.status.state) {
-      case "playing":
-      case "paused":
-        cls = Dogvibes.status.state;
-        break;
-    }
-    
+    return;    
   },
   /* Things to do when an album has loaded */
   albumCallback: function() {
     return;
-    var cls = false;
-    switch(Dogvibes.status.state) {
-      case "playing":
-      case "paused":
-        cls = Dogvibes.status.state;
-        break;
-    }
-    if(cls) {
-      this.highlightItem(Dogvibes.status.uri, cls);
-    }
   }
 };
 
+// Monitor scroll position. Invoke handler if at bottom
 var ScrollHandler = {
   /* Different handlers for pages */
   handlers: {
@@ -768,8 +766,8 @@ var ScrollHandler = {
   container: false,
   init: function() {
     /* Invoke action on scroll bottom */
-    $("#content").scroll(function() { ScrollHandler.checkScroll() });  
-    ScrollHandler.container = $("#content");
+    $("#viewport").scroll(function() { ScrollHandler.checkScroll(); });  
+    ScrollHandler.container = $("#viewport");
   },
   checkScroll: function() {
     if(Dogbone.page.id in ScrollHandler.handlers) {
@@ -778,7 +776,7 @@ var ScrollHandler = {
       }
     }  
   }
-}
+};
 
 /*
  * Class for displaying/fetching an album from uri
@@ -788,10 +786,10 @@ var AlbumEntry = function(entry, options) {
   this.options = {
     albumLink: true,
     onLoaded: $.noop
-  }
+  };
   $.extend(this.options, options);
   this.tableName = entry.uri.replace(/:/g, '_');
-  this.tableName = this.tableName.replace(/\//g, '')
+  this.tableName = this.tableName.replace(/\//g, '');
   this.ui = 
     $('<div></div>')
     .addClass('loading')
@@ -813,7 +811,7 @@ var AlbumEntry = function(entry, options) {
       $(this).fadeIn(500);
     })
     .dblclick(function() {
-      uri = $(this).data("album_uri");
+      var uri = $(this).data("album_uri");
       if(uri) {
         Dogvibes.queueAlbum(uri);
       } 
@@ -822,7 +820,6 @@ var AlbumEntry = function(entry, options) {
     
   /* Clickable album? */
   if(this.options.albumLink) {
-    var titlelink = 
       $('<a />')
       .attr('href', "#album/" + entry.uri)
       .text(entry.name + ' ('+entry.released+')')
@@ -863,7 +860,7 @@ var AlbumEntry = function(entry, options) {
         }
       }
     });    
-  },
+  };
   this.set = function(data) {
     if(data.error > 0) { return; }
     /* XXX: compensate for different behaviours in AJAX/WS */
@@ -893,20 +890,21 @@ var AlbumEntry = function(entry, options) {
     self.ui.removeClass('loading');
     /* Invoke callback */
     self.options.onLoaded.call(self);
-  },
+  };
   /* Ivokes highlight for all tables (discs) in album */
   this.highlightItem = function(id, cls) {
     for(var i in this.resTbl) {
-      this.resTbl[i].highlightItem(id, cls)
+      this.resTbl[i].highlightItem(id, cls);
     }
-  },
+  };
   this.clearHighlight = function(cls) {
     for(var i in this.resTbl) {
-      this.resTbl[i].clearHighlight(cls)
+      this.resTbl[i].clearHighlight(cls);
     }  
-  }
+  };
 };
 
+// XXX: Should we use growl notifications?
 var EventManager = {
   init: function() {
     $(document).bind("Status.state", EventManager.state);
@@ -931,12 +929,13 @@ var EventManager = {
     var user = "<b>Somebody</b> "; 
     var pid = parseInt(Dogvibes.status.playlist_id, 10);
     var name = (pid === -1) ? "play queue" : Playlist.playlistNames[pid];
-    var name = name ? " from '"+name+"'" : "";
-    msg = " is playing '" + Dogvibes.status.title + "'";
+    name = name ? " from '"+name+"'" : "";
+    var msg = " is playing '" + Dogvibes.status.title + "'";
     $('#EventContainer').notify({ text: user + msg + name });  
   }
 };
 
+// Control left or right view
 var PageSwitch = {
   currentView: 'left',
   params: {
@@ -962,7 +961,7 @@ var PageSwitch = {
       return;
     }
     PageSwitch.currentView = view;
-    where = view == "left" ? 0 :'max';
+    var where = view == "left" ? 0 :'max';
     if(view == "right") {
       $('#Button-switch').addClass('social');      
     }
@@ -972,7 +971,6 @@ var PageSwitch = {
     $("#viewport").scrollTo(where, { axis: 'x', duration: 200, easing: 'swing' });  
   },
   toggle: function() {
-    // XXX: Piggy code!!
     if(PageSwitch.currentView == "right") {
       PageSwitch.params.right.page = Dogbone.page.id;
       PageSwitch.params.right.param = Dogbone.page.param;
@@ -984,8 +982,9 @@ var PageSwitch = {
       window.location.hash = '#'+PageSwitch.params.right.page + '/' + PageSwitch.params.right.param;
     }
   }
-}
+};
 
+// Displays popup and shade
 var Popup = {
   _obj: false,
   init: function() {
@@ -1043,8 +1042,6 @@ function checkLogin(json) {
 }
 
 function startUp() {
-  /* Zebra stripes for all tables */
-  //$.tablesorter.defaults.widgets = ['zebra'];
   Popup.init();
   //TrackInfo.init();
   /* Init in correct order */
@@ -1067,11 +1064,5 @@ function startUp() {
 
   $("#Button-switch").click(function() {
     PageSwitch.toggle();
-  });  
-  /****************************************
-   * Misc. behaviour. Application specific
-   ****************************************/
-   
-  /* Display username */
-  $('#userinfo').text(Config.defaultUser);
+  });     
 } 

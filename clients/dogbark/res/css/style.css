@@ -446,7 +446,15 @@ div.loading {
   color: #909191;
 }
 
+
+#midcol ul#tracks li div.trackText {
+  height: 17px;
+  display: block;
+  overflow: hidden;
+}
+
 #midcol ul#tracks li span {
+  display: inline-block;
   height: 17px;
   overflow: hidden;
   color: #4a4a4a;
