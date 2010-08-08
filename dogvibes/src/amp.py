@@ -591,7 +591,7 @@ class Amp():
         request.finish()
 
     def API_getActivity(self, limit, request):
-        request.finish(User.get_activity(limit))
+        request.finish(User.get_activity(int(limit)))
 
     def API_getUserInfo(self, request):
         user = User.find_by_or_create_from_username(request.user, request.avatar_url)
