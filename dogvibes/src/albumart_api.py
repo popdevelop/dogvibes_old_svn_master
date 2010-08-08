@@ -103,7 +103,7 @@ class AlbumArt():
             try:
                 img = Image.open(buf)
             except:
-                logging.warning("Could not read image: %s" % img_path)
+                logging.warning("Could not read image: %s" % self.img_path)
                 return None
 
             # Won't grow the image since I couldn't get .resize() to work
