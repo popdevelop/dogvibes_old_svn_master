@@ -255,7 +255,6 @@ div.loading {
 #toolbar {
   width: 950px;
   margin: 20px auto 10px auto;  
-  display: none; 
 }
 
 #toolbar h2 {
@@ -311,7 +310,6 @@ div.loading {
   width: 950px;
   padding: 0 10px;
   overflow: hidden;
-  display: none;
 }
 
 #content {
@@ -491,7 +489,6 @@ div.loading {
 
 #midcol ul#tracks li.playing span.album {
   display: block;
-  color: #9291919;
   font-weight: normal;
   font-size: 12px;
   cursor: pointer;  

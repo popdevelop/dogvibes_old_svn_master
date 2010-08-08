@@ -464,18 +464,12 @@ var ConnectionIndicator = {
   init: function() {
       $(document).bind("Server.connecting", function() {
         Popup.message("Trying to connect you...", true);
-        $('#viewport').hide();
-        $('#toolbar').hide();
       });
       $(document).bind("Server.error", function() {
         Popup.message("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page", false);
-        $('#viewport').hide();
-        $('#toolbar').hide();        
       });
       $(document).bind("Server.connected", function() {
         Popup.hide();
-        $('#viewport').show();
-        $('#toolbar').show();
       });
   }
 };
