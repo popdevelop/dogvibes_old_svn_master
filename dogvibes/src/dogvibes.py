@@ -24,6 +24,7 @@ from fakespeaker import FakeSpeaker
 from track import Track
 from playlist import Playlist
 from user import User
+from database import Database
 
 class Dogvibes():
     ampdbname = "qurkloxuiikkolkjhhf"
@@ -261,3 +262,13 @@ class Dogvibes():
 
     def API_getSearchHistory(self, nbr, request):
         request.finish(self.search_history[-int(nbr):])
+
+    def API_cleanDatabase(self, request):
+        db = Database()
+        db.commit_statement('''delete from votes''')
+        db.commit_statement('''delete from collection''')
+        db.commit_statement('''delete from users''')
+        db.commit_statement('''delete from tracks''')
+        db.commit_statement('''delete from playlists where id != 1''')
+        db.commit_statement('''delete from playlist_tracks''')
+        request.finish()
