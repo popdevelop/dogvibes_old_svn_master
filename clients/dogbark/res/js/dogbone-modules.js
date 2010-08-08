@@ -5,7 +5,8 @@
 var Config = {
   defaultUser: "sswc",
   defaultServer: "dogvib.es",
-  defaultProtocol: ["http", "http"], //Order to try protocols  
+  defaultProtocol: ["http", "http"], //Order to try protocols
+  maxActivity: 10
 };
 
 
@@ -414,12 +415,12 @@ var Activity = {
   },
   fetch: function() {
     if(Dogvibes.server.connected) {
-      Dogvibes.getActivity("Activity.draw");
+      Dogvibes.getActivity(Config.maxActivity, "Activity.draw");
     }
   },
   draw: function(json) {
     $(Activity.ui.list).empty();
-    if(json.error !== 0) {
+    if(json.error != 0) {
       $("<li></li>").addClass("first last").text("Oops, something went wrong").appendTo($(Activity.ui.list));
       return;
     }

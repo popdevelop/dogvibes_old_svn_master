@@ -623,6 +623,7 @@ div.loading {
   min-height: 16px;
   padding: 5px 10px;
   position: relative;
+  width: 490px;
 }
 
 #rightcol ul#Search-content li span {
