@@ -12,6 +12,7 @@ class User:
         else:
             self.username = username
         self.avatar_url = avatar_url
+        self.votes = 5
         self.id = -1
     def __str__(self):
         return "username: " + self.username + " id:" + str(self.id) + " avatar: " + self.avatar_url + " votes: " + str(self.votes)
@@ -71,7 +72,7 @@ class User:
         db.commit_statement('''select * from users where username = ?''', [self.username])
         u = db.fetchone()
         if  u == None:
-            db.commit_statement('''insert into users (username, avatar_url, votes) VALUES(?, ?, ?)''', [self.username, self.avatar_url, 5])
+            db.commit_statement('''insert into users (username, avatar_url, votes) VALUES(?, ?, ?)''', [self.username, self.avatar_url, self.votes])
             db.commit_statement('''select * from users where username = ?''', [self.username])
             u = db.fetchone()
             logging.debug("Added user=%s" % self.username)
