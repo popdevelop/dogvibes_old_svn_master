@@ -150,12 +150,14 @@ class testPlaylist(testTheDog):
         time.sleep(1)
         amp("stop")
    
-class testVotingOneUser(testTheDog):
-    def runTest(self):
-        # add five votes
+class testVoting(testTheDog):
+    def setUp(self):
+        testTheDog.setUp(self)
+        # add five votes for anonymous
         for i in range(0,5):
             amp("addVote?uri=%s" % valid_uris[i]['uri'])
 
+    def test_vote_count(self):
         # check integrety
         res = amp("getUserInfo")
         self.assertTrue(res['votes'] == 0, "Incorrect vote count") 
@@ -178,7 +180,32 @@ class testVotingOneUser(testTheDog):
         
         # check integrety
         res = amp("getUserInfo")
-        self.assertTrue(res['votes'] == 5, "Incorrect vote count") 
+        self.assertTrue(res['votes'] == 5, "not all votes given back correctly")
+
+    def test_voting_positions(self):
+        # add one vote for gyllen      
+        amp("addVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
+        res = amp("getUserInfo?user=gyllen")
+
+        amp("play")
+
+        # check integrity
+        self.assertTrue(res['votes'] == 4, "Incorrect vote count")
+        amp("addVote?uri=%s&user=gyllen" % valid_uris[4]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.assertTrue(list[1]['uri'] == valid_uris[4]['uri'], "Inconsistency on moving tracks with voting")
+        res = amp("getUserInfo?user=gyllen")
+        # check integrity
+        print res
+        self.assertTrue(res['votes'] == 3, "Incorrect vote count user has %s votes" % res['votes']) 
+        amp("nextTrack")
+        res = amp("getUserInfo?user=gyllen")
+        print res
+        # check integrity
+        self.assertTrue(res['votes'] == 4, "Incorrect vote count user has %s votes" % res['votes']) 
+
+        amp("pause")
 
 if __name__ == "__main__":
    unittest.main()
