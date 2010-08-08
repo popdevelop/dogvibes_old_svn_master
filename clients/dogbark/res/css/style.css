@@ -222,6 +222,12 @@ div.loading {
   background-position: top left;  
 }
 
+#top #User-votes {
+  margin-top: 20px;
+  color: #909191;
+  font-size: 12px;
+  float: right;
+}
 
 #toolbar {
   width: 950px;

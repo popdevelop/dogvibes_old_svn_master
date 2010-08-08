@@ -346,9 +346,7 @@ function voteButton(json) {
   
   if(voted) {
     item.click(function() {
-      if(User.info.votes > 0) {
-        Dogvibes.unVote(json.uri);
-      }
+      Dogvibes.unVote(json.uri);
       return false;
     }).addClass("undo");  
   } else {
@@ -385,6 +383,7 @@ var User =  {
     });
     User.info = json.result;
     $(document).trigger("User.info");
+    $("#User-votes").text(User.info.votes + " votes left for " + User.info.username);
   }
 };
 
