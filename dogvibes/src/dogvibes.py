@@ -216,7 +216,7 @@ class Dogvibes():
     def API_removeTrackFromPlaylist(self, playlist_id, track_id, request):
         try:
             playlist = Playlist.get(playlist_id)
-            playlist.remove_track_id(int(track_id))
+            playlist.remove_playlist_tracks_id(int(track_id))
         except ValueError as e:
             raise
         self.needs_push_update = True
@@ -228,7 +228,7 @@ class Dogvibes():
             for track_id in track_ids.split(','):
                 # don't crash on railing comma
                 if track_id != '':
-                    playlist.remove_track_id(int(track_id))
+                    playlist.remove_playlist_tracks_id(int(track_id))
         except ValueError as e:
             raise
         self.needs_push_update = True

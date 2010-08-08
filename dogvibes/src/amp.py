@@ -126,7 +126,7 @@ class Amp():
         if self.is_in_tmpqueue():
             if relative and (tracknbr == 1):
                 # Remove track and goto next track
-                playlist.remove_track_id(self.active_playlists_track_id)
+                playlist.remove_playlist_tracks_id(self.active_playlists_track_id)
                 next_position = 0
             elif relative and (tracknbr == -1):
                 # Do nothing since we are always on top in playqueue
@@ -507,7 +507,7 @@ class Amp():
             self.play_track(playlist.id, id)
 
             if rmtrack != None:
-                playlist.remove_track_id(rmtrack)
+                playlist.remove_playlist_tracks_id(rmtrack)
         else:
             playlist.add_tracks(tracks, position)
 
@@ -530,7 +530,7 @@ class Amp():
         self.play_track(playlist.id, id)
 
         if rmtrack != None:
-            playlist.remove_track_id(rmtrack)
+            playlist.remove_playlist_tracks_id(rmtrack)
 
         self.needs_push_update = True
         request.finish()
@@ -544,7 +544,7 @@ class Amp():
             request.finish(error = 3)
 
         playlist = Playlist.get(self.tmpqueue_id)
-        playlist.remove_track_id(track_id)
+        playlist.remove_playlist_tracks_id(track_id)
         self.needs_push_update = True
         self.vote_version += 1
         request.push({'vote_version': self.vote_version})
@@ -562,7 +562,7 @@ class Amp():
                     continue
 
                 playlist = Playlist.get(self.tmpqueue_id)
-                playlist.remove_track_id(track_id)
+                playlist.remove_playlist_tracks_id(track_id)
                 self.needs_push_update = True
         self.vote_version += 1
         request.push({'vote_version': self.vote_version})

@@ -125,7 +125,7 @@ class Playlist():
                 logging.debug("Track has no more votes remove track from playlist")
                 db.commit_statement('''select * from playlist_tracks where track_id = ? and playlist_id = ?''', [track_id, self.id])
                 row = db.fetchone()
-                self.remove_track_id(row['id'])
+                self.remove_playlist_tracks_id(row['id'])
                 return
 
             # find all with same amount of votes, and move pass them
@@ -325,7 +325,7 @@ class Playlist():
             self.db.commit_statement('''update playlist_tracks set position = ? where playlist_id = ? and id = ?''', [position, self.id, id])
             self.db.commit_statement('''update playlist_tracks set position = position - 1 where playlist_id = ? and position > ?''', [self.id, old_position])
 
-    def remove_track_id(self, id):
+    def remove_playlist_tracks_id(self, id):
         self.tick_version()
         self.db.commit_statement('''select * from playlist_tracks where id = ?''', [id])
 
