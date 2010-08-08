@@ -3,7 +3,7 @@
  */
 
 var Config = {
-  defaultUser: "",
+  defaultUser: "sswc",
   defaultServer: "dogvib.es",
   defaultProtocol: ["http", "http"], //Order to try protocols  
 };
@@ -208,6 +208,9 @@ Number.prototype.relativeTime = function() {
   now /= 1000; //msec
   var names = ['seconds', 'minutes', 'hours']
   var diff = Math.floor(now - this);
+  if(diff < 10) {
+    return "just now";
+  }
   for(var i = 0; i < 3; i++) {
     if(diff < 60) {
       return diff + " " + names[i] + " ago";
@@ -347,12 +350,14 @@ function voteButton(json) {
   if(voted) {
     item.click(function() {
       Dogvibes.unVote(json.uri);
+      $(this).unbind("click").addClass("voting");
       return false;
     }).addClass("undo");  
   } else {
     item.click(function() {
       if(User.info.votes > 0) {
         Dogvibes.vote(json.uri);
+        $(this).unbind("click").addClass("voting");        
       }
       return false;
     }); 
@@ -375,6 +380,7 @@ var User =  {
   },
   set: function(json) { 
     if(json.error !== 0) {
+      $("#User-votes").text("Failed to get user info :(");
       return false;
     }
     User.votes = {};
@@ -453,30 +459,23 @@ var Activity = {
 
 
 var ConnectionIndicator = {
-  ui: {
-    message: "#popup"
-  },
   message: false,
   init: function() {
-    ConnectionIndicator.message = $(ConnectionIndicator.ui.message);
-    if(ConnectionIndicator.message) {
       $(document).bind("Server.connecting", function() {
-        ConnectionIndicator.message.show();
+        Popup.message("Trying to connect you...", true);
         $('#viewport').hide();
         $('#toolbar').hide();
       });
       $(document).bind("Server.error", function() {
-        ConnectionIndicator.message.show();
-        ConnectionIndicator.message.text("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page");
+        Popup.message("Sorry, there seems to be a problem with the connection to dogvibes. Please check your dog or reload the page", false);
         $('#viewport').hide();
         $('#toolbar').hide();        
       });
       $(document).bind("Server.connected", function() {
-        ConnectionIndicator.message.hide();
+        Popup.hide();
         $('#viewport').show();
         $('#toolbar').show();
-      });       
-    }
+      });
   }
 };
 
@@ -571,13 +570,18 @@ var Search = {
   handleResponse: function(json) {
     $(Search.ui.page).removeClass("loading");  
     if(json.error !== 0) {
-      alert("Search error!");
-      return;
+      $("<li></li>")
+        .text("Oops! something went wrong")
+        .addClass("first last")
+        .appendTo($(Search.ui.result));
+      return false;
     }
     Search.items = json; // Save for later
     /* Any results? */
     if(json.result.length === 0) {
-      $(Search.ui.info).text('Sorry, no matches for "'+Dogbone.page.param+'"').show();
+      $(Search.ui.info)
+        .text('Sorry, no matches for "'+Dogbone.page.param+'"')
+        .show();
     }
     // Build list
     var num = 0;
@@ -590,7 +594,9 @@ var Search = {
     });
     
     if(num === 0) {
-      item = $("<li></li>").text("Sorry, could not find anything");
+      item = $("<li></li>")
+        .text("Sorry, could not find anything")
+        .addClass("first");
     }
     
     item.addClass("last");
@@ -671,7 +677,9 @@ var Artist = {
       /* Reset and fetch new data */
       Artist.albums.items = [];
       Artist.albums.data = {};
-      $('#artist').empty().append('<h2>'+unescape(Dogbone.page.param)+'</h2>');
+      $('#artist')
+        .empty()
+        .append('<h2>'+unescape(Dogbone.page.param)+'</h2>');
       Dogvibes.getAlbums(Dogbone.page.param, "Artist.display");
     }
   },
@@ -712,7 +720,9 @@ var Artist = {
       element = Artist.albums.data[i];
       if(!Artist.albums.other && element.artist != Dogbone.page.param) {
         Artist.albums.other = true;
-        $('<h3></h3>').text("Appears on").appendTo('#artist');
+        $('<h3></h3>')
+          .text("Appears on")
+          .appendTo('#artist');
       }
       var idx = Artist.albums.items.length;
       Artist.albums.items[idx] = new AlbumEntry(element, { onLoaded: Artist.albumCallback });
@@ -724,6 +734,7 @@ var Artist = {
     }
   },
   set: function() {
+    return;
     /* FIXME: this could perhaps be more efficient */
       /* Which class should apply? */
     var cls = false;
@@ -734,33 +745,10 @@ var Artist = {
         break;
     }
     
-    /* First set single album-view */
-    if(Artist.album) {     
-      /* Remove previous classes */
-      Artist.album.clearHighlight("playing paused");
-    
-      if(cls) { 
-        /* Set new class */
-        Artist.album.highlightItem(Dogvibes.status.uri, cls);
-      }
-    }
-    
-    /* Now, the album listing for artist */
-    var noAlbums = Artist.albums.items.length;
-    if(noAlbums > 0) {
-      for(var i = 0; i < noAlbums; i++) {
-        var a = Artist.albums.items[i];
-        /* Remove current */
-        a.clearHighlight("playing paused");
-        if(cls) {
-          /* Set new class */
-          a.highlightItem(Dogvibes.status.uri, cls);
-        }       
-      }
-    }
   },
   /* Things to do when an album has loaded */
   albumCallback: function() {
+    return;
     var cls = false;
     switch(Dogvibes.status.state) {
       case "playing":
@@ -1000,6 +988,41 @@ var PageSwitch = {
   }
 }
 
+var Popup = {
+  _obj: false,
+  init: function() {
+    Popup._obj   = $("#popup");
+    Popup._shade = $("#shade");
+  },
+  show: function() {
+    if(Popup._obj) {
+      Popup._obj.show();
+    }
+    if(Popup._shade) {
+      Popup._shade.show();
+    }    
+  },
+  hide: function() {
+    if(Popup._obj) {
+      Popup._obj.hide();
+    }
+    if(Popup._shade) {
+      Popup._shade.hide();
+    }    
+  },
+  message: function(text, loading) {
+    if(Popup._obj) {
+      Popup._obj.text(text);
+      if(loading) {
+        Popup._obj.addClass("loading");
+      } else {
+        Popup._obj.removeClass("loading");
+      }
+      Popup.show();
+    }
+  }
+};
+
 /***************************
  * Keybindings 
  ***************************/
@@ -1013,8 +1036,7 @@ $(document).ready(function() {
 });
 
 function checkLogin(json) {
-  if(json.error == 5) {
-    console.log("redirecting: " + "http://dogvib.es/authTwitter/" + Config.defaultUser);
+  if(json.error == 5) {  
     window.location = "http://dogvib.es/authTwitter/" + Config.defaultUser;
   }
   else {
@@ -1025,7 +1047,8 @@ function checkLogin(json) {
 function startUp() {
   /* Zebra stripes for all tables */
   //$.tablesorter.defaults.widgets = ['zebra'];
-  TrackInfo.init();
+  Popup.init();
+  //TrackInfo.init();
   /* Init in correct order */
   Playqueue.init();
   Search.init();
@@ -1033,7 +1056,7 @@ function startUp() {
   Activity.init();
   PageSwitch.init();
   //EventManager.init();
-  ScrollHandler.init();  
+  //ScrollHandler.init();  
   ConnectionIndicator.init();
   User.init();
   Dogbone.init("pages"); 

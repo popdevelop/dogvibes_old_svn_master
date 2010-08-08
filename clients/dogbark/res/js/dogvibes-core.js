@@ -28,7 +28,7 @@ var AJAX = {
   timer: false,
 
   /* reconnection params */
-  delay: 4000,
+  delay: 1000,
   attempts: 300,
 
   start: function(server, user) {

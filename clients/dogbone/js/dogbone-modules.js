@@ -3,9 +3,9 @@
  */
 
 var Config = {
-  defaultUser: "",
+  defaultUser: "sswc",
   defaultServer: "dogvib.es",
-  defaultProtocol: ["http", "http"], //Order to try protocols 
+  defaultProtocol: ["ws", "http"], //Order to try protocols 
   resizeable: true,
   draggableOptions: {
     revert: 'invalid',

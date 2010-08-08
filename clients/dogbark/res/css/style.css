@@ -172,6 +172,12 @@ li input.voteButton.undo:hover {
   background-image: url('../img/vote-undo.png');
 }
 
+li input.voteButton.voting,
+li input.voteButton.voting:hover {
+  background-image: url('../img/loading.gif');
+  background-position: 50% 50%;  
+}
+
 div.loading {
   background-image: url('../img/loading.gif');
   background-repeat: no-repeat;
@@ -191,10 +197,22 @@ div.loading {
   vertical-align: middle;
   font-size: 18px;
   background-color: #FFF;
+  z-index: 200;
 }
 
 #popup .loading {
   padding-bottom: 30px;
+}
+
+#shade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background-color: #eee;
+  background-image: url("../img/background2.png");
 }
 
 /******************************************************************************
@@ -248,7 +266,7 @@ div.loading {
   letter-spacing: -3px;
   color: #fff;
   text-shadow: rgba(0,0,0, 0.2) 1px 1px 0;
-  text-transform: none;
+  text-transform: lowercase;
   margin-left: 10px;
 }
 
@@ -426,6 +444,8 @@ div.loading {
 
 #midcol ul#tracks li.noTracks { 
   text-align: center;
+  padding: 40px 0;
+  color: #909191;
 }
 
 #midcol ul#tracks li em {
