@@ -126,10 +126,10 @@ class User:
         db.commit_statement('''delete from votes where track_id = ?''', [track_id])
             
     @classmethod
-    def get_activity(self):
+    def get_activity(self, limit):
         tmp = self.all_votes[:]
         tmp.reverse()
-        return tmp
+        return tmp[:limit]
 
 if __name__ == '__main__':
     user = User.find_by_username("brissmyr")

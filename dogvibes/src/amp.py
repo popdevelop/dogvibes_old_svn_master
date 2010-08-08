@@ -590,8 +590,8 @@ class Amp():
         request.push({'state': 'stopped'})
         request.finish()
 
-    def API_getActivity(self, request):
-        request.finish(User.get_activity())
+    def API_getActivity(self, limit, request):
+        request.finish(User.get_activity(limit))
 
     def API_getUserInfo(self, request):
         user = User.find_by_or_create_from_username(request.user, request.avatar_url)
