@@ -229,6 +229,11 @@ div.loading {
   float: right;
 }
 
+#top #User-votes .user {
+  color: #4A89AD;
+  font-weight: bold;
+}
+
 #toolbar {
   width: 950px;
   margin: 20px auto 10px auto;  

@@ -383,7 +383,9 @@ var User =  {
     });
     User.info = json.result;
     $(document).trigger("User.info");
-    $("#User-votes").text(User.info.votes + " votes left for " + User.info.username);
+    var vts = User.info.votes == 1 ? " vote" : " votes";
+    var info = $("<span></span>").addClass("user").text(User.info.username);
+    $("#User-votes").text(User.info.votes + vts + " left for ").append(info);
   }
 };
 
