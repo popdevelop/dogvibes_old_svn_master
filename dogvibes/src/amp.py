@@ -193,6 +193,7 @@ class Amp():
             self.next_track()
             #request.push({'state': self.get_state()})
             #request.push(self.track_to_client())
+            self.vote_version += 1
             self.needs_push_update = True
             # TODO: is this enough? An update is pushed to the clients
             # but will the info be correct?
