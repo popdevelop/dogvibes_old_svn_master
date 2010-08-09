@@ -225,8 +225,27 @@ class testVoting(testTheDog):
         self.check_list_order(list)
 
         # add five votes for arne
-        for i in range(3,8):
-            amp("addVote?uri=%s&user=arne" % valid_uris[i]['uri'])
+        amp("addVote?uri=%s&user=arne" % valid_uris[3]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        amp("addVote?uri=%s&user=arne" % valid_uris[4]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        amp("addVote?uri=%s&user=arne" % valid_uris[5]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        amp("addVote?uri=%s&user=arne" % valid_uris[6]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        amp("addVote?uri=%s&user=arne" % valid_uris[7]['uri'])
 
         list = amp("getAllTracksInQueue")
         self.check_list_order(list)
@@ -244,13 +263,34 @@ class testVoting(testTheDog):
         self.check_list_order(list)
 
         # add one vote from sven
-        amp("removeVote?uri=%s&user=sven" % valid_uris[3]['uri'])
+        amp("addVote?uri=%s&user=sven" % valid_uris[3]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        amp("play")
+        amp("nextTrack")
+        amp("nextTrack")
+        amp("pause")
+
+        # remove one vote from arne
+        amp("removeVote?uri=%s&user=arne" % valid_uris[7]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        # add one vote from sven
+        #amp("addVote?uri=%s&user=sven" % valid_uris[3]['uri'])
+        #amp("addVote?uri=%s&user=sven" % valid_uris[2]['uri'])
+        #amp("addVote?uri=%s&user=sven" % valid_uris[1]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        #amp("removeVote?uri=%s&user=sven" % valid_uris[1]['uri'])
 
         list = amp("getAllTracksInQueue")
         self.check_list_order(list)
 
 if __name__ == "__main__":
    unittest.main()
-
-
-   
