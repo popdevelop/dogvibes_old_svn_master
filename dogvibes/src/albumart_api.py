@@ -65,7 +65,6 @@ class AlbumArt():
         album = re.sub(' ', '+', album)
 
         url = url_template % (api_key, artist, album)
-        print url
         fd = urllib.urlopen(url)
         self.http_client.fetch(url, self.xml_callback)
 
@@ -104,6 +103,7 @@ class AlbumArt():
                 img = Image.open(buf)
             except:
                 logging.warning("Could not read image: %s" % self.img_path)
+                self.callback(self.get_standard_image())
                 return None
 
             # Won't grow the image since I couldn't get .resize() to work
