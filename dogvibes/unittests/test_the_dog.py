@@ -51,104 +51,104 @@ class testTheDog(unittest.TestCase):
         amp("stop")
         dogvibes("cleanDatabase")
 
-#class testQueue(testTheDog):
-#    def runTest(self):
-#        for i in range(0,5):
-#            amp("queue?uri=%s" % valid_uris[i]['uri'])
-#
-#        res = amp("getAllTracksInQueue")
-#
-#        i = 0
-#        for r in res:
-#            self.assertTrue(r['uri'] == valid_uris[i]['uri'], "queue does not work")
-#            i = i + 1
-#
-#class testQueueAndPlay(testTheDog):
-#    def runTest(self):
-#        amp("queueAndPlay?uri=%s" % valid_uris[0]['uri'])
-#        print "LISTEN FOR CAUGH"
-#        time.sleep(5)
-#        amp("pause")
-#        amp("stop")
-#
-#class testSkippingAndJumping(testTheDog):
-#    def runTest(self):
-#        # test operations on empty database
-#        amp("pause")
-#        amp("stop")
-#        amp("play")
-#        amp("stop")
-#        amp("play")
-#
-#class testPlaylist(testTheDog):
-#    pid = None
-#
-#    def setUp(self):
-#        testTheDog.setUp(self)
-#        # test creating and removing playlist
-#        dogvibes("createPlaylist?name=%s" % "testlist")
-#
-#        # add five songs to playlist
-#        self.pid = dogvibes("getAllPlaylists")[0]['id']
-#        for i in range(0,5):
-#            dogvibes("addTracksToPlaylist?playlist_id=%s&uri=%s" % (self.pid, valid_uris[i]['uri']))
-#
-#    def test_moving(self):
-#        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
-#
-#        # check consistency
-#        i = 0
-#        for r in res:
-#            self.assertTrue(r['title'] == valid_uris[i]['title'], "inconsistency in playlist")
-#            i = i + 1
-#        
-#        dogvibes("moveTrackInPlaylist?playlist_id=%s&track_id=%s&position=%s" % (self.pid, res[4]['id'], 1))
-#        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
-#        # check if move was successfull
-#        self.assertTrue(res[0]['uri'] == valid_uris[4]['uri'], "move was unsuccessfull")
-#
-#        dogvibes("moveTrackInPlaylist?playlist_id=%s&track_id=%s&position=%s" % (self.pid, res[3]['id'], 3))
-#        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
-#        # check if move was successfull
-#        self.assertTrue(res[2]['uri'] == valid_uris[2]['uri'], "move was unsuccessfull")
-#        
-#    def test_addingremoving(self):
-#        ret = dogvibes("getAllPlaylists")
-#        dogvibes("removePlaylist?id=%s" % ret[0]['id'])
-#        # create new playlist with same name
-#        dogvibes("createPlaylist?name=%s" % "testlist")
-#
-#    def test_skipping(self):
-#        amp("playTrack?playlist_id=%s&nbr=1" % self.pid)
-#        amp("nextTrack")
-#        time.sleep(1)
-#        amp("nextTrack")
-#        time.sleep(1)
-#        amp("nextTrack")
-#        time.sleep(1)
-#        amp("nextTrack")
-#        time.sleep(1)
-#        amp("nextTrack")
-#        time.sleep(1)
-#        amp("nextTrack")
-#        amp("stop")
-#        # do play
-#        amp("play")
-#        time.sleep(2)
-#        amp("stop")
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("previousTrack")
-#        time.sleep(1)
-#        amp("stop")
+class testQueue(testTheDog):
+    def runTest(self):
+        for i in range(0,5):
+            amp("queue?uri=%s" % valid_uris[i]['uri'])
+
+        res = amp("getAllTracksInQueue")
+
+        i = 0
+        for r in res:
+            self.assertTrue(r['uri'] == valid_uris[i]['uri'], "queue does not work")
+            i = i + 1
+
+class testQueueAndPlay(testTheDog):
+    def runTest(self):
+        amp("queueAndPlay?uri=%s" % valid_uris[0]['uri'])
+        print "LISTEN FOR CAUGH"
+        time.sleep(5)
+        amp("pause")
+        amp("stop")
+
+class testSkippingAndJumping(testTheDog):
+    def runTest(self):
+        # test operations on empty database
+        amp("pause")
+        amp("stop")
+        amp("play")
+        amp("stop")
+        amp("play")
+
+class testPlaylist(testTheDog):
+    pid = None
+
+    def setUp(self):
+        testTheDog.setUp(self)
+        # test creating and removing playlist
+        dogvibes("createPlaylist?name=%s" % "testlist")
+
+        # add five songs to playlist
+        self.pid = dogvibes("getAllPlaylists")[0]['id']
+        for i in range(0,5):
+            dogvibes("addTracksToPlaylist?playlist_id=%s&uri=%s" % (self.pid, valid_uris[i]['uri']))
+
+    def test_moving(self):
+        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
+
+        # check consistency
+        i = 0
+        for r in res:
+            self.assertTrue(r['title'] == valid_uris[i]['title'], "inconsistency in playlist")
+            i = i + 1
+        
+        dogvibes("moveTrackInPlaylist?playlist_id=%s&track_id=%s&position=%s" % (self.pid, res[4]['id'], 1))
+        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
+        # check if move was successfull
+        self.assertTrue(res[0]['uri'] == valid_uris[4]['uri'], "move was unsuccessfull")
+
+        dogvibes("moveTrackInPlaylist?playlist_id=%s&track_id=%s&position=%s" % (self.pid, res[3]['id'], 3))
+        res = dogvibes("getAllTracksInPlaylist?playlist_id=%s" % self.pid)
+        # check if move was successfull
+        self.assertTrue(res[2]['uri'] == valid_uris[2]['uri'], "move was unsuccessfull")
+        
+    def test_addingremoving(self):
+        ret = dogvibes("getAllPlaylists")
+        dogvibes("removePlaylist?id=%s" % ret[0]['id'])
+        # create new playlist with same name
+        dogvibes("createPlaylist?name=%s" % "testlist")
+
+    def test_skipping(self):
+        amp("playTrack?playlist_id=%s&nbr=1" % self.pid)
+        amp("nextTrack")
+        time.sleep(1)
+        amp("nextTrack")
+        time.sleep(1)
+        amp("nextTrack")
+        time.sleep(1)
+        amp("nextTrack")
+        time.sleep(1)
+        amp("nextTrack")
+        time.sleep(1)
+        amp("nextTrack")
+        amp("stop")
+        # do play
+        amp("play")
+        time.sleep(2)
+        amp("stop")
+        amp("previousTrack")
+        time.sleep(1)
+        amp("previousTrack")
+        time.sleep(1)
+        amp("previousTrack")
+        time.sleep(1)
+        amp("previousTrack")
+        time.sleep(1)
+        amp("previousTrack")
+        time.sleep(1)
+        amp("previousTrack")
+        time.sleep(1)
+        amp("stop")
    
 class testVoting(testTheDog):
     def setUp(self):
@@ -157,9 +157,10 @@ class testVoting(testTheDog):
         for i in range(0,5):
             amp("addVote?uri=%s" % valid_uris[i]['uri'])
 
-    def check_list_order(self, list):
+    def check_list_order(self):
         lastvote = 100
 
+        list = amp("getAllTracksInQueue")
         # skip first entry sice we never change position for that
         for l in list[1:len(list)]:
             self.assertTrue(lastvote >= int(l['votes']), "list not correctly ordered lastvote:%s votes:%s" % (lastvote, l['votes']))
@@ -190,115 +191,117 @@ class testVoting(testTheDog):
         res = amp("getUserInfo")
         self.assertTrue(res['votes'] == 5, "not all votes given back correctly")
 
-#    def test_voting_numbers(self):
-#        # add one vote for gyllen      
-#        amp("addVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
-#        res = amp("getUserInfo?user=gyllen")
-#
-#        amp("play")
-#
-#        # check integrity
-#        self.assertTrue(res['votes'] == 4, "Incorrect vote count")
-#        amp("addVote?uri=%s&user=gyllen" % valid_uris[4]['uri'])
-#
-#        list = amp("getAllTracksInQueue")
-#        self.assertTrue(list[1]['uri'] == valid_uris[4]['uri'], "Inconsistency on moving tracks with voting")
-#        res = amp("getUserInfo?user=gyllen")
-#        # check integrity
-#        print res
-#        self.assertTrue(res['votes'] == 3, "Incorrect vote count user has %s votes" % res['votes']) 
-#        self.check_list_order(list)
-#        amp("nextTrack")
-#        res = amp("getUserInfo?user=gyllen")
-#        print res
-#        # check integrity
-#        self.assertTrue(res['votes'] == 4, "Incorrect vote count user has %s votes" % res['votes']) 
-#
-#        amp("pause")
+    def test_voting_numbers(self):
+        # add one vote for gyllen      
+        amp("addVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
+        res = amp("getUserInfo?user=gyllen")
+
+        amp("play")
+
+        # check integrity
+        self.assertTrue(res['votes'] == 4, "Incorrect vote count")
+        amp("addVote?uri=%s&user=gyllen" % valid_uris[4]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.assertTrue(list[1]['uri'] == valid_uris[4]['uri'], "Inconsistency on moving tracks with voting")
+        res = amp("getUserInfo?user=gyllen")
+        # check integrity
+        print res
+        self.assertTrue(res['votes'] == 3, "Incorrect vote count user has %s votes" % res['votes']) 
+        self.check_list_order()
+        amp("nextTrack")
+        res = amp("getUserInfo?user=gyllen")
+        print res
+        # check integrity
+        self.assertTrue(res['votes'] == 4, "Incorrect vote count user has %s votes" % res['votes']) 
+
+        amp("pause")
 
     def test_voting_sorting(self):
         # add five votes for gyllen
         for i in range(0,5):
             amp("addVote?uri=%s&user=gyllen" % valid_uris[i]['uri'])
         
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         # add five votes for arne
         amp("addVote?uri=%s&user=arne" % valid_uris[3]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=arne" % valid_uris[4]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=arne" % valid_uris[5]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=arne" % valid_uris[6]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=arne" % valid_uris[7]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
     
         # remove one vote from gyllen
         amp("removeVote?uri=%s&user=gyllen" % valid_uris[3]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         # remove one vote from arne
         amp("removeVote?uri=%s&user=arne" % valid_uris[6]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         # add one vote from sven
         amp("addVote?uri=%s&user=sven" % valid_uris[3]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("play")
         amp("nextTrack")
         amp("nextTrack")
-        amp("pause")
+        amp("stop")
 
         # remove one vote from arne
         amp("removeVote?uri=%s&user=arne" % valid_uris[7]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         # add one vote from sven
         amp("addVote?uri=%s&user=sven" % valid_uris[3]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=sven" % valid_uris[2]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("addVote?uri=%s&user=sven" % valid_uris[1]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
 
         amp("removeVote?uri=%s&user=sven" % valid_uris[2]['uri'])
 
-        list = amp("getAllTracksInQueue")
-        self.check_list_order(list)
+        self.check_list_order()
+
+        amp("addVote?uri=%s&user=sven" % valid_uris[2]['uri'])
+
+        self.check_list_order()
+
+        amp("removeVote?uri=%s&user=sven" % valid_uris[2]['uri'])
+
+        self.check_list_order()
+
+        # add five votes for pelle
+        for i in range(6,11):
+            amp("addVote?uri=%s&user=sven" % valid_uris[i]['uri'])
+
+        self.check_list_order()
+
+
 
 if __name__ == "__main__":
    unittest.main()
