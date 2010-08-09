@@ -129,9 +129,10 @@ class Playlist():
                 return
 
             # find all with same amount of votes, and move pass them
-            db.commit_statement('''select max(position) as new_pos,* from playlist_tracks where playlist_id = ? AND votes = ? AND position > 1''', [playlist_id, votes])
+            db.commit_statement('''select min(position) as new_pos,* from playlist_tracks where playlist_id = ? AND votes <= ? AND position > 1''', [playlist_id, votes])
             # update votes
             row = db.fetchone()
+
             if row == None:
                 logging.debug("no need to move, no one to pass with %s votes" % votes)
             else:
@@ -141,10 +142,7 @@ class Playlist():
                     logging.debug("cap movement to pos=2 (let playing song be first)")
                     new_pos=2
                 logging.debug("update pos, move from %s to %s" % (str(pos), str(new_pos)))
-                #move them up 1 position
-                db.commit_statement('''update playlist_tracks set position = position - 1 where playlist_id = ? and position >= ?''', [self.id, new_pos])
-                #put me below them
-                db.commit_statement('''update playlist_tracks set position = ? where playlist_id = ? and track_id = ?''', [new_pos, self.id, track_id])
+                self.move_track(self.id, new_pos)
 
             #update the votes on the track
             db.commit_statement('''update playlist_tracks set votes = votes - 1 where playlist_id = ? and track_id = ?''', [self.id, track_id])
