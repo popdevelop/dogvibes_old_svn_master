@@ -217,7 +217,7 @@ class testVoting(testTheDog):
 
         amp("pause")
 
-    def test_voting_sorting(self):
+    def test_voting_sorting1(self):
         # add five votes for gyllen
         for i in range(0,5):
             amp("addVote?uri=%s&user=gyllen" % valid_uris[i]['uri'])
@@ -301,7 +301,27 @@ class testVoting(testTheDog):
 
         self.check_list_order()
 
-
+#    def test_voting_sorting2(self):
+#        # add five votes for gyllen
+#        for i in range(0,5):
+#            amp("addVote?uri=%s&user=gyllen" % valid_uris[i]['uri'])
+#
+#        # add five votes for sven
+#        for i in range(0,5):
+#            amp("addVote?uri=%s&user=sven" % valid_uris[i]['uri'])
+#
+#        for i in range(0,5):
+#            self.assertTrue(list[i]['uri'] == valid_uris[i]['uri'], "Inconsistency on moving tracks with voting")
+#
+#        # remove two votes form gyllen
+#        amp("removeVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
+#        amp("removeVote?uri=%s&user=gyllen" % valid_uris[1]['uri'])
+#
+#        amp("addVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
+#
+#        # check consistency
+#        for i in range(0,5):
+#            self.assertTrue(list[i]['uri'] == valid_uris[i]['uri'], "Inconsistency on moving tracks with voting")
 
 if __name__ == "__main__":
    unittest.main()
