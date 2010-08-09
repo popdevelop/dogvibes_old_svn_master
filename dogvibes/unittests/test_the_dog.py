@@ -157,6 +157,14 @@ class testVoting(testTheDog):
         for i in range(0,5):
             amp("addVote?uri=%s" % valid_uris[i]['uri'])
 
+    def check_list_order(self, list):
+        lastvote = 100
+
+        # skip first entry sice we never change position for that
+        for l in list[1:len(list)]:
+            self.assertTrue(lastvote >= int(l['votes']), "list not correctly ordered lastvote:%s votes:%s" % (lastvote, l['votes']))
+            lastvote = int(l['votes'])
+
     def test_vote_count(self):
         # check integrety
         res = amp("getUserInfo")
@@ -182,7 +190,7 @@ class testVoting(testTheDog):
         res = amp("getUserInfo")
         self.assertTrue(res['votes'] == 5, "not all votes given back correctly")
 
-    def test_voting_positions(self):
+    def test_voting_numbers(self):
         # add one vote for gyllen      
         amp("addVote?uri=%s&user=gyllen" % valid_uris[0]['uri'])
         res = amp("getUserInfo?user=gyllen")
@@ -199,6 +207,7 @@ class testVoting(testTheDog):
         # check integrity
         print res
         self.assertTrue(res['votes'] == 3, "Incorrect vote count user has %s votes" % res['votes']) 
+        self.check_list_order(list)
         amp("nextTrack")
         res = amp("getUserInfo?user=gyllen")
         print res
@@ -206,6 +215,39 @@ class testVoting(testTheDog):
         self.assertTrue(res['votes'] == 4, "Incorrect vote count user has %s votes" % res['votes']) 
 
         amp("pause")
+
+    def test_voting_sorting(self):
+        # add five votes for gyllen
+        for i in range(0,5):
+            amp("addVote?uri=%s&user=gyllen" % valid_uris[i]['uri'])
+        
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        # add five votes for arne
+        for i in range(3,8):
+            amp("addVote?uri=%s&user=arne" % valid_uris[i]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+    
+        # remove one vote from gyllen
+        amp("removeVote?uri=%s&user=gyllen" % valid_uris[3]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        # remove one vote from arne
+        amp("removeVote?uri=%s&user=arne" % valid_uris[6]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
+
+        # add one vote from sven
+        amp("removeVote?uri=%s&user=sven" % valid_uris[3]['uri'])
+
+        list = amp("getAllTracksInQueue")
+        self.check_list_order(list)
 
 if __name__ == "__main__":
    unittest.main()
