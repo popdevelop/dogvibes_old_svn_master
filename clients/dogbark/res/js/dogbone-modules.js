@@ -359,6 +359,10 @@ function voteButton(json) {
   //XXX: Check against currently playing track.
   //     Should not display button at all if same
   
+  if(json.uri == Dogvibes.status.uri){
+    return;
+  }
+  
   var voted = User.votes[json.uri] === true;
   var item;
   item = $("<input>")
@@ -608,12 +612,7 @@ var Search = {
       $(Search.ui.result).append(item);
       num++;
     });
-    
-    if(num === 0) {
-      item = $("<li></li>")
-        .text("Sorry, could not find anything")
-        .addClass("first");
-    }
+
     item.addClass("last");
   },
   set: function() {
