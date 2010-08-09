@@ -129,7 +129,7 @@ class Playlist():
                 return
 
             # find all with same amount of votes, and move pass them
-            db.commit_statement('''select min(position) as new_pos,* from playlist_tracks where playlist_id = ? AND votes = ? AND position > 1''', [playlist_id, votes])
+            db.commit_statement('''select max(position) as new_pos,* from playlist_tracks where playlist_id = ? AND votes = ? AND position > 1''', [playlist_id, votes])
             # update votes
             row = db.fetchone()
             if row == None:
