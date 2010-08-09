@@ -140,8 +140,9 @@ static sp_session_callbacks g_callbacks = {
   &spotify_cb_end_of_track
 };
 
-static uint8_t g_appkey[321];
-static const size_t g_appkey_size = sizeof (g_appkey);
+static uint8_t appkey[321];
+/* FIXME: read size instead */
+static const size_t appkey_size = sizeof (appkey);
 
 /* list of spotify commad work structs to be processed */
 static GstSpotSrc *ugly_spot;
@@ -333,6 +334,7 @@ static gboolean spotify_create_session (GstSpotSrc *spot)
   sp_session_config config;
   sp_error error;
   FILE *keyfile;
+  size_t ret;
 
   keyfile = fopen (GST_SPOT_SRC_SPOTIFY_KEY_FILE (spot), "r");
   if (keyfile == NULL) {
@@ -342,11 +344,18 @@ static gboolean spotify_create_session (GstSpotSrc *spot)
   }
 
   //FIXME error check
-  fread (g_appkey, sizeof(uint8_t), g_appkey_size, keyfile);
+  ret = fread (appkey, sizeof (uint8_t), appkey_size, keyfile);
   fclose (keyfile);
 
-  config.application_key = g_appkey;
-  config.application_key_size = g_appkey_size;
+  if (ret != appkey_size) {
+    GST_ERROR_OBJECT (spot, "Failed to read appkey in keyfile %s",
+        GST_SPOT_SRC_SPOTIFY_KEY_FILE (spot));
+    /* FIXME: use ferror to check if eof or read error? */
+    return FALSE;
+  }
+
+  config.application_key = appkey;
+  config.application_key_size = appkey_size;
   config.api_version = SPOTIFY_API_VERSION;
   //FIXME check if these paths are appropiate
   config.cache_location = "tmp";
