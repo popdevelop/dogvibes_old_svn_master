@@ -51,8 +51,18 @@ class testTheDog(unittest.TestCase):
         amp("stop")
         dogvibes("cleanDatabase")
 
+class testCornerCases(testTheDog):
+    def test_playing_with_no_tracks(self):
+        amp("play")
+        amp("play")
+        amp("stop")
+        amp("pause")
+        amp("play")
+        amp("stop")
+        amp("pause")
+
 class testQueue(testTheDog):
-    def runTest(self):
+    def test_normal_use(self):
         for i in range(0,5):
             amp("queue?uri=%s" % valid_uris[i]['uri'])
 
@@ -63,22 +73,11 @@ class testQueue(testTheDog):
             self.assertTrue(r['uri'] == valid_uris[i]['uri'], "queue does not work")
             i = i + 1
 
-class testQueueAndPlay(testTheDog):
-    def runTest(self):
+    def test_queue_and_play(self):
         amp("queueAndPlay?uri=%s" % valid_uris[0]['uri'])
-        print "LISTEN FOR CAUGH"
         time.sleep(5)
         amp("pause")
         amp("stop")
-
-class testSkippingAndJumping(testTheDog):
-    def runTest(self):
-        # test operations on empty database
-        amp("pause")
-        amp("stop")
-        amp("play")
-        amp("stop")
-        amp("play")
 
 class testPlaylist(testTheDog):
     pid = None
@@ -131,7 +130,7 @@ class testPlaylist(testTheDog):
         amp("nextTrack")
         time.sleep(1)
         amp("nextTrack")
-        amp("stop")
+        amp("pause")
         # do play
         amp("play")
         time.sleep(2)
@@ -324,4 +323,14 @@ class testVoting(testTheDog):
 #            self.assertTrue(list[i]['uri'] == valid_uris[i]['uri'], "Inconsistency on moving tracks with voting")
 
 if __name__ == "__main__":
-   unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(testCornerCases)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(testQueue)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(testPlaylist)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(testVoting)
+    unittest.TextTestRunner(verbosity=2).run(suite)
