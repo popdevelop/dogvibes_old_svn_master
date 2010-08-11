@@ -206,14 +206,15 @@ Number.prototype.msec2time = function() {
 Number.prototype.relativeTime = function() {
   var now = new Date().getTime();
   now /= 1000; //msec --> sec
-  var names = ['seconds', 'minutes', 'hours'];
+  var names = ['second', 'minute', 'hour'];
   var diff = Math.floor(now - this);
   if(diff < 10) {
     return "just now";
   }
   for(var i = 0; i < 3; i++) {
     if(diff < 60) {
-      return diff + " " + names[i] + " ago";
+      var many = diff == 1 ? "" : "s";
+      return diff + " " + names[i] + many + " ago";
     } 
     diff = Math.floor(diff / 60);
   }
@@ -431,6 +432,11 @@ var Activity = {
     $(document).bind("Server.connected", function() {
       Activity.fetch();      
     });
+    
+    $(document).bind("Clock.minute", function() {
+      Activity._updateTimes();
+    });
+    
     $(document).bind("Status.activity", function() {
       Activity.fetch();      
     });
@@ -470,6 +476,11 @@ var Activity = {
   set: function() {
     Activity.draw(Activity.items);
   },
+  _updateTimes: function() {
+    $(Activity.ui.list + " li > span.time").each(function(i, el) {
+      $(el).text($(el).data("timestamp").relativeTime());
+    });
+  },
   _newItem: function(json) {
     var item = $("<li></li>").addClass("gradient");
     $("<img></img>").attr("src", json.avatar_url).appendTo(item);
@@ -479,7 +490,7 @@ var Activity = {
     $("<span></span>").text(json.title).appendTo(item);
     $("<span></span>").addClass("weak").text(" by ").appendTo(item);
     $("<span></span>").text(json.artist).appendTo(item);        
-    $("<span></span>").addClass("time").text(json.time.relativeTime()).appendTo(item);
+    $("<span></span>").addClass("time").text(json.time.relativeTime()).appendTo(item).data("timestamp", json.time);
     return item;
   }
 };
@@ -717,10 +728,6 @@ var Artist = {
       return;
     }
 
-    /* FIXME: will this always work? */
-    if(Dogbone.page.param == data.result[0].artist) {
-      $('<h3></h3>').text("Albums").appendTo('#artist');
-    }
     /* Display first chunk of albums */
     Artist.displayMore();
   },
@@ -1023,6 +1030,25 @@ var Popup = {
   }
 };
 
+
+/* Clock timer */
+var Clock = {
+  min:  0,
+  dateObj: false,
+  init: function() {
+     Clock.dateObj = new Date();
+     Clock.min = Clock.dateObj.getMinutes();
+     Clock.timer = setTimeout(Clock.init, 10000);
+     $(document).trigger("Clock.minute");
+  },
+  today: function(string) {
+     var parts = string.split("-");
+     return (parts[0] == Clock.year &&
+             parts[1] == Clock.month &&
+             parts[2] == Clock.day);
+  }
+};
+
 /***************************
  * Bindings 
  ***************************/
@@ -1090,6 +1116,7 @@ function startUp() {
   
   Popup.message("Sit tight while we connect you...", true);
   
+  Clock.init();
   //TrackInfo.init();
   Playqueue.init();
   Search.init();

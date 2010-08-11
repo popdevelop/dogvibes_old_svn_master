@@ -711,6 +711,10 @@ div.loading {
  * Artist
  *****************************************************************************/
 
+#artist, #album {
+  color: #909191;
+}
+
 #artist img, #album img {
   width: 100px;
   float: left;
@@ -738,6 +742,10 @@ table thead {
   color: #FFF;
   font-weight: normal;
   font-size: 11px;
+}
+
+table td.time {
+  text-align: right;
 }
 
 .AlbumEntry {
