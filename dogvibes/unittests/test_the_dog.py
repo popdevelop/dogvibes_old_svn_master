@@ -3,6 +3,7 @@ import optparse
 import simplejson
 import time
 import urllib
+import searchresults
 
 #change the following setup for testing
 #*********************************
@@ -322,6 +323,14 @@ class testVoting(testTheDog):
 #        for i in range(0,5):
 #            self.assertTrue(list[i]['uri'] == valid_uris[i]['uri'], "Inconsistency on moving tracks with voting")
 
+class testSearching(testTheDog):
+    def test_searching(self):
+        res = dogvibes("search?query=kotte")
+        self.assertTrue(res == searchresults.kotte, "search for kotte failed")
+
+        res = dogvibes("search?query=kalle%20kanin")
+        self.assertTrue(res == searchresults.kalle_kanin, "search for 'kalle kanin' failed")
+
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(testCornerCases)
     unittest.TextTestRunner(verbosity=2).run(suite)
@@ -333,4 +342,7 @@ if __name__ == "__main__":
     unittest.TextTestRunner(verbosity=2).run(suite)
 
     suite = unittest.TestLoader().loadTestsFromTestCase(testVoting)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(testSearching)
     unittest.TextTestRunner(verbosity=2).run(suite)
