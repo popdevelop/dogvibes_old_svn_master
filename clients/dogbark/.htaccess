@@ -1,0 +1,3 @@
+Options +FollowSymlinks
+RewriteEngine on
+RewriteRule ([^/]+)/$ ?u=$1 [QSA,NC,L]
