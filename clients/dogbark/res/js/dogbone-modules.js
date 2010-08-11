@@ -3,7 +3,7 @@
  */
 
 var Config = {
-  defaultUser: "",
+  defaultUser: "sswc",
   defaultServer: "dogvib.es",
   defaultProtocol: ["http", "http"], //Order to try protocols
   maxActivity: 10
@@ -230,7 +230,7 @@ var Playqueue = {
     info: '#Playqueue-info',
     tracklist: '#tracks'
   },
-  items: { error: 0 },
+  items: { error: 0, length: 0 },
   init: function() {
     $(Playqueue.ui.info).text('Play queue not available when offline').hide();
 
@@ -426,7 +426,7 @@ var Activity = {
   ui: {
     list: "#Activity-list"
   },
-  items: {error: 0},
+  items: {error: 0, length: 0},
   init: function() {
     $(document).bind("Server.connected", function() {
       Activity.fetch();      
@@ -543,7 +543,7 @@ var Search = {
   },
   searches: [],
   param: "",
-  items: {error: 0}, // Save search results
+  items: {error: 0, length: 0}, // Save search results
   init: function() {
     /* Init search navigation section */
     $(document).bind("Page.search", Search.setPage);
@@ -969,6 +969,9 @@ var PageSwitch = {
     }
     $("#viewport").scrollTo(where, { axis: 'x', duration: 200, easing: 'swing' });  
   },
+  scrollTo: function(xPos) {
+    $("#viewport").scrollTo(xPos, { axis: 'x' });
+  },
   toggle: function() {
     if(PageSwitch.currentView == "right") {
       PageSwitch.params.right.page = Dogbone.page.id;
@@ -985,34 +988,35 @@ var PageSwitch = {
 
 // Displays popup and shade
 var Popup = {
-  _obj: false,
-  init: function() {
-    Popup._obj   = $("#popup");
-    Popup._shade = $("#shade");
+  init: function(title) {
+    Popup._box     = $("#popup");
+    Popup._content = $("#popup-content");
+    Popup._title   = $("#popup-title").text(title);
+    Popup._shade   = $("#shade");
   },
   show: function() {
-    if(Popup._obj) {
-      Popup._obj.show();
+    if(Popup._box) {
+      Popup._box.show();
     }
     if(Popup._shade) {
       Popup._shade.show();
     }    
   },
   hide: function() {
-    if(Popup._obj) {
-      Popup._obj.hide();
+    if(Popup._box) {
+      Popup._box.hide();
     }
     if(Popup._shade) {
       Popup._shade.hide();
     }    
   },
   message: function(text, loading) {
-    if(Popup._obj) {
-      Popup._obj.text(text);
+    if(Popup._content) {
+      Popup._content.text(text);
       if(loading) {
-        Popup._obj.addClass("loading");
+        Popup._content.addClass("loading");
       } else {
-        Popup._obj.removeClass("loading");
+        Popup._content.removeClass("loading");
       }
       Popup.show();
     }
@@ -1020,14 +1024,53 @@ var Popup = {
 };
 
 /***************************
- * Keybindings 
+ * Bindings 
  ***************************/
 
+/* Ugly freakin' code for touch devices. XXX: Improve! Cleanup! */
+var xOrig  = 0;
+var yOrig  = 0;
+var touchInProgress = false;
 
+var touchStartHandler = function(e) {
+  var ev = e.originalEvent;
+  var x = ev.changedTouches[0].pageX;
+  var y = ev.changedTouches[0].pageY;
+  if(!touchInProgress) {
+    xOrig = x;
+    yOrig = y;
+    touchInProgress = true;
+  }
+};
+
+var touchEndHandler = function(e) {
+  e.preventDefault();
+  var ev = e.originalEvent;
+  
+  var x = ev.changedTouches[0].pageX;
+  var y = ev.changedTouches[0].pageY;
+  
+  var curX = x - xOrig;
+  var curY = y - yOrig;
+  
+  var scrollLeft = (curX < 0);
+  var wasSwipe = Math.abs(curX) > Math.abs(curY);
+  if(wasSwipe && Math.abs(x - xOrig) > 50) {
+    if(scrollLeft) {
+      PageSwitch.scroll('right');
+    } else {
+      PageSwitch.scroll('left');
+    }
+  }
+  touchInProgress = false;  
+};
 /***************************
  * Startup 
  ***************************/
 $(document).ready(function() {
+  Popup.init("Dogvibes@"+Config.defaultUser);
+  document.title = "Dogvibes@"+Config.defaultUser;
+  Popup.message("Authorizing...", true);
   Dogvibes.getLoginInfo(Config.defaultServer,"checkLogin");
 });
 
@@ -1041,9 +1084,13 @@ function checkLogin(json) {
 }
 
 function startUp() {
-  Popup.init();
+
+  $(document).bind("touchstart", touchStartHandler);
+  $(document).bind("touchend"  , touchEndHandler);
+  
+  Popup.message("Sit tight while we connect you...", true);
+  
   //TrackInfo.init();
-  /* Init in correct order */
   Playqueue.init();
   Search.init();
   Artist.init();
@@ -1055,6 +1102,7 @@ function startUp() {
   User.init();
   Dogbone.init("pages"); 
   window.location.hash = "#home"; 
+  
   /* Start server connection */
   Dogvibes.init(Config.defaultProtocol, Config.defaultServer, Config.defaultUser);
 

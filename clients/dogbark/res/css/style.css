@@ -200,6 +200,11 @@ div.loading {
   z-index: 200;
 }
 
+#popup h2 {
+  margin-bottom: 20px;
+  color: #909191;
+}
+
 #popup .loading {
   padding-bottom: 30px;
 }
