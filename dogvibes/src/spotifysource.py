@@ -203,7 +203,6 @@ class SpotifySource:
 
         for e in tree.findall('.//{%s}track' % ns):
             track = {}
-            print ET.dump(e)
             track['title'] = self.uglyfind(e, './/{%s}name' % ns)
             track['artist'] = self.uglyfind(e, './/{%s}artist/{%s}name' % (ns, ns))
             track['album'] = self.uglyfind(e, './/{%s}album/{%s}name' % (ns, ns))
