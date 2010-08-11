@@ -246,7 +246,8 @@ div.loading {
 }
 
 #top #User-votes {
-  margin-top: 20px;
+  text-align: right;
+  margin-top: 14px;
   color: #909191;
   font-size: 12px;
   float: right;
@@ -255,6 +256,10 @@ div.loading {
 #top #User-votes .user {
   color: #4A89AD;
   font-weight: bold;
+}
+
+#top #User-votes a {
+  font-size: 11px;
 }
 
 #toolbar {

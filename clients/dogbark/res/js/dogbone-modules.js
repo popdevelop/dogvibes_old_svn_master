@@ -419,7 +419,10 @@ var User =  {
     // Update UI objects
     var vts = User.info.votes == 1 ? " vote" : " votes";
     var info = $("<span></span>").addClass("user").text(User.info.username);
-    $("#User-votes").text(User.info.votes + vts + " left for ").append(info);
+    var votefield = $("#User-votes");
+    votefield.text(User.info.votes + vts + " left for ").append(info);
+    votefield.append("<br>");
+    $("<a></a>").attr("href", "http://dogvib.es/authTwitter/" + Config.defaultUser).text("Log out").appendTo(votefield);
   }
 };
 
