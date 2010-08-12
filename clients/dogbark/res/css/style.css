@@ -45,6 +45,11 @@ div.box {
   display: none;
 }
 
+span.weak {
+  color: #909191;
+  font-size: 10px;
+  margin: 0 2px;
+}
 
 .gradient {
 	/* Legacy browsers */

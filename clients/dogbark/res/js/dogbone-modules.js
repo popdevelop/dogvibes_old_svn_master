@@ -211,6 +211,9 @@ Number.prototype.relativeTime = function() {
   if(diff < 10) {
     return "just now";
   }
+  if(diff < 60) {
+    return "less than a minute ago";
+  }
   for(var i = 0; i < 3; i++) {
     if(diff < 60) {
       var many = diff == 1 ? "" : "s";
@@ -303,6 +306,10 @@ var Playqueue = {
     var item = $("<li></li>").attr("class", "gradient " + cls);
     $("<img>")
       .attr("src", Dogvibes.albumArt(json.artist, json.album, artSize))
+      .hide()
+      .load(function() {
+        $(this).fadeIn(500);
+      })
       .click(function() { 
         window.location.hash = "#album/" + json.album_uri; 
       })      
@@ -1022,7 +1029,7 @@ var Popup = {
   },
   message: function(text, loading) {
     if(Popup._content) {
-      Popup._content.text(text);
+      Popup._content.html(text);
       if(loading) {
         Popup._content.addClass("loading");
       } else {
@@ -1097,10 +1104,10 @@ var touchEndHandler = function(e) {
  * Startup 
  ***************************/
 $(document).ready(function() {
-  Popup.init("Dogvibes@"+Config.defaultUser);
-  document.title = "Dogvibes@"+Config.defaultUser;
+  Popup.init(Config.defaultUser + "@dogvibes");
+  document.title = Config.defaultUser + "@dogvibes";
   Popup.message("Authorizing...", true);
-  Dogvibes.getLoginInfo(Config.defaultServer,"checkLogin");
+  Dogvibes.getLoginInfo(Config.defaultServer,"checkLogin","failedLogin");
 });
 
 function checkLogin(json) {
@@ -1110,6 +1117,10 @@ function checkLogin(json) {
   else {
     startUp();  
   }
+}
+
+function failedLogin() {
+  Popup.message("Failed to authorize :( <br>Reload to try again<br><span class='weak'>(dogvib.es not responding)</span>", false);
 }
 
 function startUp() {

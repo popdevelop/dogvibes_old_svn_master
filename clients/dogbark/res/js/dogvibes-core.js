@@ -428,12 +428,13 @@ window.Dogvibes =  {
     var URL = Dogvibes.defAmp + Dogvibes.cmd.getUserInfo;
     Dogvibes.server.send(URL, Success);  
   },
-  getLoginInfo: function(server, Success) {
+  getLoginInfo: function(server, Success, Error) {
     // Do a HTTP since this function can be called before init
     var URL = "http://"+server+Dogvibes.cmd.getLoginInfo;
     var opts = {
       url: URL,
       success: eval(Success),
+      error: eval(Error),
       callbackParameter: "callback",
       timeout: 5000
     };
