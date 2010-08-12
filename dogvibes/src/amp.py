@@ -245,6 +245,9 @@ class Amp():
             return 'paused'
 
     def set_state(self, state):
+        if self.src == None:
+            # FIXME return something sweet
+            return
         logging.debug("set state try: "+str(state))
         res = self.pipeline.set_state(state)
         if res != gst.STATE_CHANGE_FAILURE:
@@ -284,6 +287,7 @@ class Amp():
                 return track
             except:
                 logging.debug("Could find any active track, %d on playlist %d", self.active_playlists_track_id, self.active_playlist_id)
+                self.active_playlists_track_id = -1
                 return None
         else:
             # Try the first active_play_list id
