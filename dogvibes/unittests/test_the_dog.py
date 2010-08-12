@@ -4,6 +4,7 @@ import simplejson
 import time
 import urllib
 import searchresults
+import random
 
 #change the following setup for testing
 #*********************************
@@ -79,6 +80,26 @@ class testQueue(testTheDog):
         time.sleep(5)
         amp("pause")
         amp("stop")
+
+    def test_skipping(self):    
+        for i in range(0,3):
+            amp("queue?uri=%s" % valid_uris[i]['uri'])
+
+        amp("play")
+
+        for i in range(0,3):
+            res = amp("getStatus")
+            amp("seek?mseconds=%d" % (int(res['duration'] - 5000)))
+            time.sleep(10)
+
+        time.sleep(5)
+        amp("getStatus")
+        time.sleep(2)
+        amp("getStatus")
+        amp("queue?uri=%s" % valid_uris[0]['uri'])
+        amp("play")
+        time.sleep(3)
+        amp("pause")
 
 class testPlaylist(testTheDog):
     pid = None
@@ -206,12 +227,10 @@ class testVoting(testTheDog):
         self.assertTrue(list[1]['uri'] == valid_uris[4]['uri'], "Inconsistency on moving tracks with voting")
         res = amp("getUserInfo?user=gyllen")
         # check integrity
-        print res
         self.assertTrue(res['votes'] == 3, "Incorrect vote count user has %s votes" % res['votes']) 
         self.check_list_order()
         amp("nextTrack")
         res = amp("getUserInfo?user=gyllen")
-        print res
         # check integrity
         self.assertTrue(res['votes'] == 4, "Incorrect vote count user has %s votes" % res['votes']) 
 
@@ -301,6 +320,20 @@ class testVoting(testTheDog):
 
         self.check_list_order()
 
+#    def test_voting_random(self):
+#        fake_users = ["gyllen", "brissmyr", "jimtegel", "tilljoel", "cirkkajoel", "nisse", "pelle", "kalle", "david", "sven", "arne", "kallekanin", "kalleduva", "dennis", "katt", "hatt"]
+#        
+#        for i in range(0, 10000):
+#            remadd = random.randint(0, 1)
+#            ruser = fake_users[random.randint(0, len(fake_users) - 1)]
+#            ruri = valid_uris[random.randint(0, len(valid_uris) - 1)]['uri']
+#            if remadd == 0:
+#                amp("addVote?user=%s&uri=%s" % (ruser, ruri))
+#            else:
+#                amp("removeVote?user=%s&uri=%s" % (ruser, ruri))
+#            self.check_list_order()
+        
+
 #    def test_voting_sorting2(self):
 #        # add five votes for gyllen
 #        for i in range(0,5):
@@ -340,7 +373,7 @@ if __name__ == "__main__":
 
     suite = unittest.TestLoader().loadTestsFromTestCase(testPlaylist)
     unittest.TextTestRunner(verbosity=2).run(suite)
-
+    
     suite = unittest.TestLoader().loadTestsFromTestCase(testVoting)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
