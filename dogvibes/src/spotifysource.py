@@ -211,7 +211,9 @@ class SpotifySource:
             track['uri'] = "spotify://" + e.items()[0][1]
             track['popularity'] = self.uglyfind(e, './/{%s}popularity' % ns)
             territories = self.uglyfind(e, './/{%s}album/{%s}availability/{%s}territories' % (ns, ns, ns))
-            if 'SE' in territories or territories == 'worldwide':
+            # TODO: Should the track be added or removed when territories isn't present.
+            # Removing just in case...
+            if territories and ('SE' in territories or territories == 'worldwide'):
                 tracks.append(track)
 
         return tracks
