@@ -63,7 +63,7 @@ def push_status():
         data = amp.get_status()
         amp.needs_push_update = False
         dogvibes.needs_push_update = False
-        return_data('0', data, 0, False, None, None, True)
+        return_data('0', data, 0, False, 'pushHandler', None, True)
 
 def on_data(command):
     commands = command.split(EOS)[0:-1]
@@ -189,7 +189,7 @@ class DogRequest:
         joined_pushes = {}
         [ joined_pushes.update(push) for push in self.pushes ]
         if joined_pushes != {}:
-            return_data('0', joined_pushes, 0, False, None, None, True)
+            return_data('0', joined_pushes, 0, False, "pushHandler", None, True)
 
 def return_data(nbr, data, error, raw, js_callback, msg_id, broadcast):
     if raw:
