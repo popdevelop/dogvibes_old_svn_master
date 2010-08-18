@@ -1,9 +1,9 @@
-      /*
+/*
  * Modules for handling playlists, searches, etc...
  */
 
 var Config = {
-  defaultUser: "sswc",
+  defaultUser: "",
   defaultServer: "dogvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols
   resizeable: true,

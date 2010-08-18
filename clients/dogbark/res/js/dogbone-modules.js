@@ -3,9 +3,9 @@
  */
 
 var Config = {
-  defaultUser: "sswc",
+  defaultUser: "",
   defaultServer: "dogvib.es",
-  defaultProtocol: ["http", "http"], //Order to try protocols
+  defaultProtocol: ["ws", "http"], //Order to try protocols
   maxActivity: 10
 };
 
@@ -306,10 +306,6 @@ var Playqueue = {
     var item = $("<li></li>").attr("class", "gradient " + cls);
     $("<img>")
       .attr("src", Dogvibes.albumArt(json.artist, json.album, artSize))
-      .hide()
-      .load(function() {
-        $(this).fadeIn(500);
-      })
       .click(function() { 
         window.location.hash = "#album/" + json.album_uri; 
       })      
