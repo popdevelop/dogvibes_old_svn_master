@@ -6,6 +6,7 @@ var Config = {
   defaultUser: "",
   defaultServer: "dogvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols
+  findNearest: true,
   maxActivity: 10
 };
 
@@ -1108,10 +1109,16 @@ $(document).ready(function() {
 
 function checkLogin(json) {
   if(json.error == 5) {  
-    window.location = "http://dogvib.es/authTwitter/" + Config.defaultUser;
+    window.location = "http://"+Config.defaultServer+"/authTwitter/" + Config.defaultUser;
+  }
+  else if(Config.findNearest){
+    // Check if the server is near
+    Dogvibes.getNearestServer(Config.defaultServer, 
+			      Config.defaultUser, "startUp", "failedLogin");
   }
   else {
-    startUp();  
+    // Start directly
+    startUp();
   }
 }
 
@@ -1119,7 +1126,12 @@ function failedLogin() {
   Popup.message("Failed to authorize :( <br>Reload to try again<br><span class='weak'>(dogvib.es not responding)</span>", false);
 }
 
-function startUp() {
+function startUp(json) {
+
+  // Set the API server that we got back
+  if(json && json.result.api_server) {
+    Config.defaultServer = json.result.api_server;
+  }
 
   $(document).bind("touchstart", touchStartHandler);
   $(document).bind("touchend"  , touchEndHandler);

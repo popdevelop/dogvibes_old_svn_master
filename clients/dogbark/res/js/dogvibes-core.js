@@ -439,7 +439,20 @@ window.Dogvibes =  {
       timeout: 5000
     };
     $.jsonp(opts);    
+  },
+  getNearestServer: function(server, user, Success, Error) {
+    // Do a HTTP since this function can be called before init
+    var URL = "http://"+server+"/getNearestServer/"+user;
+    var opts = {
+      url: URL,
+      success: eval(Success),
+      error: eval(Error),
+      callbackParameter: "callback",
+      timeout: 5000
+    };
+    $.jsonp(opts);    
   }
+
 };
 
 window.Dogvibes.defaultStatus = {
