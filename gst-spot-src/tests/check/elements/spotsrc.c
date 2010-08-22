@@ -36,6 +36,7 @@ static GstPad *mysinkpad;
     "signed = (bool) TRUE"
 
 #define SPOTIFY_URI "spotify://spotify:track:0E4rbyLYVCGLu75H3W6O67"
+#define SPOTIFY_URI_STRIPPED "spotify:track:0E4rbyLYVCGLu75H3W6O67"
 #define SPOTIFY_URI_2 "spotify://spotify:track:13GSFj7uIxqL9eNItNob3p"
 #define SPOTIFY_URI_ERROR "spotify://spotify:track:deadbeefdeadbeefdeadbeef"
 
@@ -450,6 +451,85 @@ GST_START_TEST (test_attributes)
 }
 GST_END_TEST;
 
+static gboolean no_signal;
+
+static void got_search_finished(gpointer instance, const gchar *arg1, gpointer user_data)
+{
+  printf("search:%s\n", arg1);
+  no_signal = FALSE;
+}
+
+GST_START_TEST (test_search)
+{
+  GstElement *spot;
+  no_signal = TRUE;
+
+  g_print ("*** STARTING - TEST SEARCH\n");
+
+  spot = gst_check_setup_element ("spot");
+  g_object_set (G_OBJECT (spot), "user", SPOTIFY_USER, NULL);
+  g_object_set (G_OBJECT (spot), "pass", SPOTIFY_PASS, NULL);
+  g_object_set (G_OBJECT (spot), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (spot), "logged-in", TRUE, NULL);
+  g_object_set (G_OBJECT (spot), "search", "oasis", NULL);
+
+  mysinkpad = gst_check_setup_sink_pad (spot, &sinktemplate, NULL);
+  gst_pad_set_active (mysinkpad, TRUE);
+  probe_id = gst_pad_add_buffer_probe (mysinkpad,
+      G_CALLBACK (buffer_counter), NULL);
+  g_signal_connect(spot, "search_finished", G_CALLBACK(got_search_finished), NULL);
+  
+  while (no_signal) {
+    sleep(1);
+  }
+
+  no_signal = TRUE;
+
+  g_object_set (G_OBJECT (spot), "search", "tacksam", NULL);
+
+  while (no_signal) {
+    sleep(1);
+  }
+
+  int i;
+
+  for (i = 0; i < 20; i++) {
+    no_signal = TRUE;
+    gchar *ser;
+
+    ser = g_strdup_printf("absolute %d\n", i);
+
+    g_object_set (G_OBJECT (spot), "search", ser, NULL);  
+  }
+
+  sleep(5);
+
+  cleanup_spot (spot);
+  g_print ("\nEND - TEST SEARCH\n\n\n");
+}
+GST_END_TEST;
+
+GST_START_TEST (test_resolve_uri)
+{
+  GstElement *spot;
+  no_signal = TRUE;
+
+  g_print ("*** STARTING - TEST RESOLVE URI\n");
+
+  spot = gst_check_setup_element ("spot");
+  g_object_set (G_OBJECT (spot), "user", SPOTIFY_USER, NULL);
+  g_object_set (G_OBJECT (spot), "pass", SPOTIFY_PASS, NULL);
+  g_object_set (G_OBJECT (spot), "spotifykeyfile", "dogspotify_appkey.key", NULL);
+  g_object_set (G_OBJECT (spot), "logged-in", TRUE, NULL);
+  g_object_set (G_OBJECT (spot), "resolve-uri", SPOTIFY_URI_STRIPPED, NULL);
+
+  
+  gchar *res;
+  g_object_get (G_OBJECT (spot), "resolve-uri-result", &res, NULL);
+  g_print ("%s\n", res);
+}
+GST_END_TEST;
+
 static Suite *
 spot_suite (void)
 {
@@ -467,6 +547,8 @@ spot_suite (void)
   tcase_add_test (tc_chain, test_change_track);
   tcase_add_test (tc_chain, test_seek);
   tcase_add_test (tc_chain, test_attributes);
+  tcase_add_test (tc_chain, test_search);
+  tcase_add_test (tc_chain, test_resolve_uri);
 
   return s;
 }
