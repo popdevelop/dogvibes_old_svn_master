@@ -492,7 +492,7 @@ var Activity = {
     var item = $("<li></li>").addClass("gradient");
     $("<img></img>").attr("src", json.avatar_url).appendTo(item);
     item.append(voteButton(json));
-    $("<span></span>").addClass("user").text(json.user).appendTo(item);
+    $("<span></span>").addClass("user").text(json.username).appendTo(item);
     $("<span></span>").addClass("weak").text(" voted for ").appendTo(item);
     $("<span></span>").text(json.title).appendTo(item);
     $("<span></span>").addClass("weak").text(" by ").appendTo(item);
