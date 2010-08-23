@@ -6,7 +6,7 @@ var Config = {
   defaultUser: "",
   defaultServer: "dogvib.es",
   defaultProtocol: ["ws", "http"], //Order to try protocols
-  findNearest: true,
+  findNearest: false,
   maxActivity: 10
 };
 
