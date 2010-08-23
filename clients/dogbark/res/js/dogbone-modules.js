@@ -557,7 +557,8 @@ var Search = {
     input:   "#Search-input",
     page   : "#search",
     info   : "#Search-info",
-    result : "#Search-content"
+    result : "#Search-content",
+    pagination: "#Search-pagination"
   },
   searches: [],
   param: "",
@@ -575,7 +576,8 @@ var Search = {
       $(Search.ui.info).text('Search not available when offline').show();
     });
     $(document).bind("Server.connected", function() {
-      $(Search.ui.info).hide(); 
+      $(Search.ui.info).hide();
+      $(Search.ui.pagination).hide();
       Search.setPage();
     });
 
@@ -587,6 +589,21 @@ var Search = {
       e.preventDefault();
       return false;
     });
+    //Pagination 
+    var $back = $("#Search-prev");
+    var $next = $("#Search-next");
+
+    $back
+      .addClass('pagination-disabled')
+      .click(function() {
+          pagination('<');
+      });
+
+    $next.click(function() {
+        pagination('>');
+    });
+    
+      
   },
   setPage: function() {
     /* See if search parameter has changed. If so, reload */
@@ -596,6 +613,7 @@ var Search = {
       $(Search.ui.page).addClass("loading");
       $(Search.ui.result).empty();
       $(Search.ui.info).hide();
+      $(Search.ui.pagination).hide();
       if(Search.param != "") {
         Dogvibes.search(Search.param, "Search.handleResponse");
       }
@@ -620,6 +638,8 @@ var Search = {
       $(Search.ui.info)
         .text('Sorry, no matches for "'+Dogbone.page.param+'"')
         .show();
+      $(Search.ui.pagination).hide();
+      return;
     }
     // Build list
     var num = 0;
@@ -632,6 +652,7 @@ var Search = {
     });
 
     item.addClass("last");
+    Search.paginate(15);
   },
   set: function() {
     // Re-draw list (uggly/easy way...)
@@ -639,6 +660,59 @@ var Search = {
       $(Search.ui.result).empty();
       Search.handleResponse(Search.items);
     }
+  },
+  paginate: function(pageLength) {
+    $(Search.ui.pagination).show();
+    var $results = $(Search.ui.result);
+    var $items   = $results.find("li");
+    var numPages = Math.ceil($items.length / pageLength) - 1;
+    var current  = 0;
+
+    var $nav  = $("#Search-num");
+    var $back = $("#Search-prev");
+    var $next = $("#Search-next");
+    $back.addClass('pagination-disabled');
+    $next.removeClass('pagination-disabled');
+    $nav.find('b').text(current + 1);
+    $nav.find('span').text(numPages + 1);
+      
+    $items
+      .hide()
+      .slice(0, pageLength)
+      .show();
+
+   if(numPages <= 1) {
+     $(Search.ui.pagination).hide();
+   }
+
+    pagination = function(direction) {
+      reveal = function(current) {
+        $back.removeClass('pagination-disabled');
+        $next.removeClass('pagination-disabled');
+        $items
+          .hide()
+          .slice(current * pageLength, current * pageLength + pageLength)
+          .show();
+        $nav.find('b').text(current + 1);
+      };
+      if(direction == "<") {
+        if(current > 1) {
+          reveal(current -= 1);
+        }
+        else if(current == 1) {
+          reveal(current -= 1);
+          $back.addClass('pagination-disabled');
+        }
+      } else {
+        if(current < numPages - 1) {
+          reveal(current += 1);
+        }
+        else if(current == numPages - 1) {
+          reveal(current += 1);
+          $next.addClass('pagination-disabled');
+        }
+      }
+    };
   },
   _newItem: function(json) {
     var item = $("<li></li>");
@@ -1108,6 +1182,8 @@ $(document).ready(function() {
 });
 
 function checkLogin(json) {
+  startUp();
+  return;
   if(json.error == 5) {  
     window.location = "http://"+Config.defaultServer+"/authTwitter/" + Config.defaultUser;
   }

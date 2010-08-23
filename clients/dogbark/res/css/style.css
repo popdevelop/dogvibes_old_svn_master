@@ -677,6 +677,38 @@ div.loading {
   background-image: url('../img/vote-undo.png');
 }
 
+#rightcol ul#Search-pagination  {
+  float: right;
+  margin: 10px;
+  color: #aaa;
+}
+
+#rightcol ul#Search-pagination b {
+  font-weight: normal;
+}
+
+#rightcol ul#Search-pagination li {
+  display: inline-block;
+  border: 0;
+  padding: 3px 7px;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+#rightcol ul#Search-pagination li#Search-prev,
+#rightcol ul#Search-pagination li#Search-next {
+  background-color: #aaa;
+  color: #FFF;
+  font-weight: bold;
+}
+
+#rightcol ul#Search-pagination li#Search-next.pagination-disabled,
+#rightcol ul#Search-pagination li#Search-prev.pagination-disabled {
+  background-color: #CCC;
+  color: #DDD;
+  cursor: default;
+}
+
 #rightcol h2 {
   background-image: url('../img/hr.png');
   background-position: left bottom;
