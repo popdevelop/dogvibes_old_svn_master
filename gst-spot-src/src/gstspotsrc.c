@@ -776,6 +776,8 @@ spotify_thread_func (void *data)
 	    g_free (GST_SPOT_SRC_RESOLVE_URI_RESULT (spot));
 	    GST_SPOT_SRC_RESOLVE_URI_RESULT(spot) = serialize_link(link);
 
+	    GST_DEBUG_OBJECT (spot, "Success resolved uri = %s", resolve_uri);
+
 	    error = SP_ERROR_OK;
 	    break;
 	  }
@@ -785,6 +787,8 @@ spotify_thread_func (void *data)
 
       }
 
+      GST_DEBUG_OBJECT (spot, "Success run command = %d", spot_work->cmd);
+
       /* print all errors caught and propagate to calling thread */
       if (error != SP_ERROR_OK) {
             GST_ERROR_OBJECT (spot, "Failed with SPOT_CMD=%d, error=%d, error=%s", spot_work->cmd, error, sp_error_message (error));
@@ -792,8 +796,8 @@ spotify_thread_func (void *data)
       spot_work->error = error;
 
       spot->spot_works = g_list_remove (spot->spot_works, spot->spot_works->data);
-      g_mutex_unlock (spot_work->spot_mutex);
       g_cond_broadcast (spot_work->spot_cond);
+      g_mutex_unlock (spot_work->spot_mutex);
     }
   }
 
