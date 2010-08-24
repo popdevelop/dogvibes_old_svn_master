@@ -96,7 +96,7 @@ class User:
 
         now = time.time()
 
-        self.all_votes.append({"id":track_id,"title":row['title'], "artist":row['artist'], "album": row['album'], "user":self.username, "avatar_url": self.avatar_url, "time":now, "votes":1, "duration":row['duration'], "votes":3, "uri": row["uri"]})
+        self.all_votes.append({"id":track_id,"title":row['title'], "artist":row['artist'], "album": row['album'], "username":self.username, "avatar_url": self.avatar_url, "time":now, "votes":1, "duration":row['duration'], "votes":3, "uri": row["uri"]})
 
         db.commit_statement('''insert into votes (track_id, user_id) values (?, ?)''', [track_id, self.id])
         # take vote from user
